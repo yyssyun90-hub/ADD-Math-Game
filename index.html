@@ -1134,13 +1134,6 @@
     <div class="match-feedback" id="match-feedback"></div>
 
     <script>
-        // ==================== Supabase 配置 ====================
-        const SUPABASE_URL = 'https://ytoailyxejdgtpfwcdci.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0b2FpbHl4ZWpkZ3RwZndjZGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NDE5NzQsImV4cCI6MjA4NTExNzk3NH0.DvvP8whiE3rW1bDh4qW2zOLTGsknfQ2Utt8wVOxZjV0';
-        
-        // 初始化 Supabase 客户端
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
         // ==================== 全局变量 ====================
         let score = 0;
         let selectedCards = [];
@@ -1157,9 +1150,15 @@
         let hintInterval = null;
         let gameHistory = [];
         let wrongQuestions = [];
-        let achievements = {};
         let currentUser = null;
-        let authMode = 'login'; // 'login' 或 'register'
+        let authMode = 'login';
+        
+        // Supabase 配置
+        const SUPABASE_URL = 'https://ytoailyxejdgtpfwcdci.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0b2FpbHl4ZWpkZ3RwZndjZGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NDE5NzQsImV4cCI6MjA4NTExNzk3NH0.DvvP8whiE3rW1bDh4qW2zOLTGsknfQ2Utt8wVOxZjV0';
+        
+        // 初始化 Supabase 客户端
+        let supabase;
         
         // 游戏配置
         const MODE_CONFIG = {
@@ -1175,156 +1174,43 @@
             '5-18': { min: 5, max: 18 }
         };
         
-        // ==================== 用户认证系统 ====================
-        async function checkAuth() {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (user) {
-                currentUser = user;
-                updateUserInfo();
-                return true;
+        // ==================== 初始化函数 ====================
+        async function init() {
+            try {
+                // 初始化 Supabase
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase 初始化成功');
+                
+                // 检查登录状态
+                await checkAuth();
+                
+                // 加载本地错题
+                loadWrongQuestionsFromLocal();
+                
+                // 默认选择标准模式
+                selectMode('standard');
+                
+                // 绑定开始游戏按钮事件
+                document.getElementById('start-btn').onclick = checkLoginBeforeStart;
+                
+                console.log('🎮 数学加法消消乐 - 云端版已加载');
+            } catch (error) {
+                console.error('初始化失败:', error);
+                alert('初始化失败，请刷新页面重试');
             }
-            return false;
-        }
-        
-        async function login(email, password) {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-            
-            if (error) {
-                document.getElementById('auth-error').textContent = error.message;
-                return false;
-            }
-            
-            currentUser = data.user;
-            updateUserInfo();
-            closeModal('auth-modal');
-            showMessage('登录成功！', 'success');
-            return true;
-        }
-        
-        async function register(email, password, username) {
-            const { data, error } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        username: username || email.split('@')[0]
-                    }
-                }
-            });
-            
-            if (error) {
-                document.getElementById('auth-error').textContent = error.message;
-                return false;
-            }
-            
-            // 创建用户资料
-            if (data.user) {
-                const { error: profileError } = await supabase
-                    .from('user_profiles')
-                    .insert({
-                        id: data.user.id,
-                        username: username || email.split('@')[0]
-                    });
-                    
-                if (profileError) {
-                    console.log('创建用户资料失败:', profileError);
-                }
-            }
-            
-            currentUser = data.user;
-            updateUserInfo();
-            closeModal('auth-modal');
-            showMessage('注册成功！请查看邮箱验证邮件。', 'success');
-            return true;
-        }
-        
-        async function logout() {
-            const { error } = await supabase.auth.signOut();
-            if (error) {
-                showMessage('退出失败: ' + error.message, 'error');
-                return;
-            }
-            
-            currentUser = null;
-            document.getElementById('user-info').style.display = 'none';
-            showMessage('已退出登录', 'info');
-        }
-        
-        function updateUserInfo() {
-            if (!currentUser) return;
-            
-            document.getElementById('user-info').style.display = 'flex';
-            const userAvatar = document.getElementById('user-avatar');
-            const userName = document.getElementById('user-name');
-            
-            // 显示用户头像（使用首字母）
-            const email = currentUser.email || '';
-            const firstLetter = email.charAt(0).toUpperCase() || '?';
-            userAvatar.textContent = firstLetter;
-            
-            // 显示用户名或邮箱
-            const username = currentUser.user_metadata?.username || email.split('@')[0];
-            userName.textContent = username;
-        }
-        
-        function showAuthModal() {
-            document.getElementById('auth-modal').style.display = 'flex';
-            updateAuthUI();
-        }
-        
-        function updateAuthUI() {
-            const isLogin = authMode === 'login';
-            document.getElementById('auth-title').textContent = isLogin ? '🔐 用户登录' : '📝 用户注册';
-            document.getElementById('auth-button').textContent = isLogin ? '登录' : '注册';
-            document.getElementById('auth-switch-text').textContent = isLogin ? '还没有账号？' : '已有账号？';
-            document.getElementById('auth-switch-link').textContent = isLogin ? '立即注册' : '立即登录';
-            document.getElementById('auth-username-group').style.display = isLogin ? 'none' : 'block';
-            document.getElementById('auth-error').textContent = '';
-        }
-        
-        function toggleAuthMode() {
-            authMode = authMode === 'login' ? 'register' : 'login';
-            updateAuthUI();
-        }
-        
-        async function handleAuth() {
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            const username = document.getElementById('auth-username').value.trim();
-            
-            if (!email || !password) {
-                document.getElementById('auth-error').textContent = '请输入邮箱和密码';
-                return;
-            }
-            
-            if (authMode === 'login') {
-                await login(email, password);
-            } else {
-                await register(email, password, username);
-            }
-        }
-        
-        function checkLoginBeforeStart() {
-            if (!currentUser) {
-                showAuthModal();
-                showMessage('请先登录再开始游戏', 'info');
-                return;
-            }
-            startGame();
         }
         
         // ==================== 游戏核心函数 ====================
         function selectMode(mode) {
             currentMode = mode;
             
+            // 更新UI
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
             
+            // 显示/隐藏自定义设置
             const customSettings = document.getElementById('custom-settings');
             if (mode === 'custom') {
                 customSettings.style.display = 'flex';
@@ -1332,6 +1218,7 @@
                 customSettings.style.display = 'none';
             }
             
+            // 更新按钮文本
             const startBtn = document.getElementById('start-btn');
             if (mode === 'practice') {
                 startBtn.textContent = '🎯 开始练习';
@@ -1341,17 +1228,21 @@
         }
         
         function startGame() {
+            // 重置游戏状态
             resetGame();
             
+            // 获取配置
             const range = document.getElementById('number-range').value;
             const modeConfig = MODE_CONFIG[currentMode];
             
+            // 如果是自定义模式，获取用户设置
             if (currentMode === 'custom') {
                 modeConfig.questions = parseInt(document.getElementById('custom-questions').value) || 20;
                 modeConfig.time = parseInt(document.getElementById('custom-time').value) || 60;
                 timeLeft = modeConfig.time;
             }
             
+            // 显示游戏界面
             document.getElementById('game-info').style.display = 'grid';
             document.getElementById('progress-container').style.display = 'block';
             document.getElementById('target-container').style.display = 'block';
@@ -1359,13 +1250,18 @@
             document.querySelector('.mode-selection').style.display = 'none';
             document.querySelector('.game-setting').style.display = 'none';
             
+            // 设置网格
             const gameGrid = document.getElementById('game-grid');
             gameGrid.style.display = 'grid';
             gameGrid.innerHTML = '';
             
+            // 生成初始目标
             generateNewTarget();
+            
+            // 生成数字网格
             generateNumberGrid();
             
+            // 根据模式设置计时器
             if (modeConfig.hasTimeLimit) {
                 timeLeft = modeConfig.time;
                 document.getElementById('time').textContent = timeLeft;
@@ -1379,6 +1275,7 @@
                 timerInterval = setInterval(updateElapsedTime, 1000);
             }
             
+            // 启动提示冷却计时器
             hintInterval = setInterval(updateHintCooldown, 1000);
             
             gameActive = true;
@@ -1394,14 +1291,17 @@
             gameHistory = [];
             gameActive = false;
             
+            // 清除计时器
             if (timerInterval) clearInterval(timerInterval);
             if (hintInterval) clearInterval(hintInterval);
             
+            // 重置显示
             document.getElementById('score').textContent = '0';
             document.getElementById('completed').textContent = '0/' + (MODE_CONFIG[currentMode].questions || '∞');
             document.getElementById('accuracy').textContent = '100%';
             document.getElementById('progress-bar').style.width = '100%';
             
+            // 清空网格
             const gameGrid = document.getElementById('game-grid');
             gameGrid.innerHTML = '';
         }
@@ -1412,11 +1312,11 @@
             
             let newTarget;
             if (range === '0-9') {
-                newTarget = Math.floor(Math.random() * 10) + 5;
+                newTarget = Math.floor(Math.random() * 10) + 5; // 5-14
             } else if (range === '0-18') {
-                newTarget = Math.floor(Math.random() * 13) + 6;
+                newTarget = Math.floor(Math.random() * 13) + 6; // 6-18
             } else {
-                newTarget = Math.floor(Math.random() * 11) + 8;
+                newTarget = Math.floor(Math.random() * 11) + 8; // 8-18
             }
             
             currentTarget = newTarget;
@@ -1429,6 +1329,7 @@
             const config = RANGE_CONFIG[range];
             const numbers = [];
             
+            // 生成可匹配的数字对
             for (let i = 0; i < 12; i++) {
                 const num1 = Math.floor(Math.random() * (currentTarget + 1));
                 const num2 = currentTarget - num1;
@@ -1444,17 +1345,20 @@
                 }
             }
             
+            // 添加一个随机数字
             numbers.push(Math.floor(Math.random() * (config.max - config.min + 1)) + config.min);
             
+            // 打乱数组
             shuffleArray(numbers);
             
+            // 创建卡片
             numbers.forEach((number, index) => {
                 const card = document.createElement('div');
                 card.className = 'number-card';
                 card.textContent = number;
                 card.dataset.value = number;
                 
-                card.addEventListener('click', () => selectCard(card));
+                card.onclick = () => selectCard(card);
                 
                 gameGrid.appendChild(card);
             });
@@ -1506,6 +1410,7 @@
             const isCorrect = sum === currentTarget;
             const responseTime = (new Date() - startCheckTime) / 1000;
             
+            // 记录历史
             gameHistory.push({
                 target: currentTarget,
                 num1: num1,
@@ -1516,11 +1421,13 @@
             });
             
             if (isCorrect) {
+                // 正确
                 correctCount++;
                 completedQuestions++;
                 playSound('success');
                 showFeedback('✓ 正确!', 'success');
                 
+                // 消除卡片
                 selectedCards.forEach(card => {
                     card.classList.add('disappear');
                 });
@@ -1531,27 +1438,34 @@
                     });
                 }, 500);
                 
+                // 更新分数
                 score += 10;
                 if (responseTime < 3) score += 5;
                 
+                // 更新显示
                 updateDisplay();
                 
+                // 检查是否完成标准模式
                 if (currentMode === 'standard' && completedQuestions >= MODE_CONFIG.standard.questions) {
                     endGame('complete');
                     return;
                 }
                 
+                // 生成新目标
                 setTimeout(() => {
                     generateNewTarget();
                     refreshNumbers();
                 }, 800);
                 
             } else {
+                // 错误
                 playSound('error');
                 showFeedback('✗ 错误', 'error');
                 
+                // 记录错题
                 recordWrongQuestion(num1, num2, currentTarget);
                 
+                // 取消选中
                 selectedCards.forEach(card => {
                     card.classList.remove('selected');
                 });
@@ -1566,10 +1480,12 @@
             timeLeft--;
             document.getElementById('time').textContent = timeLeft;
             
+            // 更新进度条
             const modeConfig = MODE_CONFIG[currentMode];
             const progress = (timeLeft / modeConfig.time) * 100;
             document.getElementById('progress-bar').style.width = `${progress}%`;
             
+            // 时间预警
             if (timeLeft <= 10) {
                 document.getElementById('time-container').classList.add('time-warning');
                 if (timeLeft <= 5 && timeLeft > 0) {
@@ -1577,6 +1493,7 @@
                 }
             }
             
+            // 时间到
             if (timeLeft <= 0) {
                 endGame('timeout');
             }
@@ -1588,6 +1505,7 @@
             const elapsed = Math.floor((new Date() - startTime) / 1000);
             document.getElementById('time').textContent = elapsed + '秒';
             
+            // 更新进度条（标准模式）
             if (currentMode === 'standard') {
                 const progress = (completedQuestions / MODE_CONFIG.standard.questions) * 100;
                 document.getElementById('progress-bar').style.width = `${progress}%`;
@@ -1597,6 +1515,7 @@
         function updateDisplay() {
             document.getElementById('score').textContent = score;
             
+            // 更新完成题数显示
             const modeConfig = MODE_CONFIG[currentMode];
             if (modeConfig.questions) {
                 document.getElementById('completed').textContent = `${completedQuestions}/${modeConfig.questions}`;
@@ -1604,11 +1523,12 @@
                 document.getElementById('completed').textContent = completedQuestions;
             }
             
+            // 更新正确率
             const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
             document.getElementById('accuracy').textContent = accuracy + '%';
         }
         
-        async function endGame(reason) {
+        function endGame(reason) {
             gameActive = false;
             clearInterval(timerInterval);
             clearInterval(hintInterval);
@@ -1616,11 +1536,13 @@
             const elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
             const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
             
+            // 更新结果显示
             document.getElementById('final-score').textContent = score;
             document.getElementById('final-completed').textContent = completedQuestions;
             document.getElementById('final-time').textContent = elapsedTime + '秒';
             document.getElementById('final-accuracy').textContent = accuracy + '%';
             
+            // 根据游戏结果设置标题
             const titleMap = {
                 'complete': '🎉 恭喜完成30题！',
                 'timeout': '⏰ 时间到！',
@@ -1628,19 +1550,14 @@
             };
             document.getElementById('result-title').textContent = titleMap[reason] || '🎉 游戏结束!';
             
+            // 显示游戏结束界面
             document.getElementById('game-over').style.display = 'flex';
             
+            // 播放音效
             if (reason === 'complete') {
                 playSound('win');
             } else {
                 playSound('gameover');
-            }
-            
-            // 自动同步错题到云端
-            if (currentUser && wrongQuestions.length > 0) {
-                setTimeout(() => {
-                    syncWrongQuestions();
-                }, 1000);
             }
         }
         
@@ -1728,6 +1645,172 @@
             }, 1000);
         }
         
+        // ==================== 用户认证系统 ====================
+        async function checkAuth() {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                if (error) throw error;
+                
+                if (user) {
+                    currentUser = user;
+                    updateUserInfo();
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('检查登录状态失败:', error);
+                return false;
+            }
+        }
+        
+        async function login(email, password) {
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) {
+                    document.getElementById('auth-error').textContent = error.message;
+                    return false;
+                }
+                
+                currentUser = data.user;
+                updateUserInfo();
+                closeModal('auth-modal');
+                showMessage('登录成功！', 'success');
+                return true;
+            } catch (error) {
+                console.error('登录失败:', error);
+                document.getElementById('auth-error').textContent = '登录失败，请重试';
+                return false;
+            }
+        }
+        
+        async function register(email, password, username) {
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            username: username || email.split('@')[0]
+                        }
+                    }
+                });
+                
+                if (error) {
+                    document.getElementById('auth-error').textContent = error.message;
+                    return false;
+                }
+                
+                // 尝试创建用户资料到users表（如果表存在且允许插入）
+                if (data.user) {
+                    try {
+                        const { error: profileError } = await supabase
+                            .from('users')
+                            .insert({
+                                id: data.user.id,
+                                username: username || email.split('@')[0]
+                            });
+                            
+                        if (profileError) {
+                            console.log('创建用户资料失败（可能表不存在或权限不足）:', profileError);
+                        }
+                    } catch (e) {
+                        console.log('users表操作失败:', e);
+                    }
+                }
+                
+                currentUser = data.user;
+                updateUserInfo();
+                closeModal('auth-modal');
+                showMessage('注册成功！请查看邮箱验证邮件。', 'success');
+                return true;
+            } catch (error) {
+                console.error('注册失败:', error);
+                document.getElementById('auth-error').textContent = '注册失败，请重试';
+                return false;
+            }
+        }
+        
+        async function logout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                
+                currentUser = null;
+                document.getElementById('user-info').style.display = 'none';
+                showMessage('已退出登录', 'info');
+            } catch (error) {
+                console.error('退出失败:', error);
+                showMessage('退出失败: ' + error.message, 'error');
+            }
+        }
+        
+        function updateUserInfo() {
+            if (!currentUser) return;
+            
+            document.getElementById('user-info').style.display = 'flex';
+            const userAvatar = document.getElementById('user-avatar');
+            const userName = document.getElementById('user-name');
+            
+            // 显示用户头像（使用首字母）
+            const email = currentUser.email || '';
+            const firstLetter = email.charAt(0).toUpperCase() || '?';
+            userAvatar.textContent = firstLetter;
+            
+            // 显示用户名或邮箱
+            const username = currentUser.user_metadata?.username || email.split('@')[0];
+            userName.textContent = username;
+        }
+        
+        function checkLoginBeforeStart() {
+            if (!currentUser) {
+                showAuthModal();
+                showMessage('请先登录再开始游戏', 'info');
+                return;
+            }
+            startGame();
+        }
+        
+        function showAuthModal() {
+            document.getElementById('auth-modal').style.display = 'flex';
+            updateAuthUI();
+        }
+        
+        function updateAuthUI() {
+            const isLogin = authMode === 'login';
+            document.getElementById('auth-title').textContent = isLogin ? '🔐 用户登录' : '📝 用户注册';
+            document.getElementById('auth-button').textContent = isLogin ? '登录' : '注册';
+            document.getElementById('auth-switch-text').textContent = isLogin ? '还没有账号？' : '已有账号？';
+            document.getElementById('auth-switch-link').textContent = isLogin ? '立即注册' : '立即登录';
+            document.getElementById('auth-username-group').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('auth-error').textContent = '';
+        }
+        
+        function toggleAuthMode() {
+            authMode = authMode === 'login' ? 'register' : 'login';
+            updateAuthUI();
+        }
+        
+        async function handleAuth() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            const username = document.getElementById('auth-username').value.trim();
+            
+            if (!email || !password) {
+                document.getElementById('auth-error').textContent = '请输入邮箱和密码';
+                return;
+            }
+            
+            if (authMode === 'login') {
+                await login(email, password);
+            } else {
+                await register(email, password, username);
+            }
+        }
+        
         // ==================== 历史记录功能 ====================
         function showHistory() {
             const tbody = document.getElementById('history-table-body');
@@ -1770,74 +1853,78 @@
                 return;
             }
             
-            const { data, error } = await supabase
-                .from('scores')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .order('created_at', { ascending: false });
-            
-            if (error) {
-                showMessage('加载历史记录失败: ' + error.message, 'error');
-                return;
+            try {
+                const { data, error } = await supabase
+                    .from('scores')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (data.length === 0) {
+                    alert('暂无云端历史记录');
+                    return;
+                }
+                
+                let message = `您共有 ${data.length} 条云端历史记录\n\n`;
+                data.slice(0, 5).forEach((record, index) => {
+                    message += `${index + 1}. ${record.mode}模式 - 得分: ${record.score} - 正确率: ${record.accuracy}%\n`;
+                });
+                
+                if (data.length > 5) {
+                    message += `\n...还有 ${data.length - 5} 条记录`;
+                }
+                
+                alert(message);
+            } catch (error) {
+                console.error('加载历史记录失败:', error);
+                alert('加载历史记录失败: ' + error.message);
             }
-            
-            if (data.length === 0) {
-                alert('暂无云端历史记录');
-                return;
-            }
-            
-            let message = `您共有 ${data.length} 条云端历史记录\n\n`;
-            data.slice(0, 5).forEach((record, index) => {
-                message += `${index + 1}. ${record.mode}模式 - 得分: ${record.score} - 正确率: ${record.accuracy}%\n`;
-            });
-            
-            if (data.length > 5) {
-                message += `\n...还有 ${data.length - 5} 条记录`;
-            }
-            
-            alert(message);
         }
         
         // ==================== 成绩云端存储 ====================
         async function saveScore() {
-            const nameInput = document.getElementById('player-name');
-            const playerName = nameInput.value.trim() || currentUser?.user_metadata?.username || '匿名玩家';
-            
-            if (!currentUser) {
-                showMessage('请先登录保存成绩', 'error');
-                showAuthModal();
-                return;
-            }
-            
-            const elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
-            const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
-            
-            const scoreData = {
-                user_id: currentUser.id,
-                player_name: playerName,
-                score: score,
-                completed: completedQuestions,
-                accuracy: accuracy,
-                time_used: elapsedTime,
-                mode: currentMode,
-                number_range: document.getElementById('number-range').value
-            };
-            
-            const { data, error } = await supabase
-                .from('scores')
-                .insert([scoreData]);
-            
-            if (error) {
+            try {
+                const nameInput = document.getElementById('player-name');
+                const playerName = nameInput.value.trim() || currentUser?.user_metadata?.username || '匿名玩家';
+                
+                if (!currentUser) {
+                    showMessage('请先登录保存成绩', 'error');
+                    showAuthModal();
+                    return;
+                }
+                
+                const elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
+                const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+                
+                const scoreData = {
+                    user_id: currentUser.id,
+                    player_name: playerName,
+                    score: score,
+                    completed: completedQuestions,
+                    accuracy: accuracy,
+                    time_used: elapsedTime,
+                    mode: currentMode,
+                    number_range: document.getElementById('number-range').value
+                };
+                
+                const { data, error } = await supabase
+                    .from('scores')
+                    .insert([scoreData]);
+                
+                if (error) throw error;
+                
+                showMessage('成绩保存成功！已上传到云端', 'success');
+                nameInput.value = '';
+                document.getElementById('game-over').style.display = 'none';
+            } catch (error) {
+                console.error('保存成绩失败:', error);
                 showMessage('保存成绩失败: ' + error.message, 'error');
-                return;
             }
-            
-            showMessage('成绩保存成功！已上传到云端', 'success');
-            nameInput.value = '';
-            document.getElementById('game-over').style.display = 'none';
         }
         
-        // ==================== 个人成绩报告 ====================
+        // ==================== 个人资料 ====================
         async function showProfile() {
             if (!currentUser) {
                 showMessage('请先登录查看个人资料', 'info');
@@ -1848,42 +1935,47 @@
             document.getElementById('profile-modal').style.display = 'flex';
             
             // 更新用户信息
-            const email = currentUser.email;
+            const email = currentUser.email || '未设置邮箱';
             const firstLetter = email.charAt(0).toUpperCase() || '?';
             document.getElementById('profile-avatar').textContent = firstLetter;
             document.getElementById('profile-email').textContent = email;
             
-            // 获取用户统计数据
-            const { data: scores, error } = await supabase
-                .from('scores')
-                .select('*')
-                .eq('user_id', currentUser.id);
-            
-            if (error) {
-                console.error('获取成绩失败:', error);
-                return;
-            }
-            
-            if (scores.length === 0) {
+            try {
+                // 获取用户统计数据
+                const { data: scores, error } = await supabase
+                    .from('scores')
+                    .select('*')
+                    .eq('user_id', currentUser.id);
+                
+                if (error) throw error;
+                
+                if (scores.length === 0) {
+                    document.getElementById('profile-game-count').textContent = '0';
+                    document.getElementById('profile-high-score').textContent = '0';
+                    document.getElementById('profile-avg-accuracy').textContent = '0%';
+                    document.getElementById('profile-join-date').textContent = '-';
+                    return;
+                }
+                
+                // 计算统计数据
+                const gameCount = scores.length;
+                const highScore = Math.max(...scores.map(s => s.score));
+                const avgAccuracy = scores.reduce((sum, s) => sum + s.accuracy, 0) / gameCount;
+                
+                document.getElementById('profile-game-count').textContent = gameCount;
+                document.getElementById('profile-high-score').textContent = highScore;
+                document.getElementById('profile-avg-accuracy').textContent = avgAccuracy.toFixed(1) + '%';
+                
+                // 显示注册时间
+                const joinDate = new Date(currentUser.created_at);
+                document.getElementById('profile-join-date').textContent = joinDate.toLocaleDateString('zh-CN');
+            } catch (error) {
+                console.error('获取统计数据失败:', error);
                 document.getElementById('profile-game-count').textContent = '0';
                 document.getElementById('profile-high-score').textContent = '0';
                 document.getElementById('profile-avg-accuracy').textContent = '0%';
                 document.getElementById('profile-join-date').textContent = '-';
-                return;
             }
-            
-            // 计算统计数据
-            const gameCount = scores.length;
-            const highScore = Math.max(...scores.map(s => s.score));
-            const avgAccuracy = scores.reduce((sum, s) => sum + s.accuracy, 0) / gameCount;
-            
-            document.getElementById('profile-game-count').textContent = gameCount;
-            document.getElementById('profile-high-score').textContent = highScore;
-            document.getElementById('profile-avg-accuracy').textContent = avgAccuracy.toFixed(1) + '%';
-            
-            // 显示注册时间
-            const joinDate = new Date(currentUser.created_at);
-            document.getElementById('profile-join-date').textContent = joinDate.toLocaleDateString('zh-CN');
         }
         
         // ==================== 云端排行榜 ====================
@@ -1893,69 +1985,68 @@
         }
         
         async function showLeaderboardTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            const content = document.getElementById('leaderboard-content');
-            content.innerHTML = '<div style="text-align:center;padding:20px;">加载中...</div>';
-            
-            if (tab === 'myhistory') {
-                await showMyLeaderboardHistory();
-                return;
-            }
-            
-            let orderBy = '';
-            switch(tab) {
-                case 'score': orderBy = 'score'; break;
-                case 'accuracy': orderBy = 'accuracy'; break;
-                case 'speed': orderBy = 'time_used'; break;
-            }
-            
-            const { data, error } = await supabase
-                .from('scores')
-                .select(`
-                    *,
-                    user_profiles (
-                        username
-                    )
-                `)
-                .order(orderBy, { ascending: tab === 'speed' })
-                .limit(20);
-            
-            if (error) {
-                content.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">加载失败: ' + error.message + '</div>';
-                return;
-            }
-            
-            if (data.length === 0) {
-                content.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">暂无排行榜数据</div>';
-                return;
-            }
-            
-            let html = '<table class="history-table">';
-            html += '<thead><tr><th>排名</th><th>玩家</th><th>模式</th><th>得分</th><th>正确率</th><th>用时</th><th>时间</th></tr></thead><tbody>';
-            
-            data.forEach((item, index) => {
-                const username = item.user_profiles?.username || item.player_name || '匿名玩家';
-                const isCurrentUser = currentUser && item.user_id === currentUser.id;
+            try {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
                 
-                html += `
-                    <tr ${isCurrentUser ? 'style="background-color: #e3f2fd;"' : ''}>
-                        <td>${index + 1}</td>
-                        <td>${username} ${isCurrentUser ? '(我)' : ''}</td>
-                        <td>${item.mode}</td>
-                        <td>${item.score}</td>
-                        <td>${item.accuracy}%</td>
-                        <td>${item.time_used}秒</td>
-                        <td>${new Date(item.created_at).toLocaleDateString()}</td>
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody></table>';
-            content.innerHTML = html;
+                const content = document.getElementById('leaderboard-content');
+                content.innerHTML = '<div style="text-align:center;padding:20px;">加载中...</div>';
+                
+                if (tab === 'myhistory') {
+                    await showMyLeaderboardHistory();
+                    return;
+                }
+                
+                let orderBy = '';
+                switch(tab) {
+                    case 'score': orderBy = 'score'; break;
+                    case 'accuracy': orderBy = 'accuracy'; break;
+                    case 'speed': orderBy = 'time_used'; break;
+                }
+                
+                // 简单查询，只从scores表获取数据
+                const { data, error } = await supabase
+                    .from('scores')
+                    .select('*')
+                    .order(orderBy, { ascending: tab === 'speed' })
+                    .limit(20);
+                
+                if (error) throw error;
+                
+                if (data.length === 0) {
+                    content.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">暂无排行榜数据</div>';
+                    return;
+                }
+                
+                let html = '<table class="history-table">';
+                html += '<thead><tr><th>排名</th><th>玩家</th><th>模式</th><th>得分</th><th>正确率</th><th>用时</th><th>时间</th></tr></thead><tbody>';
+                
+                data.forEach((item, index) => {
+                    const username = item.player_name || '匿名玩家';
+                    const isCurrentUser = currentUser && item.user_id === currentUser.id;
+                    
+                    html += `
+                        <tr ${isCurrentUser ? 'style="background-color: #e3f2fd;"' : ''}>
+                            <td>${index + 1}</td>
+                            <td>${username} ${isCurrentUser ? '(我)' : ''}</td>
+                            <td>${item.mode}</td>
+                            <td>${item.score}</td>
+                            <td>${item.accuracy}%</td>
+                            <td>${item.time_used}秒</td>
+                            <td>${new Date(item.created_at).toLocaleDateString()}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                content.innerHTML = html;
+            } catch (error) {
+                console.error('加载排行榜失败:', error);
+                document.getElementById('leaderboard-content').innerHTML = 
+                    '<div style="text-align:center;padding:40px;color:#666;">加载失败: ' + error.message + '</div>';
+            }
         }
         
         async function showMyLeaderboardHistory() {
@@ -1965,124 +2056,49 @@
                 return;
             }
             
-            const { data, error } = await supabase
-                .from('scores')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .order('created_at', { ascending: false })
-                .limit(10);
-            
-            if (error) {
+            try {
+                const { data, error } = await supabase
+                    .from('scores')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                
+                if (error) throw error;
+                
+                if (data.length === 0) {
+                    document.getElementById('leaderboard-content').innerHTML = 
+                        '<div style="text-align:center;padding:40px;color:#666;">暂无游戏记录</div>';
+                    return;
+                }
+                
+                let html = '<table class="history-table">';
+                html += '<thead><tr><th>序号</th><th>模式</th><th>得分</th><th>题数</th><th>正确率</th><th>用时</th><th>时间</th></tr></thead><tbody>';
+                
+                data.forEach((item, index) => {
+                    html += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item.mode}</td>
+                            <td>${item.score}</td>
+                            <td>${item.completed}</td>
+                            <td>${item.accuracy}%</td>
+                            <td>${item.time_used}秒</td>
+                            <td>${new Date(item.created_at).toLocaleDateString()}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                document.getElementById('leaderboard-content').innerHTML = html;
+            } catch (error) {
+                console.error('加载个人历史失败:', error);
                 document.getElementById('leaderboard-content').innerHTML = 
                     '<div style="text-align:center;padding:40px;color:#666;">加载失败: ' + error.message + '</div>';
-                return;
-            }
-            
-            if (data.length === 0) {
-                document.getElementById('leaderboard-content').innerHTML = 
-                    '<div style="text-align:center;padding:40px;color:#666;">暂无游戏记录</div>';
-                return;
-            }
-            
-            let html = '<table class="history-table">';
-            html += '<thead><tr><th>序号</th><th>模式</th><th>得分</th><th>题数</th><th>正确率</th><th>用时</th><th>时间</th></tr></thead><tbody>';
-            
-            data.forEach((item, index) => {
-                html += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${item.mode}</td>
-                        <td>${item.score}</td>
-                        <td>${item.completed}</td>
-                        <td>${item.accuracy}%</td>
-                        <td>${item.time_used}秒</td>
-                        <td>${new Date(item.created_at).toLocaleDateString()}</td>
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody></table>';
-            document.getElementById('leaderboard-content').innerHTML = html;
-        }
-        
-        // ==================== 错题本云端同步 ====================
-        async function syncWrongQuestions() {
-            if (!currentUser) {
-                showMessage('请先登录同步错题', 'info');
-                showAuthModal();
-                return;
-            }
-            
-            if (wrongQuestions.length === 0) {
-                showMessage('暂无错题需要同步', 'info');
-                return;
-            }
-            
-            showMessage('正在同步错题到云端...', 'info');
-            
-            // 准备同步数据
-            const syncData = wrongQuestions.map(question => ({
-                user_id: currentUser.id,
-                num1: question.num1,
-                num2: question.num2,
-                wrong_sum: question.wrongSum,
-                correct_sum: question.correctSum
-            }));
-            
-            const { data, error } = await supabase
-                .from('wrong_questions')
-                .insert(syncData);
-            
-            if (error) {
-                showMessage('同步失败: ' + error.message, 'error');
-                return;
-            }
-            
-            showMessage(`成功同步 ${syncData.length} 条错题到云端`, 'success');
-        }
-        
-        async function syncFromCloud() {
-            if (!currentUser) {
-                showMessage('请先登录同步错题', 'info');
-                showAuthModal();
-                return;
-            }
-            
-            showMessage('正在从云端加载错题...', 'info');
-            
-            const { data, error } = await supabase
-                .from('wrong_questions')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .order('created_at', { ascending: false });
-            
-            if (error) {
-                showMessage('加载失败: ' + error.message, 'error');
-                return;
-            }
-            
-            if (data.length === 0) {
-                showMessage('云端暂无错题记录', 'info');
-                return;
-            }
-            
-            // 转换格式
-            wrongQuestions = data.map(item => ({
-                num1: item.num1,
-                num2: item.num2,
-                wrongSum: item.wrong_sum,
-                correctSum: item.correct_sum,
-                timestamp: item.created_at
-            }));
-            
-            showMessage(`成功加载 ${data.length} 条云端错题`, 'success');
-            
-            // 刷新错题本显示
-            if (document.getElementById('wrongbook-modal').style.display === 'flex') {
-                showWrongBook();
             }
         }
         
+        // ==================== 错题本功能 ====================
         function recordWrongQuestion(num1, num2, target) {
             const wrongQuestion = {
                 num1: num1,
@@ -2114,6 +2130,100 @@
                 localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
             } catch (e) {
                 console.error('保存本地错题失败:', e);
+            }
+        }
+        
+        async function syncWrongQuestions() {
+            if (!currentUser) {
+                showMessage('请先登录同步错题', 'info');
+                showAuthModal();
+                return;
+            }
+            
+            if (wrongQuestions.length === 0) {
+                showMessage('暂无错题需要同步', 'info');
+                return;
+            }
+            
+            try {
+                showMessage('正在同步错题到云端...', 'info');
+                
+                // 准备同步数据（只同步今天的错题）
+                const today = new Date().toISOString().split('T')[0];
+                const todayQuestions = wrongQuestions.filter(q => 
+                    q.timestamp.includes(today)
+                );
+                
+                if (todayQuestions.length === 0) {
+                    showMessage('今天还没有错题需要同步', 'info');
+                    return;
+                }
+                
+                const syncData = todayQuestions.map(question => ({
+                    user_id: currentUser.id,
+                    num1: question.num1,
+                    num2: question.num2,
+                    wrong_sum: question.wrongSum,
+                    correct_sum: question.correctSum
+                }));
+                
+                const { data, error } = await supabase
+                    .from('wrong_questions')
+                    .insert(syncData);
+                
+                if (error) throw error;
+                
+                showMessage(`成功同步 ${syncData.length} 条错题到云端`, 'success');
+            } catch (error) {
+                console.error('同步错题失败:', error);
+                showMessage('同步失败: ' + error.message, 'error');
+            }
+        }
+        
+        async function syncFromCloud() {
+            if (!currentUser) {
+                showMessage('请先登录同步错题', 'info');
+                showAuthModal();
+                return;
+            }
+            
+            try {
+                showMessage('正在从云端加载错题...', 'info');
+                
+                const { data, error } = await supabase
+                    .from('wrong_questions')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (data.length === 0) {
+                    showMessage('云端暂无错题记录', 'info');
+                    return;
+                }
+                
+                // 转换格式
+                wrongQuestions = data.map(item => ({
+                    num1: item.num1,
+                    num2: item.num2,
+                    wrongSum: item.wrong_sum,
+                    correctSum: item.correct_sum,
+                    timestamp: item.created_at
+                }));
+                
+                // 保存到本地
+                saveWrongQuestionsToLocal();
+                
+                showMessage(`成功加载 ${data.length} 条云端错题`, 'success');
+                
+                // 刷新错题本显示
+                if (document.getElementById('wrongbook-modal').style.display === 'flex') {
+                    showWrongBook();
+                }
+            } catch (error) {
+                console.error('加载云端错题失败:', error);
+                showMessage('加载失败: ' + error.message, 'error');
             }
         }
         
@@ -2188,6 +2298,39 @@
             }
             
             return stats;
+        }
+        
+        // ==================== 成就系统 ====================
+        function showAchievements() {
+            const container = document.getElementById('achievements-grid');
+            container.innerHTML = '';
+            
+            const achievementList = [
+                { id: 'first_win', name: '首战告捷', desc: '完成第一局游戏', icon: '🥇', achieved: score > 0 },
+                { id: 'fast_5', name: '速度之星', desc: '5秒内完成一题', icon: '⚡', achieved: gameHistory.some(r => r.time < 5 && r.isCorrect) },
+                { id: 'accuracy_90', name: '准确大师', desc: '正确率达到90%', icon: '🎯', achieved: (correctCount / totalAttempts) >= 0.9 },
+                { id: 'complete_30', name: '完成挑战', desc: '完成30题模式', icon: '🏆', achieved: currentMode === 'standard' && completedQuestions >= 30 },
+                { id: 'cloud_user', name: '云端玩家', desc: '登录云端账户', icon: '☁️', achieved: !!currentUser },
+                { id: 'score_100', name: '百分达人', desc: '单局得分达到100分', icon: '💯', achieved: score >= 100 },
+                { id: 'time_master', name: '时间管理', desc: '在挑战模式下完成20题', icon: '⏱️', achieved: currentMode === 'challenge' && completedQuestions >= 20 },
+                { id: 'practice_master', name: '练习达人', desc: '练习模式完成50题', icon: '📚', achieved: currentMode === 'practice' && completedQuestions >= 50 }
+            ];
+            
+            achievementList.forEach(ach => {
+                const card = document.createElement('div');
+                card.className = `achievement-card ${ach.achieved ? '' : 'locked'}`;
+                card.innerHTML = `
+                    <div class="achievement-icon">${ach.icon}</div>
+                    <div class="achievement-name">${ach.name}</div>
+                    <div class="achievement-desc">${ach.desc}</div>
+                    <div style="margin-top: 10px; font-size: 0.8em; color: ${ach.achieved ? '#4CAF50' : '#999'}">
+                        ${ach.achieved ? '✓ 已获得' : '🔒 未获得'}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            document.getElementById('achievements-modal').style.display = 'flex';
         }
         
         // ==================== 通用工具函数 ====================
@@ -2276,82 +2419,7 @@
             }, duration * 1000);
         }
         
-        // ==================== 成就系统 ====================
-        function showAchievements() {
-            const container = document.getElementById('achievements-grid');
-            container.innerHTML = '';
-            
-            const achievementList = [
-                { id: 'first_win', name: '首战告捷', desc: '完成第一局游戏', icon: '🥇', achieved: score > 0 },
-                { id: 'fast_5', name: '速度之星', desc: '5秒内完成一题', icon: '⚡', achieved: gameHistory.some(r => r.time < 5 && r.isCorrect) },
-                { id: 'accuracy_90', name: '准确大师', desc: '正确率达到90%', icon: '🎯', achieved: (correctCount / totalAttempts) >= 0.9 },
-                { id: 'complete_30', name: '完成挑战', desc: '完成30题模式', icon: '🏆', achieved: currentMode === 'standard' && completedQuestions >= 30 },
-                { id: 'cloud_user', name: '云端玩家', desc: '登录云端账户', icon: '☁️', achieved: !!currentUser },
-                { id: 'score_100', name: '百分达人', desc: '单局得分达到100分', icon: '💯', achieved: score >= 100 },
-                { id: 'time_master', name: '时间管理', desc: '在挑战模式下完成20题', icon: '⏱️', achieved: currentMode === 'challenge' && completedQuestions >= 20 },
-                { id: 'practice_master', name: '练习达人', desc: '练习模式完成50题', icon: '📚', achieved: currentMode === 'practice' && completedQuestions >= 50 }
-            ];
-            
-            achievementList.forEach(ach => {
-                const card = document.createElement('div');
-                card.className = `achievement-card ${ach.achieved ? '' : 'locked'}`;
-                card.innerHTML = `
-                    <div class="achievement-icon">${ach.icon}</div>
-                    <div class="achievement-name">${ach.name}</div>
-                    <div class="achievement-desc">${ach.desc}</div>
-                    <div style="margin-top: 10px; font-size: 0.8em; color: ${ach.achieved ? '#4CAF50' : '#999'}">
-                        ${ach.achieved ? '✓ 已获得' : '🔒 未获得'}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-            
-            document.getElementById('achievements-modal').style.display = 'flex';
-        }
-        
-        // ==================== 初始化 ====================
-        async function init() {
-            // 初始化CSS动画
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes shake {
-                    0%, 100% { transform: translateX(0); }
-                    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-                    20%, 40%, 60%, 80% { transform: translateX(5px); }
-                }
-                .time-warning {
-                    animation: blink 1s infinite;
-                    color: #ff4444 !important;
-                }
-                @keyframes blink {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // 检查登录状态
-            const isLoggedIn = await checkAuth();
-            if (!isLoggedIn) {
-                console.log('未登录，游戏功能受限');
-            } else {
-                console.log('已登录:', currentUser.email);
-            }
-            
-            // 加载本地错题
-            loadWrongQuestionsFromLocal();
-            
-            // 默认选择标准模式
-            selectMode('standard');
-            
-            console.log('🎮 数学加法消消乐 - 云端版已加载');
-            console.log('📊 功能：用户认证 + 云端同步 + 实时排行榜 + 错题本同步');
-            
-            // 设置开始游戏按钮的事件监听器
-            document.getElementById('start-btn').addEventListener('click', checkLoginBeforeStart);
-        }
-        
-        // 页面加载完成后初始化
+        // ==================== 页面加载 ====================
         window.onload = init;
     </script>
 </body>
