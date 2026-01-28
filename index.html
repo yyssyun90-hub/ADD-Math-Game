@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数学加法消消乐 - 教学优化版</title>
     <style>
-        /* 所有CSS样式代码保持不变，与您提供的原始代码相同 */
+        /* 重置样式 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
         
+        /* 基础布局 */
         body {
             font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
             display: flex;
@@ -21,9 +22,497 @@
             overflow-x: hidden;
         }
         
-        /* ... 所有CSS样式保持不变 ... */
+        /* 侧边栏 */
+        .sidebar {
+            width: 220px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
         
-        /* 只在最后添加缺失的CSS样式 */
+        .sidebar-btn {
+            padding: 15px;
+            background: linear-gradient(to right, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+        }
+        
+        .sidebar-btn.secondary {
+            background: linear-gradient(to right, #2196F3, #0b7dda);
+        }
+        
+        .sidebar-btn.achievement {
+            background: linear-gradient(to right, #FFD700, #FFA500);
+        }
+        
+        .sidebar-btn.wrong {
+            background: linear-gradient(to right, #FF6B6B, #FF4757);
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(to right, #FFD700, #FF8C00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        /* 游戏模式选择 */
+        .mode-selection {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .mode-btn {
+            padding: 15px;
+            background: #f8f9fa;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-color: #4CAF50;
+            color: #333;
+        }
+        
+        .mode-btn .mode-title {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        
+        .mode-btn .mode-desc {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        /* 游戏设置 */
+        .game-setting {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border-left: 5px solid #4CAF50;
+        }
+        
+        .setting-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .setting-group label {
+            font-weight: bold;
+            color: #555;
+            min-width: 120px;
+        }
+        
+        .setting-group input, .setting-group select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            min-width: 150px;
+            background: white;
+        }
+        
+        /* 游戏信息头部 */
+        .game-header {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .info-item {
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .info-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        /* 目标和 */
+        .target-container {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+            animation: targetGlow 2s infinite alternate;
+        }
+        
+        @keyframes targetGlow {
+            0% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.5); }
+            100% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.8); }
+        }
+        
+        .target-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .target-number {
+            background: #FF6B6B;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2em;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 8px rgba(255,107,107,0.4);
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .target-label {
+            font-size: 1.3em;
+            color: #333;
+            font-weight: normal;
+        }
+        
+        /* 游戏网格 */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 3px solid #e9ecef;
+        }
+        
+        .number-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 12px;
+            padding: 30px 15px;
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        .number-card.selected {
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            box-shadow: 0 0 20px rgba(102, 166, 255, 0.6);
+            border: 3px solid #4CAF50;
+        }
+        
+        .number-card.disappear {
+            animation: disappear 0.5s forwards;
+        }
+        
+        @keyframes disappear {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        
+        /* 控制按钮 */
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 25px;
+            background: linear-gradient(to right, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #2196F3, #0b7dda);
+            padding: 18px 35px;
+            font-size: 1.3em;
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .modal-title {
+            font-size: 1.8em;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 表格样式 */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .history-table th {
+            background: #4CAF50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .history-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .history-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .history-table tr:hover {
+            background: #f1f1f1;
+        }
+        
+        /* 游戏结束弹窗 */
+        .game-over {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        /* 进度条 */
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #4CAF50, #8BC34A);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+        
+        /* 音效开关 */
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        /* 匹配反馈 */
+        .match-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4em;
+            font-weight: bold;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.5s;
+            text-shadow: 0 0 20px currentColor;
+        }
+        
+        /* 排行榜选项卡 */
         .tabs {
             display: flex;
             gap: 10px;
@@ -52,47 +541,94 @@
             border-color: #4CAF50;
         }
         
-        .result-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin: 20px 0;
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                padding: 15px;
+                gap: 10px;
+                overflow-x: auto;
+            }
+            
+            .sidebar-btn {
+                min-width: 140px;
+                padding: 12px;
+            }
+            
+            .mode-selection {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .game-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
         
-        .stat-item {
-            text-align: center;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+        @media (max-width: 768px) {
+            .game-header {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .game-grid {
+                grid-template-columns: repeat(3, 1fr);
+                padding: 15px;
+                gap: 10px;
+            }
+            
+            .number-card {
+                padding: 20px 10px;
+                font-size: 1.5em;
+            }
+            
+            .target-number {
+                width: 60px;
+                height: 60px;
+                font-size: 1.8em;
+            }
         }
         
-        .input-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        @media (max-width: 480px) {
+            .mode-selection {
+                grid-template-columns: 1fr;
+            }
+            
+            .game-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
-        
-        /* 其他CSS样式保持不变 */
     </style>
 </head>
 <body>
-    <!-- HTML结构保持不变，与您提供的原始代码相同 -->
     <!-- 左侧功能栏 -->
     <div class="sidebar">
         <button class="sidebar-btn" onclick="showHistory()">
-            📝 历史记录<br>History
+            📝 历史记录
         </button>
         <button class="sidebar-btn secondary" onclick="showStatistics()">
-            📊 统计<br>Statistics
+            📊 统计
         </button>
         <button class="sidebar-btn achievement" onclick="showAchievements()">
-            ⭐ 成就<br>Achievements
+            ⭐ 成就
         </button>
         <button class="sidebar-btn wrong" onclick="showWrongBook()">
-            📖 错题本<br>Wrong Book
+            📖 错题本
         </button>
         <button class="sidebar-btn" onclick="showLeaderboard()">
-            🏆 排行榜<br>Leaderboard
+            🏆 排行榜
         </button>
     </div>
     
@@ -108,19 +644,19 @@
             <div class="mode-selection">
                 <div class="mode-btn active" data-mode="standard" onclick="selectMode('standard')">
                     <div class="mode-title">📚 标准模式</div>
-                    <div class="mode-desc">完成30题<br>比拼用时</div>
+                    <div class="mode-desc">完成30题，比拼用时</div>
                 </div>
                 <div class="mode-btn" data-mode="challenge" onclick="selectMode('challenge')">
                     <div class="mode-title">⚡ 挑战模式</div>
-                    <div class="mode-desc">90秒时间<br>比拼题数</div>
+                    <div class="mode-desc">90秒时间，比拼题数</div>
                 </div>
                 <div class="mode-btn" data-mode="practice" onclick="selectMode('practice')">
                     <div class="mode-title">🎯 练习模式</div>
-                    <div class="mode-desc">无时间限制<br>专心学习</div>
+                    <div class="mode-desc">无时间限制，专心学习</div>
                 </div>
                 <div class="mode-btn" data-mode="custom" onclick="selectMode('custom')">
                     <div class="mode-title">⚙️ 自定义</div>
-                    <div class="mode-desc">自设参数<br>灵活练习</div>
+                    <div class="mode-desc">自设参数，灵活练习</div>
                 </div>
             </div>
             
@@ -144,7 +680,7 @@
                 </div>
             </div>
             
-            <!-- 游戏信息（开始后显示） -->
+            <!-- 游戏信息 -->
             <div class="game-header" id="game-info" style="display: none;">
                 <div class="info-item">
                     <div class="info-label">得分</div>
@@ -222,30 +758,13 @@
     <div class="modal" id="statistics-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">📊 统计分析 / Statistics</h2>
+                <h2 class="modal-title">📊 统计分析</h2>
                 <button class="close-btn" onclick="closeModal('statistics-modal')">×</button>
             </div>
-            <div class="chart-container">
-                <div class="chart-box">
-                    <div class="chart-title">数字范围正确率</div>
-                    <div id="range-chart"></div>
+            <div id="statistics-content">
+                <div style="padding: 20px;">
+                    <p id="stats-text">加载统计信息中...</p>
                 </div>
-                <div class="chart-box">
-                    <div class="chart-title">答题速度分布</div>
-                    <div id="speed-chart"></div>
-                </div>
-                <div class="chart-box">
-                    <div class="chart-title">薄弱环节分析</div>
-                    <div id="weakness-chart"></div>
-                </div>
-                <div class="chart-box">
-                    <div class="chart-title">学习进步曲线</div>
-                    <div id="progress-chart"></div>
-                </div>
-            </div>
-            <div class="controls" style="margin-top: 20px;">
-                <button class="btn" onclick="exportStatistics()">导出统计数据</button>
-                <button class="btn" onclick="printReport()">打印报告</button>
             </div>
         </div>
     </div>
@@ -260,10 +779,6 @@
             <div class="achievements-grid" id="achievements-grid">
                 <!-- 动态填充 -->
             </div>
-            <div class="controls" style="margin-top: 20px;">
-                <button class="btn" onclick="resetAchievements()">重置成就</button>
-                <button class="btn" onclick="shareAchievements()">分享成就</button>
-            </div>
         </div>
     </div>
     
@@ -277,15 +792,10 @@
             <div class="wrong-questions-list" id="wrong-questions-list">
                 <!-- 动态填充 -->
             </div>
-            <div class="controls" style="margin-top: 20px;">
-                <button class="btn" onclick="exportWrongBook()">导出错题本</button>
-                <button class="btn" onclick="practiceWrongQuestions()">练习错题</button>
-                <button class="btn" onclick="clearWrongBook()">清空错题本</button>
-            </div>
         </div>
     </div>
     
-    <!-- 排行榜弹窗 - 已移除综合榜 -->
+    <!-- 排行榜弹窗 - 移除综合榜 -->
     <div class="modal" id="leaderboard-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -368,30 +878,10 @@
         
         // 游戏配置
         const MODE_CONFIG = {
-            standard: {
-                questions: 30,
-                time: null,
-                hasTimeLimit: false,
-                description: "完成30题，比拼总用时"
-            },
-            challenge: {
-                questions: null,
-                time: 90,
-                hasTimeLimit: true,
-                description: "90秒内完成最多题数"
-            },
-            practice: {
-                questions: null,
-                time: null,
-                hasTimeLimit: false,
-                description: "无限制练习模式"
-            },
-            custom: {
-                questions: 20,
-                time: 60,
-                hasTimeLimit: true,
-                description: "自定义设置"
-            }
+            standard: { questions: 30, time: null, hasTimeLimit: false },
+            challenge: { questions: null, time: 90, hasTimeLimit: true },
+            practice: { questions: null, time: null, hasTimeLimit: false },
+            custom: { questions: 20, time: 60, hasTimeLimit: true }
         };
         
         const RANGE_CONFIG = {
@@ -404,11 +894,13 @@
         function selectMode(mode) {
             currentMode = mode;
             
+            // 更新UI
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
             
+            // 显示/隐藏自定义设置
             const customSettings = document.getElementById('custom-settings');
             if (mode === 'custom') {
                 customSettings.style.display = 'flex';
@@ -416,6 +908,7 @@
                 customSettings.style.display = 'none';
             }
             
+            // 更新按钮文本
             const startBtn = document.getElementById('start-btn');
             if (mode === 'practice') {
                 startBtn.textContent = '🎯 开始练习';
@@ -425,18 +918,21 @@
         }
         
         function startGame() {
+            // 重置游戏状态
             resetGame();
             
+            // 获取配置
             const range = document.getElementById('number-range').value;
-            const config = RANGE_CONFIG[range];
             const modeConfig = MODE_CONFIG[currentMode];
             
+            // 如果是自定义模式，获取用户设置
             if (currentMode === 'custom') {
                 modeConfig.questions = parseInt(document.getElementById('custom-questions').value) || 20;
                 modeConfig.time = parseInt(document.getElementById('custom-time').value) || 60;
                 timeLeft = modeConfig.time;
             }
             
+            // 显示游戏界面
             document.getElementById('game-info').style.display = 'grid';
             document.getElementById('progress-container').style.display = 'block';
             document.getElementById('target-container').style.display = 'block';
@@ -444,13 +940,18 @@
             document.querySelector('.mode-selection').style.display = 'none';
             document.querySelector('.game-setting').style.display = 'none';
             
+            // 设置网格
             const gameGrid = document.getElementById('game-grid');
             gameGrid.style.display = 'grid';
-            gameGrid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+            gameGrid.innerHTML = '';
             
+            // 生成初始目标
             generateNewTarget();
+            
+            // 生成数字网格
             generateNumberGrid();
             
+            // 根据模式设置计时器
             if (modeConfig.hasTimeLimit) {
                 timeLeft = modeConfig.time;
                 document.getElementById('time').textContent = timeLeft;
@@ -464,6 +965,7 @@
                 timerInterval = setInterval(updateElapsedTime, 1000);
             }
             
+            // 启动提示冷却计时器
             hintInterval = setInterval(updateHintCooldown, 1000);
             
             gameActive = true;
@@ -479,14 +981,17 @@
             gameHistory = [];
             gameActive = false;
             
+            // 清除计时器
             if (timerInterval) clearInterval(timerInterval);
             if (hintInterval) clearInterval(hintInterval);
             
+            // 重置显示
             document.getElementById('score').textContent = '0';
             document.getElementById('completed').textContent = '0/' + (MODE_CONFIG[currentMode].questions || '∞');
             document.getElementById('accuracy').textContent = '100%';
             document.getElementById('progress-bar').style.width = '100%';
             
+            // 清空网格
             const gameGrid = document.getElementById('game-grid');
             gameGrid.innerHTML = '';
         }
@@ -497,27 +1002,24 @@
             
             let newTarget;
             if (range === '0-9') {
-                newTarget = Math.floor(Math.random() * 10) + 5;
+                newTarget = Math.floor(Math.random() * 10) + 5; // 5-14
             } else if (range === '0-18') {
-                newTarget = Math.floor(Math.random() * 13) + 6;
+                newTarget = Math.floor(Math.random() * 13) + 6; // 6-18
             } else {
-                newTarget = Math.floor(Math.random() * 11) + 8;
+                newTarget = Math.floor(Math.random() * 11) + 8; // 8-18
             }
             
             currentTarget = newTarget;
             document.getElementById('target-sum').textContent = currentTarget;
-            
-            return currentTarget;
         }
         
         function generateNumberGrid() {
             const gameGrid = document.getElementById('game-grid');
-            gameGrid.innerHTML = '';
-            
             const range = document.getElementById('number-range').value;
             const config = RANGE_CONFIG[range];
             const numbers = [];
             
+            // 生成可匹配的数字对
             for (let i = 0; i < 12; i++) {
                 const num1 = Math.floor(Math.random() * (currentTarget + 1));
                 const num2 = currentTarget - num1;
@@ -533,28 +1035,20 @@
                 }
             }
             
+            // 添加一个随机数字
             numbers.push(Math.floor(Math.random() * (config.max - config.min + 1)) + config.min);
             
+            // 打乱数组
             shuffleArray(numbers);
             
+            // 创建卡片
             numbers.forEach((number, index) => {
                 const card = document.createElement('div');
                 card.className = 'number-card';
                 card.textContent = number;
                 card.dataset.value = number;
-                card.dataset.index = index;
                 
                 card.addEventListener('click', () => selectCard(card));
-                card.addEventListener('mouseenter', () => {
-                    if (!card.classList.contains('selected') && !card.classList.contains('disappear')) {
-                        card.style.transform = 'translateY(-3px) scale(1.03)';
-                    }
-                });
-                card.addEventListener('mouseleave', () => {
-                    if (!card.classList.contains('selected') && !card.classList.contains('disappear')) {
-                        card.style.transform = '';
-                    }
-                });
                 
                 gameGrid.appendChild(card);
             });
@@ -606,6 +1100,7 @@
             const isCorrect = sum === currentTarget;
             const responseTime = (new Date() - startCheckTime) / 1000;
             
+            // 记录历史
             gameHistory.push({
                 target: currentTarget,
                 num1: num1,
@@ -616,55 +1111,57 @@
             });
             
             if (isCorrect) {
+                // 正确
                 correctCount++;
                 completedQuestions++;
-                eliminateCards();
                 playSound('success');
                 showFeedback('✓ 正确!', 'success');
                 
+                // 消除卡片
+                selectedCards.forEach(card => {
+                    card.classList.add('disappear');
+                });
+                
+                setTimeout(() => {
+                    selectedCards.forEach(card => {
+                        card.remove();
+                    });
+                }, 500);
+                
+                // 更新分数
                 score += 10;
                 if (responseTime < 3) score += 5;
                 
+                // 更新显示
                 updateDisplay();
                 
+                // 检查是否完成标准模式
                 if (currentMode === 'standard' && completedQuestions >= MODE_CONFIG.standard.questions) {
                     endGame('complete');
                     return;
                 }
                 
+                // 生成新目标
                 setTimeout(() => {
                     generateNewTarget();
                     refreshNumbers();
-                }, 500);
+                }, 800);
                 
             } else {
+                // 错误
                 playSound('error');
                 showFeedback('✗ 错误', 'error');
                 
+                // 记录错题
                 recordWrongQuestion(num1, num2, currentTarget);
                 
+                // 取消选中
                 selectedCards.forEach(card => {
                     card.classList.remove('selected');
-                    card.style.animation = 'shake 0.5s';
-                    setTimeout(() => {
-                        card.style.animation = '';
-                    }, 500);
                 });
             }
             
             selectedCards = [];
-        }
-        
-        function eliminateCards() {
-            selectedCards.forEach(card => {
-                card.classList.add('disappear');
-            });
-            
-            setTimeout(() => {
-                selectedCards.forEach(card => {
-                    card.remove();
-                });
-            }, 500);
         }
         
         function updateTimer() {
@@ -673,10 +1170,12 @@
             timeLeft--;
             document.getElementById('time').textContent = timeLeft;
             
+            // 更新进度条
             const modeConfig = MODE_CONFIG[currentMode];
             const progress = (timeLeft / modeConfig.time) * 100;
             document.getElementById('progress-bar').style.width = `${progress}%`;
             
+            // 时间预警
             if (timeLeft <= 10) {
                 document.getElementById('time-container').classList.add('time-warning');
                 if (timeLeft <= 5 && timeLeft > 0) {
@@ -684,6 +1183,7 @@
                 }
             }
             
+            // 时间到
             if (timeLeft <= 0) {
                 endGame('timeout');
             }
@@ -695,6 +1195,7 @@
             const elapsed = Math.floor((new Date() - startTime) / 1000);
             document.getElementById('time').textContent = elapsed + '秒';
             
+            // 更新进度条（标准模式）
             if (currentMode === 'standard') {
                 const progress = (completedQuestions / MODE_CONFIG.standard.questions) * 100;
                 document.getElementById('progress-bar').style.width = `${progress}%`;
@@ -704,6 +1205,7 @@
         function updateDisplay() {
             document.getElementById('score').textContent = score;
             
+            // 更新完成题数显示
             const modeConfig = MODE_CONFIG[currentMode];
             if (modeConfig.questions) {
                 document.getElementById('completed').textContent = `${completedQuestions}/${modeConfig.questions}`;
@@ -711,10 +1213,9 @@
                 document.getElementById('completed').textContent = completedQuestions;
             }
             
+            // 更新正确率
             const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
             document.getElementById('accuracy').textContent = accuracy + '%';
-            
-            checkAchievements();
         }
         
         function endGame(reason) {
@@ -725,11 +1226,13 @@
             const elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
             const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
             
+            // 更新结果显示
             document.getElementById('final-score').textContent = score;
             document.getElementById('final-completed').textContent = completedQuestions;
             document.getElementById('final-time').textContent = elapsedTime + '秒';
             document.getElementById('final-accuracy').textContent = accuracy + '%';
             
+            // 根据游戏结果设置标题
             const titleMap = {
                 'complete': '🎉 恭喜完成30题！',
                 'timeout': '⏰ 时间到！',
@@ -737,8 +1240,10 @@
             };
             document.getElementById('result-title').textContent = titleMap[reason] || '🎉 游戏结束!';
             
+            // 显示游戏结束界面
             document.getElementById('game-over').style.display = 'flex';
             
+            // 播放音效
             if (reason === 'complete') {
                 playSound('win');
             } else {
@@ -809,7 +1314,6 @@
         
         function refreshNumbers() {
             playSound('refresh');
-            showMessage('刷新数字中...', 'info');
             
             const gameGrid = document.getElementById('game-grid');
             gameGrid.style.opacity = '0.5';
@@ -823,10 +1327,7 @@
         function showFeedback(text, type) {
             const feedback = document.getElementById('match-feedback');
             feedback.textContent = text;
-            feedback.style.color = type === 'success' ? '#4CAF50' : 
-                                  type === 'error' ? '#ff4444' : 
-                                  type === 'bonus' ? '#FFD700' :
-                                  type === 'win' ? '#9C27B0' : '#2196F3';
+            feedback.style.color = type === 'success' ? '#4CAF50' : '#ff4444';
             feedback.style.opacity = '1';
             
             setTimeout(() => {
@@ -849,7 +1350,7 @@
                         <td>${record.target}</td>
                         <td>${record.num1}</td>
                         <td>${record.num2}</td>
-                        <td class="${record.isCorrect ? 'correct-true' : 'correct-false'}">
+                        <td style="color: ${record.isCorrect ? '#4CAF50' : '#ff4444'}; font-weight: bold;">
                             ${record.isCorrect ? '✓ 正确' : '✗ 错误'}
                         </td>
                         <td>${record.time.toFixed(2)}</td>
@@ -871,28 +1372,20 @@
         
         function showAllHistory() {
             const allHistory = JSON.parse(localStorage.getItem('mathGameAllHistory')) || [];
-            
-            if (allHistory.length === 0) {
-                alert('暂无历史游戏记录');
-                return;
-            }
-            
             alert(`您共有 ${allHistory.length} 条历史游戏记录`);
         }
         
         // ==================== 统计功能 ====================
         function showStatistics() {
             const stats = calculateStatistics();
+            const content = document.getElementById('statistics-content');
             
-            document.getElementById('range-chart').innerHTML = `
+            content.innerHTML = `
                 <div style="padding: 20px;">
-                    <p>0-9范围: ${stats.range1.correct}/${stats.range1.total} (${stats.range1.rate}%)</p>
-                    <p>10-18范围: ${stats.range2.correct}/${stats.range2.total} (${stats.range2.rate}%)</p>
-                </div>
-            `;
-            
-            document.getElementById('speed-chart').innerHTML = `
-                <div style="padding: 20px;">
+                    <h3>游戏统计</h3>
+                    <p>总尝试次数: ${stats.totalAttempts}</p>
+                    <p>正确次数: ${stats.correctCount}</p>
+                    <p>正确率: ${stats.accuracy}%</p>
                     <p>平均答题时间: ${stats.avgTime.toFixed(2)}秒</p>
                     <p>最快答题: ${stats.minTime.toFixed(2)}秒</p>
                     <p>最慢答题: ${stats.maxTime.toFixed(2)}秒</p>
@@ -904,8 +1397,9 @@
         
         function calculateStatistics() {
             const stats = {
-                range1: { correct: 0, total: 0, rate: 0 },
-                range2: { correct: 0, total: 0, rate: 0 },
+                totalAttempts: gameHistory.length,
+                correctCount: correctCount,
+                accuracy: totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100,
                 avgTime: 0,
                 minTime: Infinity,
                 maxTime: 0
@@ -914,119 +1408,16 @@
             let totalTime = 0;
             
             gameHistory.forEach(record => {
-                if (record.target <= 9) {
-                    stats.range1.total++;
-                    if (record.isCorrect) stats.range1.correct++;
-                } else {
-                    stats.range2.total++;
-                    if (record.isCorrect) stats.range2.correct++;
-                }
-                
                 totalTime += record.time;
                 if (record.time < stats.minTime) stats.minTime = record.time;
                 if (record.time > stats.maxTime) stats.maxTime = record.time;
             });
-            
-            if (stats.range1.total > 0) {
-                stats.range1.rate = Math.round((stats.range1.correct / stats.range1.total) * 100);
-            }
-            if (stats.range2.total > 0) {
-                stats.range2.rate = Math.round((stats.range2.correct / stats.range2.total) * 100);
-            }
             
             if (gameHistory.length > 0) {
                 stats.avgTime = totalTime / gameHistory.length;
             }
             
             return stats;
-        }
-        
-        function exportStatistics() {
-            const stats = calculateStatistics();
-            const data = {
-                gameMode: currentMode,
-                gameHistory: gameHistory,
-                statistics: stats,
-                timestamp: new Date().toISOString()
-            };
-            
-            const dataStr = JSON.stringify(data, null, 2);
-            downloadFile(dataStr, 'statistics.json');
-            showMessage('统计数据已导出', 'success');
-        }
-        
-        // ==================== 成就系统 ====================
-        function showAchievements() {
-            loadAchievements();
-            const container = document.getElementById('achievements-grid');
-            container.innerHTML = '';
-            
-            const achievementList = [
-                { id: 'fast_5', name: '速度之星', desc: '5秒内完成一题', icon: '⚡', check: () => gameHistory.some(r => r.time < 5 && r.isCorrect) },
-                { id: 'streak_5', name: '连续答对', desc: '连续答对5题', icon: '🔥', check: () => checkStreak(5) },
-                { id: 'accuracy_90', name: '准确大师', desc: '正确率达到90%', icon: '🎯', check: () => (correctCount / totalAttempts) >= 0.9 },
-                { id: 'complete_30', name: '完成挑战', desc: '完成30题模式', icon: '🏆', check: () => currentMode === 'standard' && completedQuestions >= 30 },
-                { id: 'fast_30', name: '快速完成', desc: '30秒完成30题', icon: '🚀', check: () => false },
-                { id: 'no_hint', name: '独立完成', desc: '全程不使用提示', icon: '💪', check: () => true }
-            ];
-            
-            achievementList.forEach(ach => {
-                const achieved = achievements[ach.id] || ach.check();
-                if (achieved) achievements[ach.id] = true;
-                
-                const card = document.createElement('div');
-                card.className = `achievement-card ${achieved ? '' : 'locked'}`;
-                card.innerHTML = `
-                    <div class="achievement-icon">${ach.icon}</div>
-                    <div class="achievement-name">${ach.name}</div>
-                    <div class="achievement-desc">${ach.desc}</div>
-                    <div style="margin-top: 10px; font-size: 0.8em; color: ${achieved ? '#4CAF50' : '#999'}">
-                        ${achieved ? '✓ 已获得' : '🔒 未获得'}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-            
-            document.getElementById('achievements-modal').style.display = 'flex';
-        }
-        
-        function loadAchievements() {
-            achievements = JSON.parse(localStorage.getItem('mathGameAchievements')) || {};
-        }
-        
-        function saveAchievements() {
-            localStorage.setItem('mathGameAchievements', JSON.stringify(achievements));
-        }
-        
-        function checkAchievements() {
-            loadAchievements();
-            
-            if (gameHistory.some(r => r.time < 5 && r.isCorrect)) {
-                achievements.fast_5 = true;
-            }
-            
-            if (checkStreak(5)) {
-                achievements.streak_5 = true;
-            }
-            
-            if (totalAttempts > 0 && (correctCount / totalAttempts) >= 0.9) {
-                achievements.accuracy_90 = true;
-            }
-            
-            saveAchievements();
-        }
-        
-        function checkStreak(count) {
-            let streak = 0;
-            for (let i = gameHistory.length - 1; i >= 0; i--) {
-                if (gameHistory[i].isCorrect) {
-                    streak++;
-                    if (streak >= count) return true;
-                } else {
-                    break;
-                }
-            }
-            return false;
         }
         
         // ==================== 错题本功能 ====================
@@ -1078,22 +1469,7 @@
             localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
         }
         
-        function exportWrongBook() {
-            loadWrongQuestions();
-            
-            let content = '数学加法错题本\n';
-            content += '生成时间：' + new Date().toLocaleString() + '\n\n';
-            
-            wrongQuestions.forEach((q, i) => {
-                content += `${i + 1}. ${q.num1} + ${q.num2} = ${q.wrongSum} (错误)\n`;
-                content += `   正确答案：${q.num1} + ${q.num2} = ${q.correctSum}\n\n`;
-            });
-            
-            downloadFile(content, '错题本.txt');
-            showMessage('错题本已导出', 'success');
-        }
-        
-        // ==================== 排行榜功能 - 已移除综合榜 ====================
+        // ==================== 排行榜功能 ====================
         function showLeaderboard() {
             document.getElementById('leaderboard-modal').style.display = 'flex';
             showLeaderboardTab('speed');
@@ -1190,16 +1566,15 @@
                 mode: currentMode,
                 range: document.getElementById('number-range').value,
                 date: new Date().toLocaleDateString('zh-CN'),
-                timestamp: new Date().toISOString(),
-                history: gameHistory
+                timestamp: new Date().toISOString()
             };
             
+            // 保存到个人历史
             let allHistory = JSON.parse(localStorage.getItem('mathGameAllHistory')) || [];
             allHistory.push(gameRecord);
-            allHistory.sort((a, b) => b.score - a.score);
-            if (allHistory.length > 100) allHistory = allHistory.slice(0, 100);
             localStorage.setItem('mathGameAllHistory', JSON.stringify(allHistory));
             
+            // 保存到相应排行榜
             if (currentMode === 'standard') {
                 saveToLeaderboard('accuracy', gameRecord);
             } else if (currentMode === 'challenge') {
@@ -1208,7 +1583,7 @@
             
             showMessage('成绩保存成功！', 'success');
             nameInput.value = '';
-            closeModal('game-over');
+            document.getElementById('game-over').style.display = 'none';
         }
         
         function saveToLeaderboard(type, record) {
@@ -1248,25 +1623,13 @@
                 border-radius: 10px;
                 z-index: 3000;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                animation: slideDown 0.3s ease-out;
             `;
             
             document.body.appendChild(message);
             
             setTimeout(() => {
-                message.style.animation = 'slideUp 0.3s ease-out';
-                setTimeout(() => message.remove(), 300);
+                message.remove();
             }, 2000);
-        }
-        
-        function downloadFile(content, filename) {
-            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            link.click();
-            URL.revokeObjectURL(url);
         }
         
         // ==================== 音效系统 ====================
@@ -1282,39 +1645,27 @@
                         break;
                     case 'success':
                         playBeep(audioContext, 1200, 0.2, 0.3);
-                        setTimeout(() => playBeep(audioContext, 1500, 0.1, 0.2), 150);
                         break;
                     case 'error':
                         playBeep(audioContext, 400, 0.3, 0.3);
-                        setTimeout(() => playBeep(audioContext, 300, 0.2, 0.2), 200);
                         break;
                     case 'start':
                         playBeep(audioContext, 1000, 0.2, 0.2);
-                        setTimeout(() => playBeep(audioContext, 1200, 0.2, 0.2), 200);
-                        setTimeout(() => playBeep(audioContext, 1500, 0.3, 0.3), 400);
                         break;
                     case 'gameover':
                         playBeep(audioContext, 300, 0.5, 0.5);
-                        setTimeout(() => playBeep(audioContext, 250, 0.4, 0.4), 300);
-                        setTimeout(() => playBeep(audioContext, 200, 0.6, 0.6), 600);
                         break;
                     case 'warning':
                         playBeep(audioContext, 600, 0.2, 0.1);
                         break;
                     case 'hint':
                         playBeep(audioContext, 1000, 0.1, 0.1);
-                        setTimeout(() => playBeep(audioContext, 1200, 0.1, 0.1), 100);
                         break;
                     case 'refresh':
-                        for (let i = 0; i < 3; i++) {
-                            setTimeout(() => playBeep(audioContext, 800 + i * 200, 0.1, 0.1), i * 100);
-                        }
+                        playBeep(audioContext, 800, 0.1, 0.1);
                         break;
                     case 'win':
-                        const notes = [1300, 1500, 1700, 1900, 1700, 1500, 1300];
-                        notes.forEach((freq, i) => {
-                            setTimeout(() => playBeep(audioContext, freq, 0.15, 0.15), i * 100);
-                        });
+                        playBeep(audioContext, 1300, 0.15, 0.15);
                         break;
                 }
             } catch (e) {
@@ -1341,28 +1692,83 @@
         
         // ==================== 初始化 ====================
         window.onload = function() {
+            // 初始化CSS动画
             const style = document.createElement('style');
             style.textContent = `
-                @keyframes slideDown {
-                    from { transform: translate(-50%, -100%); opacity: 0; }
-                    to { transform: translate(-50%, 0); opacity: 1; }
-                }
-                @keyframes slideUp {
-                    from { transform: translate(-50%, 0); opacity: 1; }
-                    to { transform: translate(-50%, -100%); opacity: 0; }
-                }
                 @keyframes shake {
                     0%, 100% { transform: translateX(0); }
                     10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
                     20%, 40%, 60%, 80% { transform: translateX(5px); }
                 }
+                .time-warning {
+                    animation: blink 1s infinite;
+                    color: #ff4444 !important;
+                }
+                @keyframes blink {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                }
+                .achievements-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                    gap: 15px;
+                    margin: 20px 0;
+                }
+                .achievement-card {
+                    background: linear-gradient(135deg, #FFF9C4 0%, #FFECB3 100%);
+                    padding: 20px;
+                    border-radius: 12px;
+                    text-align: center;
+                    border: 2px solid #FFD700;
+                }
+                .achievement-card.locked {
+                    opacity: 0.5;
+                    background: #f5f5f5;
+                    border-color: #ddd;
+                }
+                .achievement-icon {
+                    font-size: 2em;
+                    margin-bottom: 10px;
+                }
+                .achievement-name {
+                    font-weight: bold;
+                    color: #333;
+                    margin-bottom: 5px;
+                }
+                .achievement-desc {
+                    font-size: 0.9em;
+                    color: #666;
+                }
+                .wrong-questions-list {
+                    max-height: 400px;
+                    overflow-y: auto;
+                    margin: 20px 0;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border-radius: 10px;
+                }
+                .wrong-question-item {
+                    padding: 15px;
+                    margin-bottom: 10px;
+                    background: white;
+                    border-radius: 8px;
+                    border-left: 5px solid #ff4444;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .input-group {
+                    display: flex;
+                    gap: 10px;
+                    align-items: center;
+                }
             `;
             document.head.appendChild(style);
             
+            // 默认选择标准模式
             selectMode('standard');
             
             console.log('🎮 数学加法消消乐 - 教学优化版已加载');
-            console.log('📊 功能：三种游戏模式 + 历史记录 + 统计分析 + 成就系统 + 错题本');
         };
     </script>
 </body>
