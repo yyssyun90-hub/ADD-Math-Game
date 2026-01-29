@@ -481,6 +481,7 @@
             max-width: 500px;
             width: 90%;
             animation: slideIn 0.5s ease-out;
+            position: relative;
         }
         
         @keyframes slideIn {
@@ -753,6 +754,24 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         
+        /* 游戏结束输入区域 */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            width: 100%;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            font-size: 1em;
+            background: white;
+            color: #333;
+        }
+        
         /* 响应式设计 */
         @media (max-width: 1024px) {
             body {
@@ -849,6 +868,10 @@
             .language-btn {
                 padding: 6px 12px;
                 font-size: 0.9em;
+            }
+            
+            .input-group {
+                flex-direction: column;
             }
         }
     </style>
@@ -1178,6 +1201,7 @@
     <!-- 游戏结束弹窗 -->
     <div class="game-over" id="game-over">
         <div class="result-card">
+            <button class="close-btn" onclick="window.gameApp.closeGameOver()" style="position: absolute; top: 15px; right: 15px;">×</button>
             <div class="result-title" id="result-title">🎉 游戏结束!</div>
             <div class="result-stats">
                 <div class="stat-item">
@@ -1197,8 +1221,8 @@
                     <div class="info-value" id="final-accuracy">100%</div>
                 </div>
             </div>
-            <div class="input-group" style="margin: 20px 0;">
-                <input type="text" id="player-name" data-i18n="playerNamePlaceholder" placeholder="请输入你的名字" maxlength="10" style="padding: 12px; border-radius: 8px; border: 2px solid #ddd; font-size: 1em; flex: 1;">
+            <div class="input-group">
+                <input type="text" id="player-name" data-i18n="playerNamePlaceholder" placeholder="请输入你的名字" maxlength="10">
                 <button class="btn" onclick="window.gameApp.saveScore()">
                     <span data-i18n="saveScore">保存成绩</span>
                 </button>
@@ -1215,14 +1239,6 @@
                 </button>
             </div>
         </div>
-    </div>
-    
-    <!-- 音效开关 -->
-    <div class="sound-toggle">
-        <label style="color: white; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px;">
-            <input type="checkbox" id="sound-toggle" checked> 
-            <span data-i18n="soundToggle">🔊 音效</span>
-        </label>
     </div>
     
     <!-- 匹配反馈 -->
@@ -1622,63 +1638,8 @@
                 }, 2000);
             }
             
-            // ==================== 音效系统 ====================
-            function playSound(type) {
-                if (!document.getElementById('sound-toggle').checked) return;
-                
-                try {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    
-                    switch(type) {
-                        case 'click':
-                            playBeep(audioContext, 800, 0.1, 0.1);
-                            break;
-                        case 'success':
-                            playBeep(audioContext, 1200, 0.2, 0.3);
-                            break;
-                        case 'error':
-                            playBeep(audioContext, 400, 0.3, 0.3);
-                            break;
-                        case 'start':
-                            playBeep(audioContext, 1000, 0.2, 0.2);
-                            break;
-                        case 'gameover':
-                            playBeep(audioContext, 300, 0.5, 0.5);
-                            break;
-                        case 'warning':
-                            playBeep(audioContext, 600, 0.2, 0.1);
-                            break;
-                        case 'hint':
-                            playBeep(audioContext, 1000, 0.1, 0.1);
-                            break;
-                        case 'refresh':
-                            playBeep(audioContext, 800, 0.1, 0.1);
-                            break;
-                        case 'win':
-                            playBeep(audioContext, 1300, 0.15, 0.15);
-                            break;
-                    }
-                } catch (e) {
-                    console.log('音效播放失败');
-                }
-            }
-            
-            function playBeep(audioContext, frequency, duration, volume) {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = frequency;
-                oscillator.type = 'sine';
-                gainNode.gain.value = volume * 0.1;
-                
-                oscillator.start();
-                setTimeout(() => {
-                    oscillator.stop();
-                }, duration * 1000);
-            }
+            // ==================== 音效系统（已移除） ====================
+            // 由于音效功能存在问题，我们直接移除相关代码
             
             // ==================== 核心游戏函数 ====================
             function selectMode(mode) {
@@ -1756,12 +1717,16 @@
                 generateNewTarget();
                 generateNumberGrid();
                 
+                // 修复：根据模式设置计时器
+                startTime = new Date();
                 if (modeConfig.hasTimeLimit) {
                     timeLeft = modeConfig.time;
-                    document.getElementById('time').textContent = timeLeft;
+                    document.getElementById('time-container').innerHTML = `
+                        <div class="info-label" data-i18n="timeLeft">剩余时间</div>
+                        <div class="info-value" id="time">${timeLeft}</div>
+                    `;
                     timerInterval = setInterval(updateTimer, 1000);
                 } else {
-                    startTime = new Date();
                     document.getElementById('time-container').innerHTML = `
                         <div class="info-label" data-i18n="timeUsed">已用时间</div>
                         <div class="info-value" id="time">0秒</div>
@@ -1772,7 +1737,6 @@
                 hintInterval = setInterval(updateHintCooldown, 1000);
                 
                 gameActive = true;
-                playSound('start');
             }
             
             function resetGame() {
@@ -1788,7 +1752,9 @@
                 if (hintInterval) clearInterval(hintInterval);
                 
                 document.getElementById('score').textContent = '0';
-                document.getElementById('completed').textContent = '0/' + (MODE_CONFIG[currentMode].questions || '∞');
+                const modeConfig = MODE_CONFIG[currentMode];
+                const questionCount = modeConfig.questions || '∞';
+                document.getElementById('completed').textContent = `0/${questionCount}`;
                 document.getElementById('accuracy').textContent = '100%';
                 document.getElementById('progress-bar').style.width = '100%';
                 
@@ -1888,14 +1854,12 @@
             function selectCard(card) {
                 if (!gameActive) return;
                 if (card.classList.contains('disappear')) {
-                    playSound('error');
                     return;
                 }
                 
                 if (card.classList.contains('selected')) {
                     card.classList.remove('selected');
                     selectedCards = selectedCards.filter(c => c !== card);
-                    playSound('click');
                     return;
                 }
                 
@@ -1904,13 +1868,11 @@
                         currentLanguage === 'zh' ? '最多只能选择2张卡片！' : 'You can only select 2 cards at most!',
                         'error'
                     );
-                    playSound('error');
                     return;
                 }
                 
                 card.classList.add('selected');
                 selectedCards.push(card);
-                playSound('click');
                 
                 if (selectedCards.length === 2) {
                     totalAttempts++;
@@ -1938,7 +1900,6 @@
                 if (isCorrect) {
                     correctCount++;
                     completedQuestions++;
-                    playSound('success');
                     showFeedback(currentLanguage === 'zh' ? '✓ 正确!' : '✓ Correct!', 'success');
                     
                     selectedCards.forEach(card => {
@@ -1978,7 +1939,6 @@
                     }, 800);
                     
                 } else {
-                    playSound('error');
                     showFeedback(currentLanguage === 'zh' ? '✗ 错误' : '✗ Wrong', 'error');
                     
                     recordWrongQuestion(num1, num2, currentTarget);
@@ -2004,9 +1964,6 @@
                 if (timeLeft <= 10) {
                     const timeContainer = document.getElementById('time-container');
                     timeContainer.classList.add('time-warning');
-                    if (timeLeft <= 5 && timeLeft > 0) {
-                        playSound('warning');
-                    }
                 }
                 
                 if (timeLeft <= 0) {
@@ -2062,19 +2019,6 @@
                     (currentLanguage === 'zh' ? '🎉 游戏结束!' : '🎉 Game Over!');
                 
                 document.getElementById('game-over').style.display = 'flex';
-                
-                if (reason === 'complete') {
-                    playSound('win');
-                } else {
-                    playSound('gameover');
-                }
-                
-                // 自动同步错题到云端
-                if (currentUser && wrongQuestions.length > 0) {
-                    setTimeout(() => {
-                        syncWrongQuestions();
-                    }, 1000);
-                }
             }
             
             function restartGame() {
@@ -2086,6 +2030,13 @@
                 document.getElementById('target-container').style.display = 'none';
                 document.getElementById('game-controls').style.display = 'none';
                 document.getElementById('game-grid').style.display = 'none';
+                document.getElementById('player-name').value = '';
+            }
+            
+            // 修复：添加关闭游戏结束弹窗功能
+            function closeGameOver() {
+                document.getElementById('game-over').style.display = 'none';
+                restartGame();
             }
             
             // ==================== 辅助功能 ====================
@@ -2114,7 +2065,6 @@
                             
                             hintCooldown = 10;
                             updateHintButton();
-                            playSound('hint');
                             return;
                         }
                     }
@@ -2160,8 +2110,6 @@
             }
             
             function refreshNumbers() {
-                playSound('refresh');
-                
                 const gameGrid = document.getElementById('game-grid');
                 gameGrid.style.opacity = '0.5';
                 
@@ -2980,6 +2928,9 @@
                 
                 // 专门关闭登录弹窗
                 closeAuthModal: closeAuthModal,
+                
+                // 关闭游戏结束弹窗
+                closeGameOver: closeGameOver,
                 
                 // 语言切换
                 switchLanguage,
