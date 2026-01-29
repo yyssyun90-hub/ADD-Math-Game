@@ -1140,7 +1140,7 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0b2FpbHl4ZWpkZ3RwZndjZGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NDE5NzQsImV4cCI6MjA4NTExNzk3NH0.DvvP8whiE3rW1bDh4qW2zOLTGsknfQ2Utt8wVOxZjV0';
         
         // ==================== 全局变量声明 ====================
-        let supabase;  // 将在init函数中初始化，避免重复声明
+        let supabase;
         let score = 0;
         let selectedCards = [];
         let timeLeft = 90;
@@ -1150,15 +1150,15 @@
         let totalAttempts = 0;
         let startTime = null;
         let currentTarget = 10;
-        let currentMode = 'standard';  // 初始化
+        let currentMode = 'standard';
         let gameActive = false;
         let hintCooldown = 0;
         let hintInterval = null;
-        let gameHistory = [];  // 初始化
+        let gameHistory = [];
         let wrongQuestions = [];
         let achievements = {};
         let currentUser = null;
-        let authMode = 'login'; // 'login' 或 'register'
+        let authMode = 'login';
         
         // 游戏配置
         const MODE_CONFIG = {
@@ -1174,7 +1174,101 @@
             '5-18': { min: 5, max: 18 }
         };
         
-        // ==================== 游戏核心函数 ====================
+        // ==================== 工具函数 ====================
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        function showMessage(text, type) {
+            const message = document.createElement('div');
+            message.textContent = text;
+            message.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#ff4444' : '#2196F3'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 10px;
+                z-index: 3000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                message.remove();
+            }, 2000);
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // ==================== 音效系统 ====================
+        function playSound(type) {
+            if (!document.getElementById('sound-toggle').checked) return;
+            
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                switch(type) {
+                    case 'click':
+                        playBeep(audioContext, 800, 0.1, 0.1);
+                        break;
+                    case 'success':
+                        playBeep(audioContext, 1200, 0.2, 0.3);
+                        break;
+                    case 'error':
+                        playBeep(audioContext, 400, 0.3, 0.3);
+                        break;
+                    case 'start':
+                        playBeep(audioContext, 1000, 0.2, 0.2);
+                        break;
+                    case 'gameover':
+                        playBeep(audioContext, 300, 0.5, 0.5);
+                        break;
+                    case 'warning':
+                        playBeep(audioContext, 600, 0.2, 0.1);
+                        break;
+                    case 'hint':
+                        playBeep(audioContext, 1000, 0.1, 0.1);
+                        break;
+                    case 'refresh':
+                        playBeep(audioContext, 800, 0.1, 0.1);
+                        break;
+                    case 'win':
+                        playBeep(audioContext, 1300, 0.15, 0.15);
+                        break;
+                }
+            } catch (e) {
+                console.log('音效播放失败');
+            }
+        }
+        
+        function playBeep(audioContext, frequency, duration, volume) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            gainNode.gain.value = volume * 0.1;
+            
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+            }, duration * 1000);
+        }
+        
+        // ==================== 核心游戏函数 ====================
         function selectMode(mode) {
             currentMode = mode;
             
@@ -1199,6 +1293,15 @@
             } else {
                 startBtn.textContent = '🚀 开始游戏';
             }
+        }
+        
+        function checkLoginBeforeStart() {
+            if (!currentUser) {
+                showAuthModal();
+                showMessage('请先登录再开始游戏', 'info');
+                return;
+            }
+            startGame();
         }
         
         function startGame() {
@@ -1324,14 +1427,6 @@
             });
         }
         
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-        
         function selectCard(card) {
             if (!gameActive) return;
             if (card.classList.contains('disappear')) {
@@ -1435,7 +1530,8 @@
             document.getElementById('progress-bar').style.width = `${progress}%`;
             
             if (timeLeft <= 10) {
-                document.getElementById('time-container').classList.add('time-warning');
+                const timeContainer = document.getElementById('time-container');
+                timeContainer.classList.add('time-warning');
                 if (timeLeft <= 5 && timeLeft > 0) {
                     playSound('warning');
                 }
@@ -1759,15 +1855,6 @@
             } else {
                 await register(email, password, username);
             }
-        }
-        
-        function checkLoginBeforeStart() {
-            if (!currentUser) {
-                showAuthModal();
-                showMessage('请先登录再开始游戏', 'info');
-                return;
-            }
-            startGame();
         }
         
         // ==================== 统计功能 ====================
@@ -2218,92 +2305,6 @@
             
             html += '</tbody></table>';
             document.getElementById('leaderboard-content').innerHTML = html;
-        }
-        
-        // ==================== 通用工具函数 ====================
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-        
-        function showMessage(text, type) {
-            const message = document.createElement('div');
-            message.textContent = text;
-            message.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#ff4444' : '#2196F3'};
-                color: white;
-                padding: 12px 24px;
-                border-radius: 10px;
-                z-index: 3000;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            `;
-            
-            document.body.appendChild(message);
-            
-            setTimeout(() => {
-                message.remove();
-            }, 2000);
-        }
-        
-        // ==================== 音效系统 ====================
-        function playSound(type) {
-            if (!document.getElementById('sound-toggle').checked) return;
-            
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                switch(type) {
-                    case 'click':
-                        playBeep(audioContext, 800, 0.1, 0.1);
-                        break;
-                    case 'success':
-                        playBeep(audioContext, 1200, 0.2, 0.3);
-                        break;
-                    case 'error':
-                        playBeep(audioContext, 400, 0.3, 0.3);
-                        break;
-                    case 'start':
-                        playBeep(audioContext, 1000, 0.2, 0.2);
-                        break;
-                    case 'gameover':
-                        playBeep(audioContext, 300, 0.5, 0.5);
-                        break;
-                    case 'warning':
-                        playBeep(audioContext, 600, 0.2, 0.1);
-                        break;
-                    case 'hint':
-                        playBeep(audioContext, 1000, 0.1, 0.1);
-                        break;
-                    case 'refresh':
-                        playBeep(audioContext, 800, 0.1, 0.1);
-                        break;
-                    case 'win':
-                        playBeep(audioContext, 1300, 0.15, 0.15);
-                        break;
-                }
-            } catch (e) {
-                console.log('音效播放失败');
-            }
-        }
-        
-        function playBeep(audioContext, frequency, duration, volume) {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = frequency;
-            oscillator.type = 'sine';
-            gainNode.gain.value = volume * 0.1;
-            
-            oscillator.start();
-            setTimeout(() => {
-                oscillator.stop();
-            }, duration * 1000);
         }
         
         // ==================== 初始化 ====================
