@@ -811,22 +811,22 @@
 <body>
     <!-- 左侧功能栏 -->
     <div class="sidebar">
-        <button class="sidebar-btn" onclick="showHistory()">
+        <button class="sidebar-btn" onclick="window.gameApp.showHistory()">
             📝 历史记录
         </button>
-        <button class="sidebar-btn secondary" onclick="showStatistics()">
+        <button class="sidebar-btn secondary" onclick="window.gameApp.showStatistics()">
             📊 统计
         </button>
-        <button class="sidebar-btn achievement" onclick="showAchievements()">
+        <button class="sidebar-btn achievement" onclick="window.gameApp.showAchievements()">
             ⭐ 成就
         </button>
-        <button class="sidebar-btn wrong" onclick="showWrongBook()">
+        <button class="sidebar-btn wrong" onclick="window.gameApp.showWrongBook()">
             📖 错题本
         </button>
-        <button class="sidebar-btn" onclick="showLeaderboard()">
+        <button class="sidebar-btn" onclick="window.gameApp.showLeaderboard()">
             🏆 排行榜
         </button>
-        <button class="sidebar-btn profile" onclick="showProfile()">
+        <button class="sidebar-btn profile" onclick="window.gameApp.showProfile()">
             👤 个人资料
         </button>
     </div>
@@ -841,26 +841,26 @@
             <div class="user-info" id="user-info" style="display: none;">
                 <div class="user-avatar" id="user-avatar">?</div>
                 <span id="user-name">用户</span>
-                <button class="btn" onclick="logout()" style="padding: 8px 15px; font-size: 0.9em;">退出</button>
+                <button class="btn" onclick="window.gameApp.logout()" style="padding: 8px 15px; font-size: 0.9em;">退出</button>
             </div>
         </div>
         
         <div class="container">
             <!-- 游戏模式选择 -->
             <div class="mode-selection">
-                <div class="mode-btn active" data-mode="standard" onclick="selectMode('standard')">
+                <div class="mode-btn active" data-mode="standard" onclick="window.gameApp.selectMode('standard')">
                     <div class="mode-title">📚 标准模式</div>
                     <div class="mode-desc">完成30题，比拼用时</div>
                 </div>
-                <div class="mode-btn" data-mode="challenge" onclick="selectMode('challenge')">
+                <div class="mode-btn" data-mode="challenge" onclick="window.gameApp.selectMode('challenge')">
                     <div class="mode-title">⚡ 挑战模式</div>
                     <div class="mode-desc">90秒时间，比拼题数</div>
                 </div>
-                <div class="mode-btn" data-mode="practice" onclick="selectMode('practice')">
+                <div class="mode-btn" data-mode="practice" onclick="window.gameApp.selectMode('practice')">
                     <div class="mode-title">🎯 练习模式</div>
                     <div class="mode-desc">无时间限制，专心学习</div>
                 </div>
-                <div class="mode-btn" data-mode="custom" onclick="selectMode('custom')">
+                <div class="mode-btn" data-mode="custom" onclick="window.gameApp.selectMode('custom')">
                     <div class="mode-title">⚙️ 自定义</div>
                     <div class="mode-desc">自设参数，灵活练习</div>
                 </div>
@@ -875,7 +875,7 @@
                         <option value="0-18" selected>0-18 (标准)</option>
                         <option value="5-18">5-18 (挑战)</option>
                     </select>
-                    <button class="btn" onclick="checkLoginBeforeStart()" id="start-btn">🚀 开始游戏</button>
+                    <button class="btn" onclick="window.gameApp.checkLoginBeforeStart()" id="start-btn">🚀 开始游戏</button>
                 </div>
                 
                 <div class="setting-group" id="custom-settings" style="display: none;">
@@ -924,9 +924,9 @@
             
             <!-- 游戏控制按钮 -->
             <div class="controls" id="game-controls" style="display: none;">
-                <button class="btn" onclick="showHint()">💡 提示(10秒)</button>
-                <button class="btn" onclick="refreshNumbers()">🔄 刷新数字</button>
-                <button class="btn" onclick="endGame('giveup')" style="background:linear-gradient(to right, #ff4444, #cc0000);">⏹️ 结束游戏</button>
+                <button class="btn" onclick="window.gameApp.showHint()">💡 提示(10秒)</button>
+                <button class="btn" onclick="window.gameApp.refreshNumbers()">🔄 刷新数字</button>
+                <button class="btn" onclick="window.gameApp.endGame('giveup')" style="background:linear-gradient(to right, #ff4444, #cc0000);">⏹️ 结束游戏</button>
             </div>
         </div>
     </div>
@@ -938,7 +938,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" id="auth-title">🔐 用户登录</h2>
-                <button class="close-btn" onclick="closeModal('auth-modal')">×</button>
+                <button class="close-btn" onclick="window.gameApp.closeModal('auth-modal')">×</button>
             </div>
             <div class="auth-form">
                 <div class="form-group">
@@ -955,11 +955,11 @@
                         <input type="text" id="auth-username" placeholder="请输入用户名（可选）">
                     </div>
                 </div>
-                <button class="btn btn-primary" onclick="handleAuth()" id="auth-button">登录</button>
+                <button class="btn btn-primary" onclick="window.gameApp.handleAuth()" id="auth-button">登录</button>
                 <div class="auth-error" id="auth-error"></div>
                 <div class="auth-switch">
                     <span id="auth-switch-text">还没有账号？</span>
-                    <a onclick="toggleAuthMode()" id="auth-switch-link">立即注册</a>
+                    <a onclick="window.gameApp.toggleAuthMode()" id="auth-switch-link">立即注册</a>
                 </div>
             </div>
         </div>
@@ -970,7 +970,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">📝 历史记录</h2>
-                <button class="close-btn" onclick="closeModal('history-modal')">×</button>
+                <button class="close-btn" onclick="window.gameApp.closeModal('history-modal')">×</button>
             </div>
             <table class="history-table">
                 <thead>
@@ -988,8 +988,8 @@
                 </tbody>
             </table>
             <div class="controls" style="margin-top: 20px;">
-                <button class="btn" onclick="clearCurrentHistory()">清空本次记录</button>
-                <button class="btn" onclick="showAllHistory()">查看所有记录</button>
+                <button class="btn" onclick="window.gameApp.clearCurrentHistory()">清空本次记录</button>
+                <button class="btn" onclick="window.gameApp.showAllHistory()">查看所有记录</button>
             </div>
         </div>
     </div>
@@ -999,7 +999,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">📊 统计分析</h2>
-                <button class="close-btn" onclick="closeModal('statistics-modal')">×</button>
+                <button class="close-btn" onclick="window.gameApp.closeModal('statistics-modal')">×</button>
             </div>
             <div id="statistics-content">
                 <div style="padding: 20px;">
@@ -1014,7 +1014,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">⭐ 成就系统</h2>
-                <button class="close-btn" onclick="closeModal('achievements-modal')">×</button>
+                <button class="close-btn" onclick="window.gameApp.closeModal('achievements-modal')">×</button>
             </div>
             <div class="achievements-grid" id="achievements-grid">
                 <!-- 动态填充 -->
@@ -1027,7 +1027,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">📖 错题本</h2>
-                <button class="close-btn" onclick="closeModal('wrongbook-modal')">×</button>
+                <button class="close-btn" onclick="window.gameApp.closeModal('wrongbook-modal')">×</button>
             </div>
             <div class="wrong-questions-list" id="wrong-questions-list">
                 <!-- 动态填充 -->
@@ -1040,13 +1040,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">🏆 排行榜</h2>
-                <button class="close-btn" onclick="closeModal('leaderboard-modal')">×</button>
+                <button class="close-btn" onclick="window.gameApp.closeModal('leaderboard-modal')">×</button>
             </div>
             <div class="tabs" style="margin-bottom: 20px;">
-                <button class="tab-btn active" onclick="showLeaderboardTab('score')">得分榜</button>
-                <button class="tab-btn" onclick="showLeaderboardTab('accuracy')">准确榜</button>
-                <button class="tab-btn" onclick="showLeaderboardTab('speed')">速度榜</button>
-                <button class="tab-btn" onclick="showLeaderboardTab('myhistory')">我的历史</button>
+                <button class="tab-btn active" onclick="window.gameApp.showLeaderboardTab('score')">得分榜</button>
+                <button class="tab-btn" onclick="window.gameApp.showLeaderboardTab('accuracy')">准确榜</button>
+                <button class="tab-btn" onclick="window.gameApp.showLeaderboardTab('speed')">速度榜</button>
+                <button class="tab-btn" onclick="window.gameApp.showLeaderboardTab('myhistory')">我的历史</button>
             </div>
             <div id="leaderboard-content">
                 <!-- 动态填充 -->
@@ -1059,7 +1059,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">👤 个人资料</h2>
-                <button class="close-btn" onclick="closeModal('profile-modal')">×</button>
+                <button class="close-btn" onclick="window.gameApp.closeModal('profile-modal')">×</button>
             </div>
             <div class="profile-info">
                 <div class="profile-avatar" id="profile-avatar">?</div>
@@ -1083,8 +1083,8 @@
                     </div>
                 </div>
                 <div class="controls" style="margin-top: 20px;">
-                    <button class="btn" onclick="syncWrongQuestions()">同步错题到云端</button>
-                    <button class="btn" onclick="syncFromCloud()">从云端同步错题</button>
+                    <button class="btn" onclick="window.gameApp.syncWrongQuestions()">同步错题到云端</button>
+                    <button class="btn" onclick="window.gameApp.syncFromCloud()">从云端同步错题</button>
                 </div>
             </div>
         </div>
@@ -1114,12 +1114,12 @@
             </div>
             <div class="input-group" style="margin: 20px 0;">
                 <input type="text" id="player-name" placeholder="请输入你的名字" maxlength="10" style="padding: 12px; border-radius: 8px; border: 2px solid #ddd; font-size: 1em; flex: 1;">
-                <button class="btn" onclick="saveScore()">保存成绩</button>
+                <button class="btn" onclick="window.gameApp.saveScore()">保存成绩</button>
             </div>
             <div class="controls">
-                <button class="btn btn-primary" onclick="restartGame()">再玩一次</button>
-                <button class="btn" onclick="showLeaderboard()">查看排行榜</button>
-                <button class="btn" onclick="showStatistics()">查看统计</button>
+                <button class="btn btn-primary" onclick="window.gameApp.restartGame()">再玩一次</button>
+                <button class="btn" onclick="window.gameApp.showLeaderboard()">查看排行榜</button>
+                <button class="btn" onclick="window.gameApp.showStatistics()">查看统计</button>
             </div>
         </div>
     </div>
@@ -1135,1222 +1135,1254 @@
     <div class="match-feedback" id="match-feedback"></div>
 
     <script>
-        // ==================== Supabase 配置 ====================
-        const SUPABASE_URL = 'https://ytoailyxejdgtpfwcdci.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0b2FpbHl4ZWpkZ3RwZndjZGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NDE5NzQsImV4cCI6MjA4NTExNzk3NH0.DvvP8whiE3rW1bDh4qW2zOLTGsknfQ2Utt8wVOxZjV0';
-        
-        // ==================== 全局变量声明 ====================
-        let supabase;
-        let score = 0;
-        let selectedCards = [];
-        let timeLeft = 90;
-        let timerInterval = null;
-        let completedQuestions = 0;
-        let correctCount = 0;
-        let totalAttempts = 0;
-        let startTime = null;
-        let currentTarget = 10;
-        let currentMode = 'standard';
-        let gameActive = false;
-        let hintCooldown = 0;
-        let hintInterval = null;
-        let gameHistory = [];
-        let wrongQuestions = [];
-        let achievements = {};
-        let currentUser = null;
-        let authMode = 'login';
-        
-        // 游戏配置
-        const MODE_CONFIG = {
-            standard: { questions: 30, time: null, hasTimeLimit: false },
-            challenge: { questions: null, time: 90, hasTimeLimit: true },
-            practice: { questions: null, time: null, hasTimeLimit: false },
-            custom: { questions: 20, time: 60, hasTimeLimit: true }
-        };
-        
-        const RANGE_CONFIG = {
-            '0-9': { min: 0, max: 9 },
-            '0-18': { min: 0, max: 18 },
-            '5-18': { min: 5, max: 18 }
-        };
-        
-        // ==================== 工具函数 ====================
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-        
-        function showMessage(text, type) {
-            const message = document.createElement('div');
-            message.textContent = text;
-            message.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#ff4444' : '#2196F3'};
-                color: white;
-                padding: 12px 24px;
-                border-radius: 10px;
-                z-index: 3000;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            `;
+        // 创建全局游戏应用对象
+        window.gameApp = (function() {
+            // ==================== Supabase 配置 ====================
+            const SUPABASE_URL = 'https://ytoailyxejdgtpfwcdci.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0b2FpbHl4ZWpkZ3RwZndjZGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NDE5NzQsImV4cCI6MjA4NTExNzk3NH0.DvvP8whiE3rW1bDh4qW2zOLTGsknfQ2Utt8wVOxZjV0';
             
-            document.body.appendChild(message);
+            // ==================== 全局变量声明 ====================
+            let supabase;
+            let score = 0;
+            let selectedCards = [];
+            let timeLeft = 90;
+            let timerInterval = null;
+            let completedQuestions = 0;
+            let correctCount = 0;
+            let totalAttempts = 0;
+            let startTime = null;
+            let currentTarget = 10;
+            let currentMode = 'standard';
+            let gameActive = false;
+            let hintCooldown = 0;
+            let hintInterval = null;
+            let gameHistory = [];
+            let wrongQuestions = [];
+            let achievements = {};
+            let currentUser = null;
+            let authMode = 'login';
             
-            setTimeout(() => {
-                message.remove();
-            }, 2000);
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-        
-        // ==================== 音效系统 ====================
-        function playSound(type) {
-            if (!document.getElementById('sound-toggle').checked) return;
+            // 游戏配置
+            const MODE_CONFIG = {
+                standard: { questions: 30, time: null, hasTimeLimit: false },
+                challenge: { questions: null, time: 90, hasTimeLimit: true },
+                practice: { questions: null, time: null, hasTimeLimit: false },
+                custom: { questions: 20, time: 60, hasTimeLimit: true }
+            };
             
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                switch(type) {
-                    case 'click':
-                        playBeep(audioContext, 800, 0.1, 0.1);
-                        break;
-                    case 'success':
-                        playBeep(audioContext, 1200, 0.2, 0.3);
-                        break;
-                    case 'error':
-                        playBeep(audioContext, 400, 0.3, 0.3);
-                        break;
-                    case 'start':
-                        playBeep(audioContext, 1000, 0.2, 0.2);
-                        break;
-                    case 'gameover':
-                        playBeep(audioContext, 300, 0.5, 0.5);
-                        break;
-                    case 'warning':
-                        playBeep(audioContext, 600, 0.2, 0.1);
-                        break;
-                    case 'hint':
-                        playBeep(audioContext, 1000, 0.1, 0.1);
-                        break;
-                    case 'refresh':
-                        playBeep(audioContext, 800, 0.1, 0.1);
-                        break;
-                    case 'win':
-                        playBeep(audioContext, 1300, 0.15, 0.15);
-                        break;
+            const RANGE_CONFIG = {
+                '0-9': { min: 0, max: 9 },
+                '0-18': { min: 0, max: 18 },
+                '5-18': { min: 5, max: 18 }
+            };
+            
+            // ==================== 工具函数 ====================
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
                 }
-            } catch (e) {
-                console.log('音效播放失败');
-            }
-        }
-        
-        function playBeep(audioContext, frequency, duration, volume) {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = frequency;
-            oscillator.type = 'sine';
-            gainNode.gain.value = volume * 0.1;
-            
-            oscillator.start();
-            setTimeout(() => {
-                oscillator.stop();
-            }, duration * 1000);
-        }
-        
-        // ==================== 核心游戏函数 ====================
-        function selectMode(mode) {
-            currentMode = mode;
-            
-            // 更新UI
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
-            
-            // 显示/隐藏自定义设置
-            const customSettings = document.getElementById('custom-settings');
-            if (mode === 'custom') {
-                customSettings.style.display = 'flex';
-            } else {
-                customSettings.style.display = 'none';
+                return array;
             }
             
-            // 更新按钮文本
-            const startBtn = document.getElementById('start-btn');
-            if (mode === 'practice') {
-                startBtn.textContent = '🎯 开始练习';
-            } else {
-                startBtn.textContent = '🚀 开始游戏';
-            }
-        }
-        
-        function checkLoginBeforeStart() {
-            if (!currentUser) {
-                showAuthModal();
-                showMessage('请先登录再开始游戏', 'info');
-                return;
-            }
-            startGame();
-        }
-        
-        function startGame() {
-            // 重置游戏状态
-            resetGame();
-            
-            const range = document.getElementById('number-range').value;
-            const modeConfig = MODE_CONFIG[currentMode];
-            
-            // 如果是自定义模式，获取用户设置
-            if (currentMode === 'custom') {
-                modeConfig.questions = parseInt(document.getElementById('custom-questions').value) || 20;
-                modeConfig.time = parseInt(document.getElementById('custom-time').value) || 60;
-                timeLeft = modeConfig.time;
-            }
-            
-            // 显示游戏界面
-            document.getElementById('game-info').style.display = 'grid';
-            document.getElementById('progress-container').style.display = 'block';
-            document.getElementById('target-container').style.display = 'block';
-            document.getElementById('game-controls').style.display = 'flex';
-            document.querySelector('.mode-selection').style.display = 'none';
-            document.querySelector('.game-setting').style.display = 'none';
-            
-            const gameGrid = document.getElementById('game-grid');
-            gameGrid.style.display = 'grid';
-            gameGrid.innerHTML = '';
-            
-            generateNewTarget();
-            generateNumberGrid();
-            
-            if (modeConfig.hasTimeLimit) {
-                timeLeft = modeConfig.time;
-                document.getElementById('time').textContent = timeLeft;
-                timerInterval = setInterval(updateTimer, 1000);
-            } else {
-                startTime = new Date();
-                document.getElementById('time-container').innerHTML = `
-                    <div class="info-label">已用时间</div>
-                    <div class="info-value" id="time">0秒</div>
+            function showMessage(text, type) {
+                const message = document.createElement('div');
+                message.textContent = text;
+                message.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#ff4444' : '#2196F3'};
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 10px;
+                    z-index: 3000;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 `;
-                timerInterval = setInterval(updateElapsedTime, 1000);
-            }
-            
-            hintInterval = setInterval(updateHintCooldown, 1000);
-            
-            gameActive = true;
-            playSound('start');
-        }
-        
-        function resetGame() {
-            score = 0;
-            selectedCards = [];
-            completedQuestions = 0;
-            correctCount = 0;
-            totalAttempts = 0;
-            gameHistory = [];
-            gameActive = false;
-            
-            if (timerInterval) clearInterval(timerInterval);
-            if (hintInterval) clearInterval(hintInterval);
-            
-            document.getElementById('score').textContent = '0';
-            document.getElementById('completed').textContent = '0/' + (MODE_CONFIG[currentMode].questions || '∞');
-            document.getElementById('accuracy').textContent = '100%';
-            document.getElementById('progress-bar').style.width = '100%';
-            
-            const gameGrid = document.getElementById('game-grid');
-            gameGrid.innerHTML = '';
-        }
-        
-        function generateNewTarget() {
-            const range = document.getElementById('number-range').value;
-            const config = RANGE_CONFIG[range];
-            
-            let newTarget;
-            if (range === '0-9') {
-                newTarget = Math.floor(Math.random() * 10) + 5;
-            } else if (range === '0-18') {
-                newTarget = Math.floor(Math.random() * 13) + 6;
-            } else {
-                newTarget = Math.floor(Math.random() * 11) + 8;
-            }
-            
-            currentTarget = newTarget;
-            document.getElementById('target-sum').textContent = currentTarget;
-        }
-        
-        function generateNumberGrid() {
-            const gameGrid = document.getElementById('game-grid');
-            const range = document.getElementById('number-range').value;
-            const config = RANGE_CONFIG[range];
-            const numbers = [];
-            
-            for (let i = 0; i < 12; i++) {
-                const num1 = Math.floor(Math.random() * (currentTarget + 1));
-                const num2 = currentTarget - num1;
                 
-                if (num1 >= config.min && num1 <= config.max && 
-                    num2 >= config.min && num2 <= config.max) {
-                    numbers.push(num1, num2);
-                } else {
-                    numbers.push(
-                        Math.floor(Math.random() * (config.max - config.min + 1)) + config.min,
-                        Math.floor(Math.random() * (config.max - config.min + 1)) + config.min
-                    );
-                }
-            }
-            
-            numbers.push(Math.floor(Math.random() * (config.max - config.min + 1)) + config.min);
-            
-            shuffleArray(numbers);
-            
-            numbers.forEach((number, index) => {
-                const card = document.createElement('div');
-                card.className = 'number-card';
-                card.textContent = number;
-                card.dataset.value = number;
-                
-                card.addEventListener('click', () => selectCard(card));
-                
-                gameGrid.appendChild(card);
-            });
-        }
-        
-        function selectCard(card) {
-            if (!gameActive) return;
-            if (card.classList.contains('disappear')) {
-                playSound('error');
-                return;
-            }
-            
-            if (card.classList.contains('selected')) {
-                card.classList.remove('selected');
-                selectedCards = selectedCards.filter(c => c !== card);
-                playSound('click');
-                return;
-            }
-            
-            if (selectedCards.length >= 2) {
-                showMessage('最多只能选择2张卡片！', 'error');
-                playSound('error');
-                return;
-            }
-            
-            card.classList.add('selected');
-            selectedCards.push(card);
-            playSound('click');
-            
-            if (selectedCards.length === 2) {
-                totalAttempts++;
-                setTimeout(checkMatch, 300);
-            }
-        }
-        
-        function checkMatch() {
-            const startCheckTime = new Date();
-            const num1 = parseInt(selectedCards[0].dataset.value);
-            const num2 = parseInt(selectedCards[1].dataset.value);
-            const sum = num1 + num2;
-            const isCorrect = sum === currentTarget;
-            const responseTime = (new Date() - startCheckTime) / 1000;
-            
-            gameHistory.push({
-                target: currentTarget,
-                num1: num1,
-                num2: num2,
-                isCorrect: isCorrect,
-                time: responseTime,
-                timestamp: new Date().toISOString()
-            });
-            
-            if (isCorrect) {
-                correctCount++;
-                completedQuestions++;
-                playSound('success');
-                showFeedback('✓ 正确!', 'success');
-                
-                selectedCards.forEach(card => {
-                    card.classList.add('disappear');
-                });
+                document.body.appendChild(message);
                 
                 setTimeout(() => {
-                    selectedCards.forEach(card => {
-                        card.remove();
-                    });
-                }, 500);
+                    message.remove();
+                }, 2000);
+            }
+            
+            // ==================== 音效系统 ====================
+            function playSound(type) {
+                if (!document.getElementById('sound-toggle').checked) return;
                 
-                score += 10;
-                if (responseTime < 3) score += 5;
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    switch(type) {
+                        case 'click':
+                            playBeep(audioContext, 800, 0.1, 0.1);
+                            break;
+                        case 'success':
+                            playBeep(audioContext, 1200, 0.2, 0.3);
+                            break;
+                        case 'error':
+                            playBeep(audioContext, 400, 0.3, 0.3);
+                            break;
+                        case 'start':
+                            playBeep(audioContext, 1000, 0.2, 0.2);
+                            break;
+                        case 'gameover':
+                            playBeep(audioContext, 300, 0.5, 0.5);
+                            break;
+                        case 'warning':
+                            playBeep(audioContext, 600, 0.2, 0.1);
+                            break;
+                        case 'hint':
+                            playBeep(audioContext, 1000, 0.1, 0.1);
+                            break;
+                        case 'refresh':
+                            playBeep(audioContext, 800, 0.1, 0.1);
+                            break;
+                        case 'win':
+                            playBeep(audioContext, 1300, 0.15, 0.15);
+                            break;
+                    }
+                } catch (e) {
+                    console.log('音效播放失败');
+                }
+            }
+            
+            function playBeep(audioContext, frequency, duration, volume) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
                 
-                updateDisplay();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
                 
-                if (currentMode === 'standard' && completedQuestions >= MODE_CONFIG.standard.questions) {
-                    endGame('complete');
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                gainNode.gain.value = volume * 0.1;
+                
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                }, duration * 1000);
+            }
+            
+            // ==================== 核心游戏函数 ====================
+            function selectMode(mode) {
+                currentMode = mode;
+                
+                // 更新UI
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+                
+                // 显示/隐藏自定义设置
+                const customSettings = document.getElementById('custom-settings');
+                if (mode === 'custom') {
+                    customSettings.style.display = 'flex';
+                } else {
+                    customSettings.style.display = 'none';
+                }
+                
+                // 更新按钮文本
+                const startBtn = document.getElementById('start-btn');
+                if (mode === 'practice') {
+                    startBtn.textContent = '🎯 开始练习';
+                } else {
+                    startBtn.textContent = '🚀 开始游戏';
+                }
+            }
+            
+            function checkLoginBeforeStart() {
+                if (!currentUser) {
+                    showAuthModal();
+                    showMessage('请先登录再开始游戏', 'info');
+                    return;
+                }
+                startGame();
+            }
+            
+            function startGame() {
+                // 重置游戏状态
+                resetGame();
+                
+                const range = document.getElementById('number-range').value;
+                const modeConfig = MODE_CONFIG[currentMode];
+                
+                // 如果是自定义模式，获取用户设置
+                if (currentMode === 'custom') {
+                    modeConfig.questions = parseInt(document.getElementById('custom-questions').value) || 20;
+                    modeConfig.time = parseInt(document.getElementById('custom-time').value) || 60;
+                    timeLeft = modeConfig.time;
+                }
+                
+                // 显示游戏界面
+                document.getElementById('game-info').style.display = 'grid';
+                document.getElementById('progress-container').style.display = 'block';
+                document.getElementById('target-container').style.display = 'block';
+                document.getElementById('game-controls').style.display = 'flex';
+                document.querySelector('.mode-selection').style.display = 'none';
+                document.querySelector('.game-setting').style.display = 'none';
+                
+                const gameGrid = document.getElementById('game-grid');
+                gameGrid.style.display = 'grid';
+                gameGrid.innerHTML = '';
+                
+                generateNewTarget();
+                generateNumberGrid();
+                
+                if (modeConfig.hasTimeLimit) {
+                    timeLeft = modeConfig.time;
+                    document.getElementById('time').textContent = timeLeft;
+                    timerInterval = setInterval(updateTimer, 1000);
+                } else {
+                    startTime = new Date();
+                    document.getElementById('time-container').innerHTML = `
+                        <div class="info-label">已用时间</div>
+                        <div class="info-value" id="time">0秒</div>
+                    `;
+                    timerInterval = setInterval(updateElapsedTime, 1000);
+                }
+                
+                hintInterval = setInterval(updateHintCooldown, 1000);
+                
+                gameActive = true;
+                playSound('start');
+            }
+            
+            function resetGame() {
+                score = 0;
+                selectedCards = [];
+                completedQuestions = 0;
+                correctCount = 0;
+                totalAttempts = 0;
+                gameHistory = [];
+                gameActive = false;
+                
+                if (timerInterval) clearInterval(timerInterval);
+                if (hintInterval) clearInterval(hintInterval);
+                
+                document.getElementById('score').textContent = '0';
+                document.getElementById('completed').textContent = '0/' + (MODE_CONFIG[currentMode].questions || '∞');
+                document.getElementById('accuracy').textContent = '100%';
+                document.getElementById('progress-bar').style.width = '100%';
+                
+                const gameGrid = document.getElementById('game-grid');
+                gameGrid.innerHTML = '';
+            }
+            
+            function generateNewTarget() {
+                const range = document.getElementById('number-range').value;
+                const config = RANGE_CONFIG[range];
+                
+                let newTarget;
+                if (range === '0-9') {
+                    newTarget = Math.floor(Math.random() * 10) + 5;
+                } else if (range === '0-18') {
+                    newTarget = Math.floor(Math.random() * 13) + 6;
+                } else {
+                    newTarget = Math.floor(Math.random() * 11) + 8;
+                }
+                
+                currentTarget = newTarget;
+                document.getElementById('target-sum').textContent = currentTarget;
+            }
+            
+            function generateNumberGrid() {
+                const gameGrid = document.getElementById('game-grid');
+                const range = document.getElementById('number-range').value;
+                const config = RANGE_CONFIG[range];
+                const numbers = [];
+                
+                for (let i = 0; i < 12; i++) {
+                    const num1 = Math.floor(Math.random() * (currentTarget + 1));
+                    const num2 = currentTarget - num1;
+                    
+                    if (num1 >= config.min && num1 <= config.max && 
+                        num2 >= config.min && num2 <= config.max) {
+                        numbers.push(num1, num2);
+                    } else {
+                        numbers.push(
+                            Math.floor(Math.random() * (config.max - config.min + 1)) + config.min,
+                            Math.floor(Math.random() * (config.max - config.min + 1)) + config.min
+                        );
+                    }
+                }
+                
+                numbers.push(Math.floor(Math.random() * (config.max - config.min + 1)) + config.min);
+                
+                shuffleArray(numbers);
+                
+                numbers.forEach((number, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'number-card';
+                    card.textContent = number;
+                    card.dataset.value = number;
+                    
+                    card.addEventListener('click', () => selectCard(card));
+                    
+                    gameGrid.appendChild(card);
+                });
+            }
+            
+            function selectCard(card) {
+                if (!gameActive) return;
+                if (card.classList.contains('disappear')) {
+                    playSound('error');
                     return;
                 }
                 
-                setTimeout(() => {
-                    generateNewTarget();
-                    refreshNumbers();
-                }, 800);
-                
-            } else {
-                playSound('error');
-                showFeedback('✗ 错误', 'error');
-                
-                recordWrongQuestion(num1, num2, currentTarget);
-                
-                selectedCards.forEach(card => {
+                if (card.classList.contains('selected')) {
                     card.classList.remove('selected');
+                    selectedCards = selectedCards.filter(c => c !== card);
+                    playSound('click');
+                    return;
+                }
+                
+                if (selectedCards.length >= 2) {
+                    showMessage('最多只能选择2张卡片！', 'error');
+                    playSound('error');
+                    return;
+                }
+                
+                card.classList.add('selected');
+                selectedCards.push(card);
+                playSound('click');
+                
+                if (selectedCards.length === 2) {
+                    totalAttempts++;
+                    setTimeout(checkMatch, 300);
+                }
+            }
+            
+            function checkMatch() {
+                const startCheckTime = new Date();
+                const num1 = parseInt(selectedCards[0].dataset.value);
+                const num2 = parseInt(selectedCards[1].dataset.value);
+                const sum = num1 + num2;
+                const isCorrect = sum === currentTarget;
+                const responseTime = (new Date() - startCheckTime) / 1000;
+                
+                gameHistory.push({
+                    target: currentTarget,
+                    num1: num1,
+                    num2: num2,
+                    isCorrect: isCorrect,
+                    time: responseTime,
+                    timestamp: new Date().toISOString()
                 });
-            }
-            
-            selectedCards = [];
-        }
-        
-        function updateTimer() {
-            if (!gameActive) return;
-            
-            timeLeft--;
-            document.getElementById('time').textContent = timeLeft;
-            
-            const modeConfig = MODE_CONFIG[currentMode];
-            const progress = (timeLeft / modeConfig.time) * 100;
-            document.getElementById('progress-bar').style.width = `${progress}%`;
-            
-            if (timeLeft <= 10) {
-                const timeContainer = document.getElementById('time-container');
-                timeContainer.classList.add('time-warning');
-                if (timeLeft <= 5 && timeLeft > 0) {
-                    playSound('warning');
-                }
-            }
-            
-            if (timeLeft <= 0) {
-                endGame('timeout');
-            }
-        }
-        
-        function updateElapsedTime() {
-            if (!gameActive) return;
-            
-            const elapsed = Math.floor((new Date() - startTime) / 1000);
-            document.getElementById('time').textContent = elapsed + '秒';
-            
-            if (currentMode === 'standard') {
-                const progress = (completedQuestions / MODE_CONFIG.standard.questions) * 100;
-                document.getElementById('progress-bar').style.width = `${progress}%`;
-            }
-        }
-        
-        function updateDisplay() {
-            document.getElementById('score').textContent = score;
-            
-            const modeConfig = MODE_CONFIG[currentMode];
-            if (modeConfig.questions) {
-                document.getElementById('completed').textContent = `${completedQuestions}/${modeConfig.questions}`;
-            } else {
-                document.getElementById('completed').textContent = completedQuestions;
-            }
-            
-            const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
-            document.getElementById('accuracy').textContent = accuracy + '%';
-        }
-        
-        function endGame(reason) {
-            gameActive = false;
-            clearInterval(timerInterval);
-            clearInterval(hintInterval);
-            
-            const elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
-            const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
-            
-            document.getElementById('final-score').textContent = score;
-            document.getElementById('final-completed').textContent = completedQuestions;
-            document.getElementById('final-time').textContent = elapsedTime + '秒';
-            document.getElementById('final-accuracy').textContent = accuracy + '%';
-            
-            const titleMap = {
-                'complete': '🎉 恭喜完成30题！',
-                'timeout': '⏰ 时间到！',
-                'giveup': '🏁 游戏结束'
-            };
-            document.getElementById('result-title').textContent = titleMap[reason] || '🎉 游戏结束!';
-            
-            document.getElementById('game-over').style.display = 'flex';
-            
-            if (reason === 'complete') {
-                playSound('win');
-            } else {
-                playSound('gameover');
-            }
-            
-            // 自动同步错题到云端
-            if (currentUser && wrongQuestions.length > 0) {
-                setTimeout(() => {
-                    syncWrongQuestions();
-                }, 1000);
-            }
-        }
-        
-        function restartGame() {
-            document.getElementById('game-over').style.display = 'none';
-            document.querySelector('.mode-selection').style.display = 'grid';
-            document.querySelector('.game-setting').style.display = 'block';
-            document.getElementById('game-info').style.display = 'none';
-            document.getElementById('progress-container').style.display = 'none';
-            document.getElementById('target-container').style.display = 'none';
-            document.getElementById('game-controls').style.display = 'none';
-            document.getElementById('game-grid').style.display = 'none';
-        }
-        
-        // ==================== 辅助功能 ====================
-        function showHint() {
-            if (hintCooldown > 0) {
-                showMessage(`提示冷却中，还剩${hintCooldown}秒`, 'info');
-                return;
-            }
-            
-            const cards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
-            const values = cards.map(card => parseInt(card.dataset.value));
-            
-            for (let i = 0; i < values.length; i++) {
-                for (let j = i + 1; j < values.length; j++) {
-                    if (values[i] + values[j] === currentTarget) {
-                        cards[i].style.boxShadow = '0 0 20px #FFD700';
-                        cards[j].style.boxShadow = '0 0 20px #FFD700';
-                        
-                        setTimeout(() => {
-                            cards[i].style.boxShadow = '';
-                            cards[j].style.boxShadow = '';
-                        }, 2000);
-                        
-                        hintCooldown = 10;
-                        updateHintButton();
-                        playSound('hint');
-                        return;
-                    }
-                }
-            }
-        }
-        
-        function updateHintCooldown() {
-            if (hintCooldown > 0) {
-                hintCooldown--;
-                updateHintButton();
-            }
-        }
-        
-        function updateHintButton() {
-            const hintBtn = document.querySelector('[onclick="showHint()"]');
-            if (hintCooldown > 0) {
-                hintBtn.textContent = `💡 提示(${hintCooldown}秒)`;
-                hintBtn.disabled = true;
-                hintBtn.style.opacity = '0.7';
-            } else {
-                hintBtn.textContent = '💡 提示(10秒)';
-                hintBtn.disabled = false;
-                hintBtn.style.opacity = '1';
-            }
-        }
-        
-        function refreshNumbers() {
-            playSound('refresh');
-            
-            const gameGrid = document.getElementById('game-grid');
-            gameGrid.style.opacity = '0.5';
-            
-            setTimeout(() => {
-                generateNumberGrid();
-                gameGrid.style.opacity = '1';
-            }, 500);
-        }
-        
-        function showFeedback(text, type) {
-            const feedback = document.getElementById('match-feedback');
-            feedback.textContent = text;
-            feedback.style.color = type === 'success' ? '#4CAF50' : '#ff4444';
-            feedback.style.opacity = '1';
-            
-            setTimeout(() => {
-                feedback.style.opacity = '0';
-            }, 1000);
-        }
-        
-        // ==================== 历史记录功能 ====================
-        function showHistory() {
-            const tbody = document.getElementById('history-table-body');
-            tbody.innerHTML = '';
-            
-            if (gameHistory.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;">暂无历史记录</td></tr>`;
-            } else {
-                gameHistory.forEach((record, index) => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${record.target}</td>
-                        <td>${record.num1}</td>
-                        <td>${record.num2}</td>
-                        <td style="color: ${record.isCorrect ? '#4CAF50' : '#ff4444'}; font-weight: bold;">
-                            ${record.isCorrect ? '✓ 正确' : '✗ 错误'}
-                        </td>
-                        <td>${record.time.toFixed(2)}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            }
-            
-            document.getElementById('history-modal').style.display = 'flex';
-        }
-        
-        function clearCurrentHistory() {
-            if (confirm('确定要清空本次游戏的历史记录吗？')) {
-                gameHistory = [];
-                showHistory();
-                showMessage('历史记录已清空', 'info');
-            }
-        }
-        
-        function showAllHistory() {
-            alert('此功能需要登录后才能使用');
-        }
-        
-        // ==================== 用户认证系统 ====================
-        async function checkAuth() {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (user) {
-                currentUser = user;
-                updateUserInfo();
-                return true;
-            }
-            return false;
-        }
-        
-        async function login(email, password) {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-            
-            if (error) {
-                document.getElementById('auth-error').textContent = error.message;
-                return false;
-            }
-            
-            currentUser = data.user;
-            updateUserInfo();
-            closeModal('auth-modal');
-            showMessage('登录成功！', 'success');
-            return true;
-        }
-        
-        async function register(email, password, username) {
-            const { data, error } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        username: username || email.split('@')[0]
-                    }
-                }
-            });
-            
-            if (error) {
-                document.getElementById('auth-error').textContent = error.message;
-                return false;
-            }
-            
-            // 创建用户资料到users表
-            if (data.user) {
-                const { error: profileError } = await supabase
-                    .from('users')
-                    .insert({
-                        id: data.user.id,
-                        username: username || email.split('@')[0]
+                
+                if (isCorrect) {
+                    correctCount++;
+                    completedQuestions++;
+                    playSound('success');
+                    showFeedback('✓ 正确!', 'success');
+                    
+                    selectedCards.forEach(card => {
+                        card.classList.add('disappear');
                     });
                     
-                if (profileError) {
-                    console.log('创建用户资料失败:', profileError);
+                    setTimeout(() => {
+                        selectedCards.forEach(card => {
+                            card.remove();
+                        });
+                    }, 500);
+                    
+                    score += 10;
+                    if (responseTime < 3) score += 5;
+                    
+                    updateDisplay();
+                    
+                    if (currentMode === 'standard' && completedQuestions >= MODE_CONFIG.standard.questions) {
+                        endGame('complete');
+                        return;
+                    }
+                    
+                    setTimeout(() => {
+                        generateNewTarget();
+                        refreshNumbers();
+                    }, 800);
+                    
+                } else {
+                    playSound('error');
+                    showFeedback('✗ 错误', 'error');
+                    
+                    recordWrongQuestion(num1, num2, currentTarget);
+                    
+                    selectedCards.forEach(card => {
+                        card.classList.remove('selected');
+                    });
+                }
+                
+                selectedCards = [];
+            }
+            
+            function updateTimer() {
+                if (!gameActive) return;
+                
+                timeLeft--;
+                document.getElementById('time').textContent = timeLeft;
+                
+                const modeConfig = MODE_CONFIG[currentMode];
+                const progress = (timeLeft / modeConfig.time) * 100;
+                document.getElementById('progress-bar').style.width = `${progress}%`;
+                
+                if (timeLeft <= 10) {
+                    const timeContainer = document.getElementById('time-container');
+                    timeContainer.classList.add('time-warning');
+                    if (timeLeft <= 5 && timeLeft > 0) {
+                        playSound('warning');
+                    }
+                }
+                
+                if (timeLeft <= 0) {
+                    endGame('timeout');
                 }
             }
             
-            currentUser = data.user;
-            updateUserInfo();
-            closeModal('auth-modal');
-            showMessage('注册成功！请查看邮箱验证邮件。', 'success');
-            return true;
-        }
-        
-        async function logout() {
-            const { error } = await supabase.auth.signOut();
-            if (error) {
-                showMessage('退出失败: ' + error.message, 'error');
-                return;
+            function updateElapsedTime() {
+                if (!gameActive) return;
+                
+                const elapsed = Math.floor((new Date() - startTime) / 1000);
+                document.getElementById('time').textContent = elapsed + '秒';
+                
+                if (currentMode === 'standard') {
+                    const progress = (completedQuestions / MODE_CONFIG.standard.questions) * 100;
+                    document.getElementById('progress-bar').style.width = `${progress}%`;
+                }
             }
             
-            currentUser = null;
-            document.getElementById('user-info').style.display = 'none';
-            showMessage('已退出登录', 'info');
-        }
-        
-        function updateUserInfo() {
-            if (!currentUser) return;
-            
-            document.getElementById('user-info').style.display = 'flex';
-            const userAvatar = document.getElementById('user-avatar');
-            const userName = document.getElementById('user-name');
-            
-            const email = currentUser.email || '';
-            const firstLetter = email.charAt(0).toUpperCase() || '?';
-            userAvatar.textContent = firstLetter;
-            
-            const username = currentUser.user_metadata?.username || email.split('@')[0];
-            userName.textContent = username;
-        }
-        
-        function showAuthModal() {
-            document.getElementById('auth-modal').style.display = 'flex';
-            updateAuthUI();
-        }
-        
-        function updateAuthUI() {
-            const isLogin = authMode === 'login';
-            document.getElementById('auth-title').textContent = isLogin ? '🔐 用户登录' : '📝 用户注册';
-            document.getElementById('auth-button').textContent = isLogin ? '登录' : '注册';
-            document.getElementById('auth-switch-text').textContent = isLogin ? '还没有账号？' : '已有账号？';
-            document.getElementById('auth-switch-link').textContent = isLogin ? '立即注册' : '立即登录';
-            document.getElementById('auth-username-group').style.display = isLogin ? 'none' : 'block';
-            document.getElementById('auth-error').textContent = '';
-        }
-        
-        function toggleAuthMode() {
-            authMode = authMode === 'login' ? 'register' : 'login';
-            updateAuthUI();
-        }
-        
-        async function handleAuth() {
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            const username = document.getElementById('auth-username').value.trim();
-            
-            if (!email || !password) {
-                document.getElementById('auth-error').textContent = '请输入邮箱和密码';
-                return;
+            function updateDisplay() {
+                document.getElementById('score').textContent = score;
+                
+                const modeConfig = MODE_CONFIG[currentMode];
+                if (modeConfig.questions) {
+                    document.getElementById('completed').textContent = `${completedQuestions}/${modeConfig.questions}`;
+                } else {
+                    document.getElementById('completed').textContent = completedQuestions;
+                }
+                
+                const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+                document.getElementById('accuracy').textContent = accuracy + '%';
             }
             
-            if (authMode === 'login') {
-                await login(email, password);
-            } else {
-                await register(email, password, username);
-            }
-        }
-        
-        // ==================== 统计功能 ====================
-        function showStatistics() {
-            const stats = calculateStatistics();
-            const content = document.getElementById('statistics-content');
-            
-            content.innerHTML = `
-                <div style="padding: 20px;">
-                    <h3 style="color: #4CAF50; margin-bottom: 15px;">📊 本次游戏统计</h3>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
-                            <div style="color: #666; font-size: 0.9em;">总尝试次数</div>
-                            <div style="color: #2196F3; font-size: 1.5em; font-weight: bold;">${stats.totalAttempts}</div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
-                            <div style="color: #666; font-size: 0.9em;">正确次数</div>
-                            <div style="color: #4CAF50; font-size: 1.5em; font-weight: bold;">${stats.correctCount}</div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
-                            <div style="color: #666; font-size: 0.9em;">正确率</div>
-                            <div style="color: #FF9800; font-size: 1.5em; font-weight: bold;">${stats.accuracy}%</div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
-                            <div style="color: #666; font-size: 0.9em;">平均答题时间</div>
-                            <div style="color: #9C27B0; font-size: 1.5em; font-weight: bold;">${stats.avgTime.toFixed(2)}秒</div>
-                        </div>
-                    </div>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
-                        <div style="margin-bottom: 10px; color: #666;">详细数据：</div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span>最快答题：</span>
-                            <span style="font-weight: bold; color: #4CAF50;">${stats.minTime.toFixed(2)}秒</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span>最慢答题：</span>
-                            <span style="font-weight: bold; color: #ff4444;">${stats.maxTime.toFixed(2)}秒</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span>最终得分：</span>
-                            <span style="font-weight: bold; color: #2196F3;">${score}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>完成题数：</span>
-                            <span style="font-weight: bold; color: #FF9800;">${completedQuestions}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('statistics-modal').style.display = 'flex';
-        }
-        
-        function calculateStatistics() {
-            const stats = {
-                totalAttempts: gameHistory.length,
-                correctCount: correctCount,
-                accuracy: totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100,
-                avgTime: 0,
-                minTime: Infinity,
-                maxTime: 0
-            };
-            
-            let totalTime = 0;
-            
-            gameHistory.forEach(record => {
-                totalTime += record.time;
-                if (record.time < stats.minTime) stats.minTime = record.time;
-                if (record.time > stats.maxTime) stats.maxTime = record.time;
-            });
-            
-            if (gameHistory.length > 0) {
-                stats.avgTime = totalTime / gameHistory.length;
+            function endGame(reason) {
+                gameActive = false;
+                clearInterval(timerInterval);
+                clearInterval(hintInterval);
+                
+                const elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
+                const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+                
+                document.getElementById('final-score').textContent = score;
+                document.getElementById('final-completed').textContent = completedQuestions;
+                document.getElementById('final-time').textContent = elapsedTime + '秒';
+                document.getElementById('final-accuracy').textContent = accuracy + '%';
+                
+                const titleMap = {
+                    'complete': '🎉 恭喜完成30题！',
+                    'timeout': '⏰ 时间到！',
+                    'giveup': '🏁 游戏结束'
+                };
+                document.getElementById('result-title').textContent = titleMap[reason] || '🎉 游戏结束!';
+                
+                document.getElementById('game-over').style.display = 'flex';
+                
+                if (reason === 'complete') {
+                    playSound('win');
+                } else {
+                    playSound('gameover');
+                }
+                
+                // 自动同步错题到云端
+                if (currentUser && wrongQuestions.length > 0) {
+                    setTimeout(() => {
+                        syncWrongQuestions();
+                    }, 1000);
+                }
             }
             
-            return stats;
-        }
-        
-        // ==================== 成就系统 ====================
-        function showAchievements() {
-            const container = document.getElementById('achievements-grid');
-            container.innerHTML = '';
+            function restartGame() {
+                document.getElementById('game-over').style.display = 'none';
+                document.querySelector('.mode-selection').style.display = 'grid';
+                document.querySelector('.game-setting').style.display = 'block';
+                document.getElementById('game-info').style.display = 'none';
+                document.getElementById('progress-container').style.display = 'none';
+                document.getElementById('target-container').style.display = 'none';
+                document.getElementById('game-controls').style.display = 'none';
+                document.getElementById('game-grid').style.display = 'none';
+            }
             
-            const achievementList = [
-                { id: 'first_win', name: '首战告捷', desc: '完成第一局游戏', icon: '🥇', achieved: score > 0 },
-                { id: 'fast_5', name: '速度之星', desc: '5秒内完成一题', icon: '⚡', achieved: gameHistory.some(r => r.time < 5 && r.isCorrect) },
-                { id: 'accuracy_90', name: '准确大师', desc: '正确率达到90%', icon: '🎯', achieved: (correctCount / totalAttempts) >= 0.9 },
-                { id: 'complete_30', name: '完成挑战', desc: '完成30题模式', icon: '🏆', achieved: currentMode === 'standard' && completedQuestions >= 30 },
-                { id: 'cloud_user', name: '云端玩家', desc: '登录云端账户', icon: '☁️', achieved: !!currentUser },
-                { id: 'score_100', name: '百分达人', desc: '单局得分达到100分', icon: '💯', achieved: score >= 100 },
-                { id: 'time_master', name: '时间管理', desc: '在挑战模式下完成20题', icon: '⏱️', achieved: currentMode === 'challenge' && completedQuestions >= 20 },
-                { id: 'practice_master', name: '练习达人', desc: '练习模式完成50题', icon: '📚', achieved: currentMode === 'practice' && completedQuestions >= 50 }
-            ];
+            // ==================== 辅助功能 ====================
+            function showHint() {
+                if (hintCooldown > 0) {
+                    showMessage(`提示冷却中，还剩${hintCooldown}秒`, 'info');
+                    return;
+                }
+                
+                const cards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
+                const values = cards.map(card => parseInt(card.dataset.value));
+                
+                for (let i = 0; i < values.length; i++) {
+                    for (let j = i + 1; j < values.length; j++) {
+                        if (values[i] + values[j] === currentTarget) {
+                            cards[i].style.boxShadow = '0 0 20px #FFD700';
+                            cards[j].style.boxShadow = '0 0 20px #FFD700';
+                            
+                            setTimeout(() => {
+                                cards[i].style.boxShadow = '';
+                                cards[j].style.boxShadow = '';
+                            }, 2000);
+                            
+                            hintCooldown = 10;
+                            updateHintButton();
+                            playSound('hint');
+                            return;
+                        }
+                    }
+                }
+            }
             
-            achievementList.forEach(ach => {
-                const card = document.createElement('div');
-                card.className = `achievement-card ${ach.achieved ? '' : 'locked'}`;
-                card.innerHTML = `
-                    <div class="achievement-icon">${ach.icon}</div>
-                    <div class="achievement-name">${ach.name}</div>
-                    <div class="achievement-desc">${ach.desc}</div>
-                    <div style="margin-top: 10px; font-size: 0.8em; color: ${ach.achieved ? '#4CAF50' : '#999'}">
-                        ${ach.achieved ? '✓ 已获得' : '🔒 未获得'}
+            function updateHintCooldown() {
+                if (hintCooldown > 0) {
+                    hintCooldown--;
+                    updateHintButton();
+                }
+            }
+            
+            function updateHintButton() {
+                const hintBtn = document.querySelector('[onclick="window.gameApp.showHint()"]');
+                if (hintCooldown > 0) {
+                    hintBtn.textContent = `💡 提示(${hintCooldown}秒)`;
+                    hintBtn.disabled = true;
+                    hintBtn.style.opacity = '0.7';
+                } else {
+                    hintBtn.textContent = '💡 提示(10秒)';
+                    hintBtn.disabled = false;
+                    hintBtn.style.opacity = '1';
+                }
+            }
+            
+            function refreshNumbers() {
+                playSound('refresh');
+                
+                const gameGrid = document.getElementById('game-grid');
+                gameGrid.style.opacity = '0.5';
+                
+                setTimeout(() => {
+                    generateNumberGrid();
+                    gameGrid.style.opacity = '1';
+                }, 500);
+            }
+            
+            function showFeedback(text, type) {
+                const feedback = document.getElementById('match-feedback');
+                feedback.textContent = text;
+                feedback.style.color = type === 'success' ? '#4CAF50' : '#ff4444';
+                feedback.style.opacity = '1';
+                
+                setTimeout(() => {
+                    feedback.style.opacity = '0';
+                }, 1000);
+            }
+            
+            // ==================== 历史记录功能 ====================
+            function showHistory() {
+                const tbody = document.getElementById('history-table-body');
+                tbody.innerHTML = '';
+                
+                if (gameHistory.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;">暂无历史记录</td></tr>`;
+                } else {
+                    gameHistory.forEach((record, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${record.target}</td>
+                            <td>${record.num1}</td>
+                            <td>${record.num2}</td>
+                            <td style="color: ${record.isCorrect ? '#4CAF50' : '#ff4444'}; font-weight: bold;">
+                                ${record.isCorrect ? '✓ 正确' : '✗ 错误'}
+                            </td>
+                            <td>${record.time.toFixed(2)}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+                document.getElementById('history-modal').style.display = 'flex';
+            }
+            
+            function clearCurrentHistory() {
+                if (confirm('确定要清空本次游戏的历史记录吗？')) {
+                    gameHistory = [];
+                    showHistory();
+                    showMessage('历史记录已清空', 'info');
+                }
+            }
+            
+            function showAllHistory() {
+                alert('此功能需要登录后才能使用');
+            }
+            
+            // ==================== 用户认证系统 ====================
+            async function checkAuth() {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                if (user) {
+                    currentUser = user;
+                    updateUserInfo();
+                    return true;
+                }
+                return false;
+            }
+            
+            async function login(email, password) {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) {
+                    document.getElementById('auth-error').textContent = error.message;
+                    return false;
+                }
+                
+                currentUser = data.user;
+                updateUserInfo();
+                closeModal('auth-modal');
+                showMessage('登录成功！', 'success');
+                return true;
+            }
+            
+            async function register(email, password, username) {
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            username: username || email.split('@')[0]
+                        }
+                    }
+                });
+                
+                if (error) {
+                    document.getElementById('auth-error').textContent = error.message;
+                    return false;
+                }
+                
+                // 创建用户资料到users表
+                if (data.user) {
+                    const { error: profileError } = await supabase
+                        .from('users')
+                        .insert({
+                            id: data.user.id,
+                            username: username || email.split('@')[0]
+                        });
+                        
+                    if (profileError) {
+                        console.log('创建用户资料失败:', profileError);
+                    }
+                }
+                
+                currentUser = data.user;
+                updateUserInfo();
+                closeModal('auth-modal');
+                showMessage('注册成功！请查看邮箱验证邮件。', 'success');
+                return true;
+            }
+            
+            async function logout() {
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    showMessage('退出失败: ' + error.message, 'error');
+                    return;
+                }
+                
+                currentUser = null;
+                document.getElementById('user-info').style.display = 'none';
+                showMessage('已退出登录', 'info');
+            }
+            
+            function updateUserInfo() {
+                if (!currentUser) return;
+                
+                document.getElementById('user-info').style.display = 'flex';
+                const userAvatar = document.getElementById('user-avatar');
+                const userName = document.getElementById('user-name');
+                
+                const email = currentUser.email || '';
+                const firstLetter = email.charAt(0).toUpperCase() || '?';
+                userAvatar.textContent = firstLetter;
+                
+                const username = currentUser.user_metadata?.username || email.split('@')[0];
+                userName.textContent = username;
+            }
+            
+            function showAuthModal() {
+                document.getElementById('auth-modal').style.display = 'flex';
+                updateAuthUI();
+            }
+            
+            function updateAuthUI() {
+                const isLogin = authMode === 'login';
+                document.getElementById('auth-title').textContent = isLogin ? '🔐 用户登录' : '📝 用户注册';
+                document.getElementById('auth-button').textContent = isLogin ? '登录' : '注册';
+                document.getElementById('auth-switch-text').textContent = isLogin ? '还没有账号？' : '已有账号？';
+                document.getElementById('auth-switch-link').textContent = isLogin ? '立即注册' : '立即登录';
+                document.getElementById('auth-username-group').style.display = isLogin ? 'none' : 'block';
+                document.getElementById('auth-error').textContent = '';
+            }
+            
+            function toggleAuthMode() {
+                authMode = authMode === 'login' ? 'register' : 'login';
+                updateAuthUI();
+            }
+            
+            async function handleAuth() {
+                const email = document.getElementById('auth-email').value.trim();
+                const password = document.getElementById('auth-password').value.trim();
+                const username = document.getElementById('auth-username').value.trim();
+                
+                if (!email || !password) {
+                    document.getElementById('auth-error').textContent = '请输入邮箱和密码';
+                    return;
+                }
+                
+                if (authMode === 'login') {
+                    await login(email, password);
+                } else {
+                    await register(email, password, username);
+                }
+            }
+            
+            // ==================== 统计功能 ====================
+            function showStatistics() {
+                const stats = calculateStatistics();
+                const content = document.getElementById('statistics-content');
+                
+                content.innerHTML = `
+                    <div style="padding: 20px;">
+                        <h3 style="color: #4CAF50; margin-bottom: 15px;">📊 本次游戏统计</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="color: #666; font-size: 0.9em;">总尝试次数</div>
+                                <div style="color: #2196F3; font-size: 1.5em; font-weight: bold;">${stats.totalAttempts}</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="color: #666; font-size: 0.9em;">正确次数</div>
+                                <div style="color: #4CAF50; font-size: 1.5em; font-weight: bold;">${stats.correctCount}</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="color: #666; font-size: 0.9em;">正确率</div>
+                                <div style="color: #FF9800; font-size: 1.5em; font-weight: bold;">${stats.accuracy}%</div>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="color: #666; font-size: 0.9em;">平均答题时间</div>
+                                <div style="color: #9C27B0; font-size: 1.5em; font-weight: bold;">${stats.avgTime.toFixed(2)}秒</div>
+                            </div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                            <div style="margin-bottom: 10px; color: #666;">详细数据：</div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>最快答题：</span>
+                                <span style="font-weight: bold; color: #4CAF50;">${stats.minTime.toFixed(2)}秒</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>最慢答题：</span>
+                                <span style="font-weight: bold; color: #ff4444;">${stats.maxTime.toFixed(2)}秒</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>最终得分：</span>
+                                <span style="font-weight: bold; color: #2196F3;">${score}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>完成题数：</span>
+                                <span style="font-weight: bold; color: #FF9800;">${completedQuestions}</span>
+                            </div>
+                        </div>
                     </div>
                 `;
-                container.appendChild(card);
-            });
+                
+                document.getElementById('statistics-modal').style.display = 'flex';
+            }
             
-            document.getElementById('achievements-modal').style.display = 'flex';
-        }
-        
-        // ==================== 错题本功能 ====================
-        function showWrongBook() {
-            loadWrongQuestionsFromLocal();
-            const container = document.getElementById('wrong-questions-list');
-            container.innerHTML = '';
+            function calculateStatistics() {
+                const stats = {
+                    totalAttempts: gameHistory.length,
+                    correctCount: correctCount,
+                    accuracy: totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100,
+                    avgTime: 0,
+                    minTime: Infinity,
+                    maxTime: 0
+                };
+                
+                let totalTime = 0;
+                
+                gameHistory.forEach(record => {
+                    totalTime += record.time;
+                    if (record.time < stats.minTime) stats.minTime = record.time;
+                    if (record.time > stats.maxTime) stats.maxTime = record.time;
+                });
+                
+                if (gameHistory.length > 0) {
+                    stats.avgTime = totalTime / gameHistory.length;
+                }
+                
+                return stats;
+            }
             
-            if (wrongQuestions.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">错题本为空</div>';
-            } else {
-                wrongQuestions.forEach((question, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'wrong-question-item';
-                    item.innerHTML = `
-                        <div>
-                            <strong style="color: #333;">${question.num1} + ${question.num2} = ${question.wrongSum}</strong><br>
-                            <small style="color: #ff4444;">错误答案 (应为 ${question.correctSum})</small>
-                        </div>
-                        <div>
-                            <small style="color: #666;">${new Date(question.timestamp).toLocaleDateString()}</small>
+            // ==================== 成就系统 ====================
+            function showAchievements() {
+                const container = document.getElementById('achievements-grid');
+                container.innerHTML = '';
+                
+                const achievementList = [
+                    { id: 'first_win', name: '首战告捷', desc: '完成第一局游戏', icon: '🥇', achieved: score > 0 },
+                    { id: 'fast_5', name: '速度之星', desc: '5秒内完成一题', icon: '⚡', achieved: gameHistory.some(r => r.time < 5 && r.isCorrect) },
+                    { id: 'accuracy_90', name: '准确大师', desc: '正确率达到90%', icon: '🎯', achieved: (correctCount / totalAttempts) >= 0.9 },
+                    { id: 'complete_30', name: '完成挑战', desc: '完成30题模式', icon: '🏆', achieved: currentMode === 'standard' && completedQuestions >= 30 },
+                    { id: 'cloud_user', name: '云端玩家', desc: '登录云端账户', icon: '☁️', achieved: !!currentUser },
+                    { id: 'score_100', name: '百分达人', desc: '单局得分达到100分', icon: '💯', achieved: score >= 100 },
+                    { id: 'time_master', name: '时间管理', desc: '在挑战模式下完成20题', icon: '⏱️', achieved: currentMode === 'challenge' && completedQuestions >= 20 },
+                    { id: 'practice_master', name: '练习达人', desc: '练习模式完成50题', icon: '📚', achieved: currentMode === 'practice' && completedQuestions >= 50 }
+                ];
+                
+                achievementList.forEach(ach => {
+                    const card = document.createElement('div');
+                    card.className = `achievement-card ${ach.achieved ? '' : 'locked'}`;
+                    card.innerHTML = `
+                        <div class="achievement-icon">${ach.icon}</div>
+                        <div class="achievement-name">${ach.name}</div>
+                        <div class="achievement-desc">${ach.desc}</div>
+                        <div style="margin-top: 10px; font-size: 0.8em; color: ${ach.achieved ? '#4CAF50' : '#999'}">
+                            ${ach.achieved ? '✓ 已获得' : '🔒 未获得'}
                         </div>
                     `;
-                    container.appendChild(item);
+                    container.appendChild(card);
                 });
-            }
-            
-            document.getElementById('wrongbook-modal').style.display = 'flex';
-        }
-        
-        function recordWrongQuestion(num1, num2, target) {
-            const wrongQuestion = {
-                num1: num1,
-                num2: num2,
-                wrongSum: num1 + num2,
-                correctSum: target,
-                timestamp: new Date().toISOString()
-            };
-            
-            wrongQuestions.push(wrongQuestion);
-            saveWrongQuestionsToLocal();
-        }
-        
-        function loadWrongQuestionsFromLocal() {
-            try {
-                const saved = localStorage.getItem('mathGameWrongQuestions');
-                if (saved) {
-                    wrongQuestions = JSON.parse(saved);
-                }
-            } catch (e) {
-                console.error('加载本地错题失败:', e);
-            }
-        }
-        
-        function saveWrongQuestionsToLocal() {
-            try {
-                localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
-            } catch (e) {
-                console.error('保存本地错题失败:', e);
-            }
-        }
-        
-        async function syncWrongQuestions() {
-            if (!currentUser) {
-                showMessage('请先登录同步错题', 'info');
-                showAuthModal();
-                return;
-            }
-            
-            if (wrongQuestions.length === 0) {
-                showMessage('暂无错题需要同步', 'info');
-                return;
-            }
-            
-            showMessage('正在同步错题到云端...', 'info');
-            
-            // 准备同步数据
-            const syncData = wrongQuestions.map(question => ({
-                user_id: currentUser.id,
-                num1: question.num1,
-                num2: question.num2,
-                wrong_sum: question.wrongSum,
-                correct_sum: question.correctSum
-            }));
-            
-            const { data, error } = await supabase
-                .from('wrong_questions')
-                .insert(syncData);
-            
-            if (error) {
-                showMessage('同步失败: ' + error.message, 'error');
-                return;
-            }
-            
-            showMessage(`成功同步 ${syncData.length} 条错题到云端`, 'success');
-        }
-        
-        async function syncFromCloud() {
-            if (!currentUser) {
-                showMessage('请先登录同步错题', 'info');
-                showAuthModal();
-                return;
-            }
-            
-            showMessage('正在从云端加载错题...', 'info');
-            
-            const { data, error } = await supabase
-                .from('wrong_questions')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .order('created_at', { ascending: false });
-            
-            if (error) {
-                showMessage('加载失败: ' + error.message, 'error');
-                return;
-            }
-            
-            if (data.length === 0) {
-                showMessage('云端暂无错题记录', 'info');
-                return;
-            }
-            
-            wrongQuestions = data.map(item => ({
-                num1: item.num1,
-                num2: item.num2,
-                wrongSum: item.wrong_sum,
-                correctSum: item.correct_sum,
-                timestamp: item.created_at
-            }));
-            
-            showMessage(`成功加载 ${data.length} 条云端错题`, 'success');
-            
-            if (document.getElementById('wrongbook-modal').style.display === 'flex') {
-                showWrongBook();
-            }
-        }
-        
-        // ==================== 个人资料功能 ====================
-        function showProfile() {
-            if (!currentUser) {
-                showMessage('请先登录查看个人资料', 'info');
-                showAuthModal();
-                return;
-            }
-            
-            document.getElementById('profile-modal').style.display = 'flex';
-            
-            const email = currentUser.email;
-            const firstLetter = email.charAt(0).toUpperCase() || '?';
-            document.getElementById('profile-avatar').textContent = firstLetter;
-            document.getElementById('profile-email').textContent = email;
-            
-            // 初始显示默认值
-            document.getElementById('profile-game-count').textContent = '0';
-            document.getElementById('profile-high-score').textContent = '0';
-            document.getElementById('profile-avg-accuracy').textContent = '0%';
-            
-            const joinDate = new Date(currentUser.created_at);
-            document.getElementById('profile-join-date').textContent = joinDate.toLocaleDateString('zh-CN');
-            
-            // 异步加载统计数据
-            loadProfileStats();
-        }
-        
-        async function loadProfileStats() {
-            if (!currentUser) return;
-            
-            const { data: scores, error } = await supabase
-                .from('scores')
-                .select('*')
-                .eq('user_id', currentUser.id);
-            
-            if (error) {
-                console.error('获取成绩失败:', error);
-                return;
-            }
-            
-            if (scores.length === 0) {
-                return;
-            }
-            
-            const gameCount = scores.length;
-            const highScore = Math.max(...scores.map(s => s.score));
-            const avgAccuracy = scores.reduce((sum, s) => sum + s.accuracy, 0) / gameCount;
-            
-            document.getElementById('profile-game-count').textContent = gameCount;
-            document.getElementById('profile-high-score').textContent = highScore;
-            document.getElementById('profile-avg-accuracy').textContent = avgAccuracy.toFixed(1) + '%';
-        }
-        
-        // ==================== 成绩云端存储 ====================
-        async function saveScore() {
-            const nameInput = document.getElementById('player-name');
-            const playerName = nameInput.value.trim() || currentUser?.user_metadata?.username || '匿名玩家';
-            
-            if (!currentUser) {
-                showMessage('请先登录保存成绩', 'error');
-                showAuthModal();
-                return;
-            }
-            
-            const elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
-            const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
-            
-            const scoreData = {
-                user_id: currentUser.id,
-                player_name: playerName,
-                score: score,
-                completed: completedQuestions,
-                accuracy: accuracy,
-                time_used: elapsedTime,
-                mode: currentMode,
-                number_range: document.getElementById('number-range').value
-            };
-            
-            const { data, error } = await supabase
-                .from('scores')
-                .insert([scoreData]);
-            
-            if (error) {
-                showMessage('保存成绩失败: ' + error.message, 'error');
-                return;
-            }
-            
-            showMessage('成绩保存成功！已上传到云端', 'success');
-            nameInput.value = '';
-            document.getElementById('game-over').style.display = 'none';
-        }
-        
-        // ==================== 云端排行榜 ====================
-        function showLeaderboard() {
-            document.getElementById('leaderboard-modal').style.display = 'flex';
-            showLeaderboardTab('score');
-        }
-        
-        async function showLeaderboardTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            const content = document.getElementById('leaderboard-content');
-            content.innerHTML = '<div style="text-align:center;padding:20px;">加载中...</div>';
-            
-            if (tab === 'myhistory') {
-                await showMyLeaderboardHistory();
-                return;
-            }
-            
-            let orderBy = '';
-            switch(tab) {
-                case 'score': orderBy = 'score'; break;
-                case 'accuracy': orderBy = 'accuracy'; break;
-                case 'speed': orderBy = 'time_used'; break;
-            }
-            
-            const { data, error } = await supabase
-                .from('scores')
-                .select('*')
-                .order(orderBy, { ascending: tab === 'speed' })
-                .limit(20);
-            
-            if (error) {
-                content.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">加载失败: ' + error.message + '</div>';
-                return;
-            }
-            
-            if (data.length === 0) {
-                content.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">暂无排行榜数据</div>';
-                return;
-            }
-            
-            let html = '<table class="history-table">';
-            html += '<thead><tr><th>排名</th><th>玩家</th><th>模式</th><th>得分</th><th>正确率</th><th>用时</th><th>时间</th></tr></thead><tbody>';
-            
-            data.forEach((item, index) => {
-                const username = item.player_name || '匿名玩家';
-                const isCurrentUser = currentUser && item.user_id === currentUser.id;
                 
-                html += `
-                    <tr ${isCurrentUser ? 'style="background-color: #e3f2fd;"' : ''}>
-                        <td>${index + 1}</td>
-                        <td><strong>${username}</strong> ${isCurrentUser ? '<span style="color:#2196F3;">(我)</span>' : ''}</td>
-                        <td>${item.mode}</td>
-                        <td><span style="color:#FF9800;font-weight:bold;">${item.score}</span></td>
-                        <td><span style="color:#4CAF50;font-weight:bold;">${item.accuracy}%</span></td>
-                        <td>${item.time_used}秒</td>
-                        <td>${new Date(item.created_at).toLocaleDateString()}</td>
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody></table>';
-            content.innerHTML = html;
-        }
-        
-        async function showMyLeaderboardHistory() {
-            if (!currentUser) {
-                document.getElementById('leaderboard-content').innerHTML = 
-                    '<div style="text-align:center;padding:40px;color:#666;">请先登录查看个人历史</div>';
-                return;
+                document.getElementById('achievements-modal').style.display = 'flex';
             }
             
-            const { data, error } = await supabase
-                .from('scores')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .order('created_at', { ascending: false })
-                .limit(10);
-            
-            if (error) {
-                document.getElementById('leaderboard-content').innerHTML = 
-                    '<div style="text-align:center;padding:40px;color:#666;">加载失败: ' + error.message + '</div>';
-                return;
-            }
-            
-            if (data.length === 0) {
-                document.getElementById('leaderboard-content').innerHTML = 
-                    '<div style="text-align:center;padding:40px;color:#666;">暂无游戏记录</div>';
-                return;
-            }
-            
-            let html = '<table class="history-table">';
-            html += '<thead><tr><th>序号</th><th>模式</th><th>得分</th><th>题数</th><th>正确率</th><th>用时</th><th>时间</th></tr></thead><tbody>';
-            
-            data.forEach((item, index) => {
-                html += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${item.mode}</td>
-                        <td><span style="color:#FF9800;font-weight:bold;">${item.score}</span></td>
-                        <td>${item.completed}</td>
-                        <td><span style="color:#4CAF50;font-weight:bold;">${item.accuracy}%</span></td>
-                        <td>${item.time_used}秒</td>
-                        <td>${new Date(item.created_at).toLocaleDateString()}</td>
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody></table>';
-            document.getElementById('leaderboard-content').innerHTML = html;
-        }
-        
-        // ==================== 初始化 ====================
-        async function init() {
-            // 初始化CSS动画
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes shake {
-                    0%, 100% { transform: translateX(0); }
-                    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-                    20%, 40%, 60%, 80% { transform: translateX(5px); }
+            // ==================== 错题本功能 ====================
+            function showWrongBook() {
+                loadWrongQuestionsFromLocal();
+                const container = document.getElementById('wrong-questions-list');
+                container.innerHTML = '';
+                
+                if (wrongQuestions.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">错题本为空</div>';
+                } else {
+                    wrongQuestions.forEach((question, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'wrong-question-item';
+                        item.innerHTML = `
+                            <div>
+                                <strong style="color: #333;">${question.num1} + ${question.num2} = ${question.wrongSum}</strong><br>
+                                <small style="color: #ff4444;">错误答案 (应为 ${question.correctSum})</small>
+                            </div>
+                            <div>
+                                <small style="color: #666;">${new Date(question.timestamp).toLocaleDateString()}</small>
+                            </div>
+                        `;
+                        container.appendChild(item);
+                    });
                 }
-                .time-warning {
-                    animation: blink 1s infinite;
-                    color: #ff4444 !important;
-                }
-                @keyframes blink {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // 初始化Supabase（只初始化一次）
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            
-            // 检查登录状态
-            const isLoggedIn = await checkAuth();
-            if (!isLoggedIn) {
-                console.log('未登录，游戏功能受限');
-            } else {
-                console.log('已登录:', currentUser.email);
+                
+                document.getElementById('wrongbook-modal').style.display = 'flex';
             }
             
-            // 加载本地错题
-            loadWrongQuestionsFromLocal();
+            function recordWrongQuestion(num1, num2, target) {
+                const wrongQuestion = {
+                    num1: num1,
+                    num2: num2,
+                    wrongSum: num1 + num2,
+                    correctSum: target,
+                    timestamp: new Date().toISOString()
+                };
+                
+                wrongQuestions.push(wrongQuestion);
+                saveWrongQuestionsToLocal();
+            }
             
-            // 默认选择标准模式
-            selectMode('standard');
+            function loadWrongQuestionsFromLocal() {
+                try {
+                    const saved = localStorage.getItem('mathGameWrongQuestions');
+                    if (saved) {
+                        wrongQuestions = JSON.parse(saved);
+                    }
+                } catch (e) {
+                    console.error('加载本地错题失败:', e);
+                }
+            }
             
-            console.log('🎮 数学加法消消乐 - 云端版已加载');
-            console.log('📊 功能：用户认证 + 云端同步 + 实时排行榜 + 错题本同步');
-        }
+            function saveWrongQuestionsToLocal() {
+                try {
+                    localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
+                } catch (e) {
+                    console.error('保存本地错题失败:', e);
+                }
+            }
+            
+            async function syncWrongQuestions() {
+                if (!currentUser) {
+                    showMessage('请先登录同步错题', 'info');
+                    showAuthModal();
+                    return;
+                }
+                
+                if (wrongQuestions.length === 0) {
+                    showMessage('暂无错题需要同步', 'info');
+                    return;
+                }
+                
+                showMessage('正在同步错题到云端...', 'info');
+                
+                // 准备同步数据
+                const syncData = wrongQuestions.map(question => ({
+                    user_id: currentUser.id,
+                    num1: question.num1,
+                    num2: question.num2,
+                    wrong_sum: question.wrongSum,
+                    correct_sum: question.correctSum
+                }));
+                
+                const { data, error } = await supabase
+                    .from('wrong_questions')
+                    .insert(syncData);
+                
+                if (error) {
+                    showMessage('同步失败: ' + error.message, 'error');
+                    return;
+                }
+                
+                showMessage(`成功同步 ${syncData.length} 条错题到云端`, 'success');
+            }
+            
+            async function syncFromCloud() {
+                if (!currentUser) {
+                    showMessage('请先登录同步错题', 'info');
+                    showAuthModal();
+                    return;
+                }
+                
+                showMessage('正在从云端加载错题...', 'info');
+                
+                const { data, error } = await supabase
+                    .from('wrong_questions')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    showMessage('加载失败: ' + error.message, 'error');
+                    return;
+                }
+                
+                if (data.length === 0) {
+                    showMessage('云端暂无错题记录', 'info');
+                    return;
+                }
+                
+                wrongQuestions = data.map(item => ({
+                    num1: item.num1,
+                    num2: item.num2,
+                    wrongSum: item.wrong_sum,
+                    correctSum: item.correct_sum,
+                    timestamp: item.created_at
+                }));
+                
+                showMessage(`成功加载 ${data.length} 条云端错题`, 'success');
+                
+                if (document.getElementById('wrongbook-modal').style.display === 'flex') {
+                    showWrongBook();
+                }
+            }
+            
+            // ==================== 个人资料功能 ====================
+            function showProfile() {
+                if (!currentUser) {
+                    showMessage('请先登录查看个人资料', 'info');
+                    showAuthModal();
+                    return;
+                }
+                
+                document.getElementById('profile-modal').style.display = 'flex';
+                
+                const email = currentUser.email;
+                const firstLetter = email.charAt(0).toUpperCase() || '?';
+                document.getElementById('profile-avatar').textContent = firstLetter;
+                document.getElementById('profile-email').textContent = email;
+                
+                // 初始显示默认值
+                document.getElementById('profile-game-count').textContent = '0';
+                document.getElementById('profile-high-score').textContent = '0';
+                document.getElementById('profile-avg-accuracy').textContent = '0%';
+                
+                const joinDate = new Date(currentUser.created_at);
+                document.getElementById('profile-join-date').textContent = joinDate.toLocaleDateString('zh-CN');
+                
+                // 异步加载统计数据
+                loadProfileStats();
+            }
+            
+            async function loadProfileStats() {
+                if (!currentUser) return;
+                
+                const { data: scores, error } = await supabase
+                    .from('scores')
+                    .select('*')
+                    .eq('user_id', currentUser.id);
+                
+                if (error) {
+                    console.error('获取成绩失败:', error);
+                    return;
+                }
+                
+                if (scores.length === 0) {
+                    return;
+                }
+                
+                const gameCount = scores.length;
+                const highScore = Math.max(...scores.map(s => s.score));
+                const avgAccuracy = scores.reduce((sum, s) => sum + s.accuracy, 0) / gameCount;
+                
+                document.getElementById('profile-game-count').textContent = gameCount;
+                document.getElementById('profile-high-score').textContent = highScore;
+                document.getElementById('profile-avg-accuracy').textContent = avgAccuracy.toFixed(1) + '%';
+            }
+            
+            // ==================== 成绩云端存储 ====================
+            async function saveScore() {
+                const nameInput = document.getElementById('player-name');
+                const playerName = nameInput.value.trim() || currentUser?.user_metadata?.username || '匿名玩家';
+                
+                if (!currentUser) {
+                    showMessage('请先登录保存成绩', 'error');
+                    showAuthModal();
+                    return;
+                }
+                
+                const elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
+                const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+                
+                const scoreData = {
+                    user_id: currentUser.id,
+                    player_name: playerName,
+                    score: score,
+                    completed: completedQuestions,
+                    accuracy: accuracy,
+                    time_used: elapsedTime,
+                    mode: currentMode,
+                    number_range: document.getElementById('number-range').value
+                };
+                
+                const { data, error } = await supabase
+                    .from('scores')
+                    .insert([scoreData]);
+                
+                if (error) {
+                    showMessage('保存成绩失败: ' + error.message, 'error');
+                    return;
+                }
+                
+                showMessage('成绩保存成功！已上传到云端', 'success');
+                nameInput.value = '';
+                document.getElementById('game-over').style.display = 'none';
+            }
+            
+            // ==================== 云端排行榜 ====================
+            function showLeaderboard() {
+                document.getElementById('leaderboard-modal').style.display = 'flex';
+                showLeaderboardTab('score');
+            }
+            
+            async function showLeaderboardTab(tab) {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+                const content = document.getElementById('leaderboard-content');
+                content.innerHTML = '<div style="text-align:center;padding:20px;">加载中...</div>';
+                
+                if (tab === 'myhistory') {
+                    await showMyLeaderboardHistory();
+                    return;
+                }
+                
+                let orderBy = '';
+                switch(tab) {
+                    case 'score': orderBy = 'score'; break;
+                    case 'accuracy': orderBy = 'accuracy'; break;
+                    case 'speed': orderBy = 'time_used'; break;
+                }
+                
+                const { data, error } = await supabase
+                    .from('scores')
+                    .select('*')
+                    .order(orderBy, { ascending: tab === 'speed' })
+                    .limit(20);
+                
+                if (error) {
+                    content.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">加载失败: ' + error.message + '</div>';
+                    return;
+                }
+                
+                if (data.length === 0) {
+                    content.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">暂无排行榜数据</div>';
+                    return;
+                }
+                
+                let html = '<table class="history-table">';
+                html += '<thead><tr><th>排名</th><th>玩家</th><th>模式</th><th>得分</th><th>正确率</th><th>用时</th><th>时间</th></tr></thead><tbody>';
+                
+                data.forEach((item, index) => {
+                    const username = item.player_name || '匿名玩家';
+                    const isCurrentUser = currentUser && item.user_id === currentUser.id;
+                    
+                    html += `
+                        <tr ${isCurrentUser ? 'style="background-color: #e3f2fd;"' : ''}>
+                            <td>${index + 1}</td>
+                            <td><strong>${username}</strong> ${isCurrentUser ? '<span style="color:#2196F3;">(我)</span>' : ''}</td>
+                            <td>${item.mode}</td>
+                            <td><span style="color:#FF9800;font-weight:bold;">${item.score}</span></td>
+                            <td><span style="color:#4CAF50;font-weight:bold;">${item.accuracy}%</span></td>
+                            <td>${item.time_used}秒</td>
+                            <td>${new Date(item.created_at).toLocaleDateString()}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                content.innerHTML = html;
+            }
+            
+            async function showMyLeaderboardHistory() {
+                if (!currentUser) {
+                    document.getElementById('leaderboard-content').innerHTML = 
+                        '<div style="text-align:center;padding:40px;color:#666;">请先登录查看个人历史</div>';
+                    return;
+                }
+                
+                const { data, error } = await supabase
+                    .from('scores')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                
+                if (error) {
+                    document.getElementById('leaderboard-content').innerHTML = 
+                        '<div style="text-align:center;padding:40px;color:#666;">加载失败: ' + error.message + '</div>';
+                    return;
+                }
+                
+                if (data.length === 0) {
+                    document.getElementById('leaderboard-content').innerHTML = 
+                        '<div style="text-align:center;padding:40px;color:#666;">暂无游戏记录</div>';
+                    return;
+                }
+                
+                let html = '<table class="history-table">';
+                html += '<thead><tr><th>序号</th><th>模式</th><th>得分</th><th>题数</th><th>正确率</th><th>用时</th><th>时间</th></tr></thead><tbody>';
+                
+                data.forEach((item, index) => {
+                    html += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item.mode}</td>
+                            <td><span style="color:#FF9800;font-weight:bold;">${item.score}</span></td>
+                            <td>${item.completed}</td>
+                            <td><span style="color:#4CAF50;font-weight:bold;">${item.accuracy}%</span></td>
+                            <td>${item.time_used}秒</td>
+                            <td>${new Date(item.created_at).toLocaleDateString()}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                document.getElementById('leaderboard-content').innerHTML = html;
+            }
+            
+            // ==================== 公共方法 ====================
+            return {
+                // 初始化
+                init: async function() {
+                    // 初始化CSS动画
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes shake {
+                            0%, 100% { transform: translateX(0); }
+                            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                            20%, 40%, 60%, 80% { transform: translateX(5px); }
+                        }
+                        .time-warning {
+                            animation: blink 1s infinite;
+                            color: #ff4444 !important;
+                        }
+                        @keyframes blink {
+                            0%, 100% { opacity: 1; }
+                            50% { opacity: 0.5; }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    // 初始化Supabase
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    
+                    // 检查登录状态
+                    const isLoggedIn = await checkAuth();
+                    if (!isLoggedIn) {
+                        console.log('未登录，游戏功能受限');
+                    } else {
+                        console.log('已登录:', currentUser.email);
+                    }
+                    
+                    // 加载本地错题
+                    loadWrongQuestionsFromLocal();
+                    
+                    // 默认选择标准模式
+                    selectMode('standard');
+                    
+                    console.log('🎮 数学加法消消乐 - 云端版已加载');
+                    console.log('📊 功能：用户认证 + 云端同步 + 实时排行榜 + 错题本同步');
+                },
+                
+                // 模态框控制
+                closeModal: function(modalId) {
+                    document.getElementById(modalId).style.display = 'none';
+                },
+                
+                // 公开的游戏方法
+                selectMode,
+                checkLoginBeforeStart,
+                showHistory,
+                showStatistics,
+                showAchievements,
+                showWrongBook,
+                showLeaderboard,
+                showProfile,
+                logout,
+                showHint,
+                refreshNumbers,
+                endGame,
+                restartGame,
+                clearCurrentHistory,
+                showAllHistory,
+                handleAuth,
+                toggleAuthMode,
+                saveScore,
+                showLeaderboardTab,
+                syncWrongQuestions,
+                syncFromCloud
+            };
+        })();
         
         // 页面加载完成后初始化
-        window.onload = init;
+        window.onload = function() {
+            window.gameApp.init();
+        };
     </script>
 </body>
 </html>
