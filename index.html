@@ -1848,6 +1848,12 @@
                 let elapsedTime;
                 if (startTime) {
                     elapsedTime = Math.floor((new Date() - startTime) / 1000);
+                    
+                    // 修复：挑战模式的时间限制
+                    if (currentMode === 'challenge') {
+                        const challengeTime = MODE_CONFIG.challenge.time; // 90秒
+                        elapsedTime = Math.min(elapsedTime, challengeTime);
+                    }
                 } else {
                     elapsedTime = 0;
                 }
@@ -1866,6 +1872,9 @@
                 };
                 document.getElementById('result-title').textContent = titleMap[reason] || 
                     (currentLanguage === 'zh' ? '🎉 游戏结束!' : '🎉 Game Over!');
+                
+                // 保存已用时间到全局变量，供saveScore使用
+                window.lastGameElapsedTime = elapsedTime;
                 
                 document.getElementById('game-over').style.display = 'flex';
                 
@@ -2242,7 +2251,16 @@
                     return;
                 }
                 
-                const elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
+                // 修复：正确计算已用时间
+                let elapsedTime;
+                if (currentMode === 'challenge') {
+                    // 挑战模式：使用保存的时间或计算最小值
+                    elapsedTime = window.lastGameElapsedTime || 
+                        (startTime ? Math.min(Math.floor((new Date() - startTime) / 1000), MODE_CONFIG.challenge.time) : 0);
+                } else {
+                    elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
+                }
+                
                 const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
                 
                 const scoreData = {
@@ -2255,6 +2273,15 @@
                     mode: currentMode,
                     number_range: document.getElementById('number-range').value
                 };
+                
+                // 调试信息
+                console.log('保存成绩数据:', {
+                    mode: currentMode,
+                    elapsedTime: elapsedTime,
+                    completed: completedQuestions,
+                    accuracy: accuracy,
+                    score: score
+                });
                 
                 try {
                     const { data, error } = await supabase
@@ -2553,8 +2580,10 @@
                         return;
                     }
                     
-                    if (data.length === 0) {
-                        content.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">${currentLanguage === 'zh' ? '暂无排行榜数据' : 'No leaderboard data'}</div>`;
+                    // 如果没有视图数据，尝试直接从scores表查询
+                    if (!data || data.length === 0) {
+                        console.log(`视图 ${viewName} 无数据，尝试直接查询`);
+                        await showDirectLeaderboard(tab, content);
                         return;
                     }
                     
@@ -2600,6 +2629,84 @@
                     content.innerHTML = html;
                 } catch (error) {
                     console.error('获取排行榜失败:', error);
+                    content.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">${currentLanguage === 'zh' ? '加载失败' : 'Load failed'}</div>`;
+                }
+            }
+            
+            // 直接查询scores表作为后备方案
+            async function showDirectLeaderboard(tab, content) {
+                try {
+                    let query = supabase
+                        .from('scores')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                    
+                    if (tab === 'standard') {
+                        query = query.eq('mode', 'standard')
+                                    .gte('completed', 30)
+                                    .gte('accuracy', 50)
+                                    .order('time_used', { ascending: true });
+                    } else if (tab === 'challenge') {
+                        query = query.eq('mode', 'challenge')
+                                    .lte('time_used', 90)  // 确保时间不超过90秒
+                                    .order('completed', { ascending: false })
+                                    .order('time_used', { ascending: true });
+                    } else if (tab === 'score') {
+                        query = query.gte('accuracy', 50)
+                                    .order('score', { ascending: false });
+                    } else if (tab === 'accuracy') {
+                        query = query.gte('completed', 10)
+                                    .gte('accuracy', 50)
+                                    .order('accuracy', { ascending: false })
+                                    .order('completed', { ascending: false });
+                    }
+                    
+                    const { data, error } = await query.limit(20);
+                    
+                    if (error || !data || data.length === 0) {
+                        content.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">${currentLanguage === 'zh' ? '暂无排行榜数据' : 'No leaderboard data'}</div>`;
+                        return;
+                    }
+                    
+                    let html = `<div style="margin-bottom: 15px; color: #666; font-size: 0.9em;">
+                        ${currentLanguage === 'zh' ? '直接查询结果（视图可能未创建）' : 'Direct Query (view may not exist)'}
+                    </div>`;
+                    html += '<table class="history-table">';
+                    html += `<thead><tr>
+                        <th>${currentLanguage === 'zh' ? '排名' : 'Rank'}</th>
+                        <th>${currentLanguage === 'zh' ? '玩家' : 'Player'}</th>
+                        <th>${currentLanguage === 'zh' ? '模式' : 'Mode'}</th>
+                        <th>${currentLanguage === 'zh' ? '得分' : 'Score'}</th>
+                        <th>${currentLanguage === 'zh' ? '题数' : 'Questions'}</th>
+                        <th>${currentLanguage === 'zh' ? '正确率' : 'Accuracy'}</th>
+                        <th>${currentLanguage === 'zh' ? '用时' : 'Time'}</th>
+                        <th>${currentLanguage === 'zh' ? '时间' : 'Date'}</th>
+                    </tr></thead><tbody>`;
+                    
+                    data.forEach((item, index) => {
+                        const username = item.player_name || 
+                            (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
+                        const isCurrentUser = currentUser && item.user_id === currentUser.id;
+                        
+                        html += `
+                            <tr ${isCurrentUser ? 'style="background-color: #e3f2fd;"' : ''}>
+                                <td>${index + 1}</td>
+                                <td><strong>${username}</strong> ${isCurrentUser ? 
+                                    `<span style="color:#2196F3;">(${currentLanguage === 'zh' ? '我' : 'Me'})</span>` : ''}</td>
+                                <td>${item.mode}</td>
+                                <td><span style="color:#FF9800;font-weight:bold;">${item.score}</span></td>
+                                <td>${item.completed}</td>
+                                <td><span style="color:#4CAF50;font-weight:bold;">${item.accuracy}%</span></td>
+                                <td>${item.time_used}${currentLanguage === 'zh' ? '秒' : 's'}</td>
+                                <td>${new Date(item.created_at).toLocaleDateString(currentLanguage === 'zh' ? 'zh-CN' : 'en-US')}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    content.innerHTML = html;
+                } catch (error) {
+                    console.error('直接查询排行榜失败:', error);
                     content.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">${currentLanguage === 'zh' ? '加载失败' : 'Load failed'}</div>`;
                 }
             }
