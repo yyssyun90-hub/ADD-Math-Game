@@ -4,867 +4,181 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数学加法消消乐 - 云端版</title>
-    <!-- 引入 Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
     <style>
-        /* 重置样式 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        /* 基础布局 */
-        body {
-            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
-            display: flex;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            overflow-x: hidden;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif; display: flex; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; overflow-x: hidden; }
         
         /* 侧边栏 */
-        .sidebar {
-            width: 220px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            box-shadow: 3px 0 15px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
-        
-        .sidebar-btn {
-            padding: 15px;
-            background: linear-gradient(to right, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
-            transition: all 0.3s;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-        }
-        
-        .sidebar-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
-        }
-        
-        .sidebar-btn.secondary {
-            background: linear-gradient(to right, #2196F3, #0b7dda);
-        }
-        
-        .sidebar-btn.achievement {
-            background: linear-gradient(to right, #FFD700, #FFA500);
-        }
-        
-        .sidebar-btn.wrong {
-            background: linear-gradient(to right, #FF6B6B, #FF4757);
-        }
-        
-        .sidebar-btn.profile {
-            background: linear-gradient(to right, #9C27B0, #7B1FA2);
-        }
+        .sidebar { width: 220px; background: rgba(255, 255, 255, 0.95); padding: 20px 15px; display: flex; flex-direction: column; gap: 15px; box-shadow: 3px 0 15px rgba(0,0,0,0.1); z-index: 100; }
+        .sidebar-btn { padding: 15px; background: linear-gradient(to right, #4CAF50, #45a049); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .sidebar-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 12px rgba(0,0,0,0.2); }
+        .sidebar-btn.secondary { background: linear-gradient(to right, #2196F3, #0b7dda); }
+        .sidebar-btn.achievement { background: linear-gradient(to right, #FFD700, #FFA500); }
+        .sidebar-btn.wrong { background: linear-gradient(to right, #FF6B6B, #FF4757); }
+        .sidebar-btn.profile { background: linear-gradient(to right, #9C27B0, #7B1FA2); }
         
         /* 主内容区 */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            width: 100%;
-            position: relative;
-        }
-        
-        h1 {
-            color: white;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            background: linear-gradient(to right, #FFD700, #FF8C00);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        
-        .subtitle {
-            color: rgba(255,255,255,0.9);
-            font-size: 1.1em;
-            margin-bottom: 20px;
-        }
-        
-        .user-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: white;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 900px;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
+        .header { text-align: center; margin-bottom: 20px; width: 100%; position: relative; }
+        h1 { color: white; font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); background: linear-gradient(to right, #FFD700, #FF8C00); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .subtitle { color: rgba(255,255,255,0.9); font-size: 1.1em; margin-bottom: 20px; }
+        .user-info { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; color: white; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2em; }
+        .container { width: 100%; max-width: 900px; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         
         /* 游戏模式选择 */
-        .mode-selection {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .mode-btn {
-            padding: 15px;
-            background: #f8f9fa;
-            border: 3px solid #ddd;
-            border-radius: 12px;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.3s;
-            font-weight: bold;
-            color: #555;
-        }
-        
-        .mode-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-        }
-        
-        .mode-btn.active {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            border-color: #4CAF50;
-            color: #333;
-        }
-        
-        .mode-btn .mode-title {
-            font-size: 1.1em;
-            margin-bottom: 5px;
-        }
-        
-        .mode-btn .mode-desc {
-            font-size: 0.9em;
-            color: #666;
-        }
+        .mode-selection { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .mode-btn { padding: 15px; background: #f8f9fa; border: 3px solid #ddd; border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.3s; font-weight: bold; color: #555; }
+        .mode-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+        .mode-btn.active { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); border-color: #4CAF50; color: #333; }
+        .mode-btn .mode-title { font-size: 1.1em; margin-bottom: 5px; }
+        .mode-btn .mode-desc { font-size: 0.9em; color: #666; }
         
         /* 游戏设置 */
-        .game-setting {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 25px;
-            border-left: 5px solid #4CAF50;
-        }
-        
-        .setting-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
-        }
-        
-        .setting-group label {
-            font-weight: bold;
-            color: #555;
-            min-width: 120px;
-        }
-        
-        .setting-group input, .setting-group select {
-            padding: 10px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1em;
-            min-width: 150px;
-            background: white;
-        }
+        .game-setting { background: #f8f9fa; padding: 20px; border-radius: 15px; margin-bottom: 25px; border-left: 5px solid #4CAF50; }
+        .setting-group { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
+        .setting-group label { font-weight: bold; color: #555; min-width: 120px; }
+        .setting-group input, .setting-group select { padding: 10px 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; min-width: 150px; background: white; }
         
         /* 游戏信息头部 */
-        .game-header {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            background: linear-gradient(to right, #ff9966, #ff5e62);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .info-item {
-            text-align: center;
-            padding: 10px;
-        }
-        
-        .info-label {
-            font-size: 0.9em;
-            opacity: 0.9;
-            margin-bottom: 5px;
-        }
-        
-        .info-value {
-            font-size: 1.8em;
-            font-weight: bold;
-        }
+        .game-header { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: linear-gradient(to right, #ff9966, #ff5e62); color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .info-item { text-align: center; padding: 10px; }
+        .info-label { font-size: 0.9em; opacity: 0.9; margin-bottom: 5px; }
+        .info-value { font-size: 1.8em; font-weight: bold; }
         
         /* 目标和 */
-        .target-container {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 15px;
-            margin: 25px 0;
-            text-align: center;
-            font-size: 1.5em;
-            font-weight: bold;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            position: relative;
-            overflow: hidden;
-            animation: targetGlow 2s infinite alternate;
-        }
-        
-        @keyframes targetGlow {
-            0% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.5); }
-            100% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.8); }
-        }
-        
-        .target-text {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-        }
-        
-        .target-number {
-            background: #FF6B6B;
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.2em;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            box-shadow: 0 4px 8px rgba(255,107,107,0.4);
-            animation: bounce 2s infinite;
-        }
-        
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .target-label {
-            font-size: 1.3em;
-            color: #333;
-            font-weight: normal;
-        }
+        .target-container { background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%); color: white; padding: 25px; border-radius: 15px; margin: 25px 0; text-align: center; font-size: 1.5em; font-weight: bold; box-shadow: 0 6px 12px rgba(0,0,0,0.15); position: relative; overflow: hidden; animation: targetGlow 2s infinite alternate; }
+        @keyframes targetGlow { 0% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.5); } 100% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.8); } }
+        .target-text { display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .target-number { background: #FF6B6B; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2em; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); box-shadow: 0 4px 8px rgba(255,107,107,0.4); animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .target-label { font-size: 1.3em; color: #333; font-weight: normal; }
         
         /* 游戏网格 */
-        .game-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-            margin: 30px 0;
-            padding: 25px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            border: 3px solid #e9ecef;
-        }
-        
-        .number-card {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            border-radius: 12px;
-            padding: 30px 15px;
-            text-align: center;
-            font-size: 2em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-            user-select: none;
-        }
-        
-        .number-card.selected {
-            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-            box-shadow: 0 0 20px rgba(102, 166, 255, 0.6);
-            border: 3px solid #4CAF50;
-        }
-        
-        .number-card.disappear {
-            animation: disappear 0.5s forwards;
-        }
-        
-        @keyframes disappear {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0); opacity: 0; }
-        }
+        .game-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin: 30px 0; padding: 25px; background: #f8f9fa; border-radius: 15px; border: 3px solid #e9ecef; }
+        .number-card { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); border-radius: 12px; padding: 30px 15px; text-align: center; font-size: 2em; font-weight: bold; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; overflow: hidden; user-select: none; }
+        .number-card.selected { background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); box-shadow: 0 0 20px rgba(102, 166, 255, 0.6); border: 3px solid #4CAF50; }
+        .number-card.disappear { animation: disappear 0.5s forwards; }
+        @keyframes disappear { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
         
         /* 控制按钮 */
-        .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin: 25px 0;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 15px 25px;
-            background: linear-gradient(to right, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(to right, #2196F3, #0b7dda);
-            padding: 18px 35px;
-            font-size: 1.3em;
-        }
+        .controls { display: flex; gap: 15px; justify-content: center; margin: 25px 0; flex-wrap: wrap; }
+        .btn { padding: 15px 25px; background: linear-gradient(to right, #4CAF50, #45a049); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: bold; transition: all 0.3s; box-shadow: 0 3px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 12px rgba(0,0,0,0.2); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: linear-gradient(to right, #2196F3, #0b7dda); padding: 18px 35px; font-size: 1.3em; }
         
         /* 模态框 */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-        
-        .modal-title {
-            font-size: 1.8em;
-            color: #333;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .close-btn {
-            background: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 1.5em;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-title { font-size: 1.8em; color: #333; display: flex; align-items: center; gap: 10px; }
+        .close-btn { background: #ff4444; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5em; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         
         /* 表格样式 */
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        .history-table th {
-            background: #4CAF50;
-            color: white;
-            padding: 12px;
-            text-align: left;
-        }
-        
-        .history-table td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .history-table tr:nth-child(even) {
-            background: #f9f9f9;
-        }
-        
-        .history-table tr:hover {
-            background: #f1f1f1;
-        }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .history-table th { background: #4CAF50; color: white; padding: 12px; text-align: left; }
+        .history-table td { padding: 12px; border-bottom: 1px solid #ddd; }
+        .history-table tr:nth-child(even) { background: #f9f9f9; }
+        .history-table tr:hover { background: #f1f1f1; }
         
         /* 游戏结束弹窗 */
-        .game-over {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            color: white;
-        }
-        
-        .result-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
-            animation: slideIn 0.5s ease-out;
-            position: relative;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        .result-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
-        .stat-item {
-            text-align: center;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
+        .game-over { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        .result-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 20px; text-align: center; max-width: 500px; width: 90%; animation: slideIn 0.5s ease-out; position: relative; }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .result-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+        .stat-item { text-align: center; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
         
         /* 进度条 */
-        .progress-container {
-            width: 100%;
-            height: 12px;
-            background: #e9ecef;
-            border-radius: 6px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(to right, #4CAF50, #8BC34A);
-            border-radius: 6px;
-            transition: width 0.3s ease;
-        }
+        .progress-container { width: 100%; height: 12px; background: #e9ecef; border-radius: 6px; margin: 20px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(to right, #4CAF50, #8BC34A); border-radius: 6px; transition: width 0.3s ease; }
         
         /* 匹配反馈 */
-        .match-feedback {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 4em;
-            font-weight: bold;
-            z-index: 1000;
-            pointer-events: none;
-            opacity: 0;
-            transition: all 0.5s;
-            text-shadow: 0 0 20px currentColor;
-        }
+        .match-feedback { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 4em; font-weight: bold; z-index: 1000; pointer-events: none; opacity: 0; transition: all 0.5s; text-shadow: 0 0 20px currentColor; }
         
         /* 排行榜选项卡 */
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .tab-btn {
-            padding: 10px 20px;
-            background: #f8f9fa;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #555;
-            transition: all 0.3s;
-        }
-        
-        .tab-btn:hover {
-            background: #e9ecef;
-        }
-        
-        .tab-btn.active {
-            background: #4CAF50;
-            color: white;
-            border-color: #4CAF50;
-        }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 20px; background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: bold; color: #555; transition: all 0.3s; }
+        .tab-btn:hover { background: #e9ecef; }
+        .tab-btn.active { background: #4CAF50; color: white; border-color: #4CAF50; }
         
         /* 登录/注册弹窗 */
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .form-group label {
-            font-weight: bold;
-            color: #555;
-        }
-        
-        .form-group input {
-            padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1em;
-        }
-        
-        .auth-switch {
-            text-align: center;
-            margin-top: 15px;
-            color: #666;
-        }
-        
-        .auth-switch a {
-            color: #2196F3;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        
-        .auth-error {
-            color: #ff4444;
-            text-align: center;
-            margin-top: 10px;
-        }
+        .auth-form { display: flex; flex-direction: column; gap: 20px; max-width: 400px; margin: 0 auto; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-weight: bold; color: #555; }
+        .form-group input { padding: 12px 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; }
+        .auth-switch { text-align: center; margin-top: 15px; color: #666; }
+        .auth-switch a { color: #2196F3; cursor: pointer; text-decoration: underline; }
+        .auth-error { color: #ff4444; text-align: center; margin-top: 10px; }
         
         /* 成就系统 */
-        .achievements-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
-        .achievement-card {
-            background: linear-gradient(135deg, #FFF9C4 0%, #FFECB3 100%);
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            border: 2px solid #FFD700;
-        }
-        
-        .achievement-card.locked {
-            opacity: 0.5;
-            background: #f5f5f5;
-            border-color: #ddd;
-        }
-        
-        .achievement-icon {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        
-        .achievement-name {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .achievement-desc {
-            font-size: 0.9em;
-            color: #666;
-        }
+        .achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .achievement-card { background: linear-gradient(135deg, #FFF9C4 0%, #FFECB3 100%); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #FFD700; }
+        .achievement-card.locked { opacity: 0.5; background: #f5f5f5; border-color: #ddd; }
+        .achievement-icon { font-size: 2em; margin-bottom: 10px; }
+        .achievement-name { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .achievement-desc { font-size: 0.9em; color: #666; }
         
         /* 错题本 */
-        .wrong-questions-list {
-            max-height: 400px;
-            overflow-y: auto;
-            margin: 20px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-        
-        .wrong-question-item {
-            padding: 15px;
-            margin-bottom: 10px;
-            background: white;
-            border-radius: 8px;
-            border-left: 5px solid #ff4444;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .wrong-questions-list { max-height: 400px; overflow-y: auto; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; }
+        .wrong-question-item { padding: 15px; margin-bottom: 10px; background: white; border-radius: 8px; border-left: 5px solid #ff4444; display: flex; justify-content: space-between; align-items: center; }
         
         /* 个人资料 */
-        .profile-info {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5em;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 20px;
-        }
-        
-        .profile-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            width: 100%;
-        }
-        
-        .profile-stat {
-            text-align: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-        
-        .profile-stat-label {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        
-        .profile-stat-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #333;
-        }
+        .profile-info { display: flex; flex-direction: column; gap: 20px; align-items: center; padding: 20px; }
+        .profile-avatar { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 2.5em; font-weight: bold; color: white; margin-bottom: 20px; }
+        .profile-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; }
+        .profile-stat { text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px; }
+        .profile-stat-label { font-size: 0.9em; color: #666; margin-bottom: 5px; }
+        .profile-stat-value { font-size: 1.5em; font-weight: bold; color: #333; }
         
         /* 语言切换按钮 */
-        .language-switch {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-        }
-        
-        .language-btn {
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #4CAF50;
-            border-radius: 20px;
-            padding: 8px 15px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: bold;
-            color: #333;
-            transition: all 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        .language-btn:hover {
-            background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
+        .language-switch { position: fixed; top: 20px; left: 20px; z-index: 1000; }
+        .language-btn { background: rgba(255, 255, 255, 0.9); border: 2px solid #4CAF50; border-radius: 20px; padding: 8px 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold; color: #333; transition: all 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .language-btn:hover { background: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         
         /* 游戏结束输入区域 */
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            width: 100%;
+        .input-group { display: flex; gap: 10px; margin: 20px 0; width: 100%; }
+        .input-group input { flex: 1; padding: 12px; border-radius: 8px; border: 2px solid #ddd; font-size: 1em; background: white; color: #333; }
+        
+        /* 新样式：成就解锁动画 */
+        .achievement-unlock { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #FFD700, #FFA500); padding: 30px; border-radius: 20px; z-index: 3000; text-align: center; animation: unlockAnimation 2s ease-out; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        @keyframes unlockAnimation { 
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
         
-        .input-group input {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-            font-size: 1em;
-            background: white;
-            color: #333;
-        }
+        /* 新样式：进度指示器 */
+        .progress-indicator { position: absolute; bottom: 5px; left: 5px; right: 5px; height: 4px; background: #e9ecef; border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(to right, #4CAF50, #8BC34A); transition: width 0.3s ease; }
         
         /* 响应式设计 */
         @media (max-width: 1024px) {
-            body {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                width: 100%;
-                flex-direction: row;
-                padding: 15px;
-                gap: 10px;
-                overflow-x: auto;
-            }
-            
-            .sidebar-btn {
-                min-width: 140px;
-                padding: 12px;
-            }
-            
-            .mode-selection {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .game-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
+            body { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; padding: 15px; gap: 10px; overflow-x: auto; }
+            .sidebar-btn { min-width: 140px; padding: 12px; }
+            .mode-selection { grid-template-columns: repeat(2, 1fr); }
+            .game-grid { grid-template-columns: repeat(4, 1fr); }
         }
-        
         @media (max-width: 768px) {
-            .game-header {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .game-grid {
-                grid-template-columns: repeat(3, 1fr);
-                padding: 15px;
-                gap: 10px;
-            }
-            
-            .number-card {
-                padding: 20px 10px;
-                font-size: 1.5em;
-            }
-            
-            .target-number {
-                width: 60px;
-                height: 60px;
-                font-size: 1.8em;
-            }
-            
-            .user-info {
-                position: static;
-                justify-content: center;
-                margin-bottom: 20px;
-            }
-            
-            .language-switch {
-                top: 10px;
-                left: 10px;
-            }
+            .game-header { grid-template-columns: repeat(2, 1fr); }
+            .game-grid { grid-template-columns: repeat(3, 1fr); padding: 15px; gap: 10px; }
+            .number-card { padding: 20px 10px; font-size: 1.5em; }
+            .target-number { width: 60px; height: 60px; font-size: 1.8em; }
+            .user-info { position: static; justify-content: center; margin-bottom: 20px; }
+            .language-switch { top: 10px; left: 10px; }
         }
-        
         @media (max-width: 480px) {
-            .mode-selection {
-                grid-template-columns: 1fr;
-            }
-            
-            .game-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .controls {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .result-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .profile-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .language-btn {
-                padding: 6px 12px;
-                font-size: 0.9em;
-            }
-            
-            .input-group {
-                flex-direction: column;
-            }
+            .mode-selection { grid-template-columns: 1fr; }
+            .game-grid { grid-template-columns: repeat(2, 1fr); }
+            .controls { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+            .result-stats { grid-template-columns: 1fr; }
+            .profile-stats { grid-template-columns: 1fr; }
+            .language-btn { padding: 6px 12px; font-size: 0.9em; }
+            .input-group { flex-direction: column; }
         }
     </style>
 </head>
@@ -879,24 +193,12 @@
     
     <!-- 左侧功能栏 -->
     <div class="sidebar">
-        <button class="sidebar-btn" id="history-btn">
-            <span data-i18n="history">📝 历史记录</span>
-        </button>
-        <button class="sidebar-btn secondary" id="statistics-btn">
-            <span data-i18n="statistics">📊 统计</span>
-        </button>
-        <button class="sidebar-btn achievement" id="achievements-btn">
-            <span data-i18n="achievements">⭐ 成就</span>
-        </button>
-        <button class="sidebar-btn wrong" id="wrongbook-btn">
-            <span data-i18n="wrongBook">📖 错题本</span>
-        </button>
-        <button class="sidebar-btn" id="leaderboard-btn">
-            <span data-i18n="leaderboard">🏆 排行榜</span>
-        </button>
-        <button class="sidebar-btn profile" id="profile-btn">
-            <span data-i18n="profile">👤 个人资料</span>
-        </button>
+        <button class="sidebar-btn" id="history-btn"><span data-i18n="history">📝 历史记录</span></button>
+        <button class="sidebar-btn secondary" id="statistics-btn"><span data-i18n="statistics">📊 统计</span></button>
+        <button class="sidebar-btn achievement" id="achievements-btn"><span data-i18n="achievements">⭐ 成就</span></button>
+        <button class="sidebar-btn wrong" id="wrongbook-btn"><span data-i18n="wrongBook">📖 错题本</span></button>
+        <button class="sidebar-btn" id="leaderboard-btn"><span data-i18n="leaderboard">🏆 排行榜</span></button>
+        <button class="sidebar-btn profile" id="profile-btn"><span data-i18n="profile">👤 个人资料</span></button>
     </div>
     
     <!-- 主游戏区 -->
@@ -905,7 +207,6 @@
             <h1 data-i18n="gameTitle">🧮 数学加法消消乐</h1>
             <p class="subtitle" data-i18n="gameSubtitle">教学优化版 | 支持云端同步 | 实时排行榜</p>
             
-            <!-- 用户信息 -->
             <div class="user-info" id="user-info" style="display: none;">
                 <div class="user-avatar" id="user-avatar">?</div>
                 <span id="user-name" data-i18n="user">用户</span>
@@ -1009,15 +310,11 @@
         </div>
     </div>
     
-    <!-- ==================== 弹窗区域 ==================== -->
-    
-    <!-- 登录/注册弹窗 -->
+    <!-- 弹窗区域 -->
     <div class="modal" id="auth-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="auth-title">
-                    <span data-i18n="loginTitle">🔐 用户登录</span>
-                </h2>
+                <h2 class="modal-title" id="auth-title"><span data-i18n="loginTitle">🔐 用户登录</span></h2>
                 <button class="close-btn" id="close-auth-modal">×</button>
             </div>
             <div class="auth-form">
@@ -1035,21 +332,16 @@
                         <input type="text" id="auth-username" data-i18n="usernamePlaceholder" placeholder="请输入用户名（可选）">
                     </div>
                 </div>
-                <button class="btn btn-primary" id="auth-submit-btn">
-                    <span data-i18n="loginButton">登录</span>
-                </button>
+                <button class="btn btn-primary" id="auth-submit-btn"><span data-i18n="loginButton">登录</span></button>
                 <div class="auth-error" id="auth-error"></div>
                 <div class="auth-switch">
                     <span id="auth-switch-text" data-i18n="noAccount">还没有账号？</span>
-                    <a id="auth-switch-link">
-                        <span data-i18n="registerNow">立即注册</span>
-                    </a>
+                    <a id="auth-switch-link"><span data-i18n="registerNow">立即注册</span></a>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- 历史记录弹窗 -->
     <div class="modal" id="history-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1067,22 +359,15 @@
                         <th data-i18n="tableTime">用时(秒)</th>
                     </tr>
                 </thead>
-                <tbody id="history-table-body">
-                    <!-- 动态填充 -->
-                </tbody>
+                <tbody id="history-table-body"></tbody>
             </table>
             <div class="controls" style="margin-top: 20px;">
-                <button class="btn" id="clear-history-btn">
-                    <span data-i18n="clearHistory">清空本次记录</span>
-                </button>
-                <button class="btn" id="view-all-history-btn">
-                    <span data-i18n="viewAllHistory">查看所有记录</span>
-                </button>
+                <button class="btn" id="clear-history-btn"><span data-i18n="clearHistory">清空本次记录</span></button>
+                <button class="btn" id="view-all-history-btn"><span data-i18n="viewAllHistory">查看所有记录</span></button>
             </div>
         </div>
     </div>
     
-    <!-- 统计弹窗 -->
     <div class="modal" id="statistics-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1090,40 +375,39 @@
                 <button class="close-btn" id="close-statistics-modal">×</button>
             </div>
             <div id="statistics-content">
-                <div style="padding: 20px;">
-                    <p id="stats-text" data-i18n="loadingStats">加载统计信息中...</p>
-                </div>
+                <div style="padding: 20px;"><p id="stats-text" data-i18n="loadingStats">加载统计信息中...</p></div>
             </div>
         </div>
     </div>
     
-    <!-- 成就系统弹窗 -->
     <div class="modal" id="achievements-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" data-i18n="achievementsTitle">⭐ 成就系统</h2>
                 <button class="close-btn" id="close-achievements-modal">×</button>
             </div>
-            <div class="achievements-grid" id="achievements-grid">
-                <!-- 动态填充 -->
-            </div>
+            <div class="achievements-grid" id="achievements-grid"></div>
         </div>
     </div>
     
-    <!-- 错题本弹窗 -->
     <div class="modal" id="wrongbook-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" data-i18n="wrongbookTitle">📖 错题本</h2>
                 <button class="close-btn" id="close-wrongbook-modal">×</button>
             </div>
-            <div class="wrong-questions-list" id="wrong-questions-list">
-                <!-- 动态填充 -->
+            <div class="wrong-questions-list" id="wrong-questions-list"></div>
+            <div class="controls" style="margin-top: 20px;">
+                <button class="btn" id="sync-wrong-questions-btn">
+                    <span data-i18n="syncWrongQuestions">同步错题到云端</span>
+                </button>
+                <button class="btn" id="clear-wrong-questions-btn">
+                    <span data-i18n="clearWrongQuestions">清空本地错题</span>
+                </button>
             </div>
         </div>
     </div>
     
-    <!-- 排行榜弹窗 -->
     <div class="modal" id="leaderboard-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1131,29 +415,16 @@
                 <button class="close-btn" id="close-leaderboard-modal">×</button>
             </div>
             <div class="tabs" style="margin-bottom: 20px;">
-                <button class="tab-btn active" id="tab-standard">
-                    <span data-i18n="standardBoard">📚 标准模式</span>
-                </button>
-                <button class="tab-btn" id="tab-challenge">
-                    <span data-i18n="challengeBoard">⚡ 挑战模式</span>
-                </button>
-                <button class="tab-btn" id="tab-score">
-                    <span data-i18n="scoreBoard">🏆 高分榜</span>
-                </button>
-                <button class="tab-btn" id="tab-accuracy">
-                    <span data-i18n="accuracyBoard">🎯 准确率</span>
-                </button>
-                <button class="tab-btn" id="tab-myhistory">
-                    <span data-i18n="myHistory">📊 我的历史</span>
-                </button>
+                <button class="tab-btn active" id="tab-standard"><span data-i18n="standardBoard">📚 标准模式</span></button>
+                <button class="tab-btn" id="tab-challenge"><span data-i18n="challengeBoard">⚡ 挑战模式</span></button>
+                <button class="tab-btn" id="tab-score"><span data-i18n="scoreBoard">🏆 高分榜</span></button>
+                <button class="tab-btn" id="tab-accuracy"><span data-i18n="accuracyBoard">🎯 准确率</span></button>
+                <button class="tab-btn" id="tab-myhistory"><span data-i18n="myHistory">📊 我的历史</span></button>
             </div>
-            <div id="leaderboard-content">
-                <!-- 动态填充 -->
-            </div>
+            <div id="leaderboard-content"></div>
         </div>
     </div>
     
-    <!-- 个人资料弹窗 -->
     <div class="modal" id="profile-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1182,11 +453,11 @@
                     </div>
                 </div>
                 <div class="controls" style="margin-top: 20px;">
-                    <button class="btn" id="sync-to-cloud-btn">
-                        <span data-i18n="syncToCloud">同步错题到云端</span>
+                    <button class="btn" id="backup-data-btn">
+                        <span data-i18n="backupData">备份数据到云端</span>
                     </button>
-                    <button class="btn" id="sync-from-cloud-btn">
-                        <span data-i18n="syncFromCloud">从云端同步错题</span>
+                    <button class="btn" id="restore-data-btn">
+                        <span data-i18n="restoreData">从云端恢复数据</span>
                     </button>
                 </div>
             </div>
@@ -1218,29 +489,19 @@
             </div>
             <div class="input-group">
                 <input type="text" id="player-name" data-i18n="playerNamePlaceholder" placeholder="请输入你的名字" maxlength="10">
-                <button class="btn" id="save-score-btn">
-                    <span data-i18n="saveScore">保存成绩</span>
-                </button>
+                <button class="btn" id="save-score-btn"><span data-i18n="saveScore">保存成绩</span></button>
             </div>
             <div class="controls">
-                <button class="btn btn-primary" id="play-again-btn">
-                    <span data-i18n="playAgain">再玩一次</span>
-                </button>
-                <button class="btn" id="view-leaderboard-btn">
-                    <span data-i18n="viewLeaderboard">查看排行榜</span>
-                </button>
-                <button class="btn" id="view-statistics-btn">
-                    <span data-i18n="viewStatistics">查看统计</span>
-                </button>
+                <button class="btn btn-primary" id="play-again-btn"><span data-i18n="playAgain">再玩一次</span></button>
+                <button class="btn" id="view-leaderboard-btn"><span data-i18n="viewLeaderboard">查看排行榜</span></button>
+                <button class="btn" id="view-statistics-btn"><span data-i18n="viewStatistics">查看统计</span></button>
             </div>
         </div>
     </div>
     
-    <!-- 匹配反馈 -->
     <div class="match-feedback" id="match-feedback"></div>
 
     <script>
-        // 创建全局游戏应用对象
         const MathGame = (function() {
             // ==================== Supabase 配置 ====================
             const SUPABASE_URL = 'https://ytoailyxejdgtpfwcdci.supabase.co';
@@ -1249,190 +510,76 @@
             // ==================== 多语言支持 ====================
             const translations = {
                 zh: {
-                    gameTitle: "🧮 数学加法消消乐",
-                    gameSubtitle: "教学优化版 | 支持云端同步 | 实时排行榜",
-                    history: "📝 历史记录",
-                    statistics: "📊 统计",
-                    achievements: "⭐ 成就",
-                    wrongBook: "📖 错题本",
-                    leaderboard: "🏆 排行榜",
-                    profile: "👤 个人资料",
-                    modeStandard: "📚 标准模式",
-                    modeStandardDesc: "完成30题，比拼用时",
-                    modeChallenge: "⚡ 挑战模式",
-                    modeChallengeDesc: "90秒时间，比拼题数",
-                    modePractice: "🎯 练习模式",
-                    modePracticeDesc: "无时间限制，专心学习",
-                    modeCustom: "⚙️ 自定义",
-                    modeCustomDesc: "自设参数，灵活练习",
-                    numberRange: "数字范围:",
-                    rangeEasy: "0-9 (简单)",
-                    rangeStandard: "0-18 (标准)",
-                    rangeChallenge: "5-18 (挑战)",
-                    startGame: "🚀 开始游戏",
-                    startPractice: "🎯 开始练习",
-                    questionCount: "题目数量:",
-                    timeLimit: "时间限制(秒):",
-                    scoreLabel: "得分",
-                    completedLabel: "完成题数",
-                    timeLeft: "剩余时间",
-                    timeUsed: "已用时间",
-                    accuracyLabel: "正确率",
-                    targetSum: "目标和:",
-                    hintButton: "💡 提示(10秒)",
-                    refreshButton: "🔄 刷新数字",
-                    endGameButton: "⏹️ 结束游戏",
-                    user: "用户",
-                    logout: "退出",
-                    loginTitle: "🔐 用户登录",
-                    registerTitle: "📝 用户注册",
-                    emailLabel: "邮箱地址:",
-                    emailPlaceholder: "请输入邮箱地址",
-                    passwordLabel: "密码:",
-                    passwordPlaceholder: "请输入密码",
-                    usernameLabel: "用户名:",
-                    usernamePlaceholder: "请输入用户名（可选）",
-                    loginButton: "登录",
-                    registerButton: "注册",
-                    noAccount: "还没有账号？",
-                    registerNow: "立即注册",
-                    hasAccount: "已有账号？",
-                    loginNow: "立即登录",
-                    historyTitle: "📝 历史记录",
-                    statisticsTitle: "📊 统计分析",
-                    achievementsTitle: "⭐ 成就系统",
-                    wrongbookTitle: "📖 错题本",
-                    leaderboardTitle: "🏆 排行榜",
-                    profileTitle: "👤 个人资料",
-                    tableNumber: "#",
-                    tableTarget: "目标",
-                    tableNum1: "数字1",
-                    tableNum2: "数字2",
-                    tableResult: "结果",
-                    tableTime: "用时(秒)",
-                    clearHistory: "清空本次记录",
-                    viewAllHistory: "查看所有记录",
-                    standardBoard: "📚 标准模式",
-                    challengeBoard: "⚡ 挑战模式",
-                    scoreBoard: "🏆 高分榜",
-                    accuracyBoard: "🎯 准确率",
-                    myHistory: "📊 我的历史",
-                    gameCount: "游戏次数",
-                    highScore: "最高得分",
-                    avgAccuracy: "平均正确率",
-                    joinDate: "注册时间",
-                    syncToCloud: "同步错题到云端",
-                    syncFromCloud: "从云端同步错题",
-                    finalScore: "最终得分",
-                    finalCompleted: "完成题数",
-                    finalTime: "用时",
-                    finalAccuracy: "正确率",
-                    playerNamePlaceholder: "请输入你的名字",
-                    saveScore: "保存成绩",
-                    playAgain: "再玩一次",
-                    viewLeaderboard: "查看排行榜",
-                    viewStatistics: "查看统计",
-                    loadingStats: "加载统计信息中...",
-                    languageText: "English",
-                    gameComplete: "🎉 恭喜完成30题！",
-                    gameTimeout: "⏰ 时间到！",
-                    gameGiveup: "🏁 游戏结束",
-                    gameEnd: "🎉 游戏结束!"
+                    gameTitle: "🧮 数学加法消消乐", gameSubtitle: "教学优化版 | 支持云端同步 | 实时排行榜",
+                    history: "📝 历史记录", statistics: "📊 统计", achievements: "⭐ 成就", wrongBook: "📖 错题本",
+                    leaderboard: "🏆 排行榜", profile: "👤 个人资料", modeStandard: "📚 标准模式",
+                    modeStandardDesc: "完成30题，比拼用时", modeChallenge: "⚡ 挑战模式",
+                    modeChallengeDesc: "90秒时间，比拼题数", modePractice: "🎯 练习模式",
+                    modePracticeDesc: "无时间限制，专心学习", modeCustom: "⚙️ 自定义",
+                    modeCustomDesc: "自设参数，灵活练习", numberRange: "数字范围:", rangeEasy: "0-9 (简单)",
+                    rangeStandard: "0-18 (标准)", rangeChallenge: "5-18 (挑战)", startGame: "🚀 开始游戏",
+                    startPractice: "🎯 开始练习", questionCount: "题目数量:", timeLimit: "时间限制(秒):",
+                    scoreLabel: "得分", completedLabel: "完成题数", timeLeft: "剩余时间", timeUsed: "已用时间",
+                    accuracyLabel: "正确率", targetSum: "目标和:", hintButton: "💡 提示(10秒)",
+                    refreshButton: "🔄 刷新数字", endGameButton: "⏹️ 结束游戏", user: "用户", logout: "退出",
+                    loginTitle: "🔐 用户登录", registerTitle: "📝 用户注册", emailLabel: "邮箱地址:",
+                    emailPlaceholder: "请输入邮箱地址", passwordLabel: "密码:", passwordPlaceholder: "请输入密码",
+                    usernameLabel: "用户名:", usernamePlaceholder: "请输入用户名（可选）", loginButton: "登录",
+                    registerButton: "注册", noAccount: "还没有账号？", registerNow: "立即注册",
+                    hasAccount: "已有账号？", loginNow: "立即登录", historyTitle: "📝 历史记录",
+                    statisticsTitle: "📊 统计分析", achievementsTitle: "⭐ 成就系统", wrongbookTitle: "📖 错题本",
+                    leaderboardTitle: "🏆 排行榜", profileTitle: "👤 个人资料", tableNumber: "#",
+                    tableTarget: "目标", tableNum1: "数字1", tableNum2: "数字2", tableResult: "结果",
+                    tableTime: "用时(秒)", clearHistory: "清空本次记录", viewAllHistory: "查看所有记录",
+                    standardBoard: "📚 标准模式", challengeBoard: "⚡ 挑战模式", scoreBoard: "🏆 高分榜",
+                    accuracyBoard: "🎯 准确率", myHistory: "📊 我的历史", gameCount: "游戏次数",
+                    highScore: "最高得分", avgAccuracy: "平均正确率", joinDate: "注册时间",
+                    syncWrongQuestions: "同步错题到云端", clearWrongQuestions: "清空本地错题",
+                    backupData: "备份数据到云端", restoreData: "从云端恢复数据", finalScore: "最终得分",
+                    finalCompleted: "完成题数", finalTime: "用时", finalAccuracy: "正确率",
+                    playerNamePlaceholder: "请输入你的名字", saveScore: "保存成绩", playAgain: "再玩一次",
+                    viewLeaderboard: "查看排行榜", viewStatistics: "查看统计", loadingStats: "加载统计信息中...",
+                    languageText: "English", gameComplete: "🎉 恭喜完成30题！", gameTimeout: "⏰ 时间到！",
+                    gameGiveup: "🏁 游戏结束", gameEnd: "🎉 游戏结束!"
                 },
                 en: {
-                    gameTitle: "🧮 Math Addition Match",
-                    gameSubtitle: "Educational Edition | Cloud Sync | Real-time Leaderboard",
-                    history: "📝 History",
-                    statistics: "📊 Statistics",
-                    achievements: "⭐ Achievements",
-                    wrongBook: "📖 Wrong Questions",
-                    leaderboard: "🏆 Leaderboard",
-                    profile: "👤 Profile",
-                    modeStandard: "📚 Standard Mode",
-                    modeStandardDesc: "Complete 30 questions, compete by time",
-                    modeChallenge: "⚡ Challenge Mode",
-                    modeChallengeDesc: "90 seconds, compete by question count",
-                    modePractice: "🎯 Practice Mode",
-                    modePracticeDesc: "No time limit, focus on learning",
-                    modeCustom: "⚙️ Custom Mode",
-                    modeCustomDesc: "Set your own parameters",
-                    numberRange: "Number Range:",
-                    rangeEasy: "0-9 (Easy)",
-                    rangeStandard: "0-18 (Standard)",
-                    rangeChallenge: "5-18 (Challenge)",
-                    startGame: "🚀 Start Game",
-                    startPractice: "🎯 Start Practice",
-                    questionCount: "Questions:",
-                    timeLimit: "Time Limit (seconds):",
-                    scoreLabel: "Score",
-                    completedLabel: "Completed",
-                    timeLeft: "Time Left",
-                    timeUsed: "Time Used",
-                    accuracyLabel: "Accuracy",
-                    targetSum: "Target Sum:",
-                    hintButton: "💡 Hint (10s)",
-                    refreshButton: "🔄 Refresh Numbers",
-                    endGameButton: "⏹️ End Game",
-                    user: "User",
-                    logout: "Logout",
-                    loginTitle: "🔐 User Login",
-                    registerTitle: "📝 User Registration",
-                    emailLabel: "Email:",
-                    emailPlaceholder: "Enter email address",
-                    passwordLabel: "Password:",
-                    passwordPlaceholder: "Enter password",
-                    usernameLabel: "Username:",
-                    usernamePlaceholder: "Enter username (optional)",
-                    loginButton: "Login",
-                    registerButton: "Register",
-                    noAccount: "No account?",
-                    registerNow: "Register Now",
-                    hasAccount: "Already have an account?",
-                    loginNow: "Login Now",
-                    historyTitle: "📝 History Records",
-                    statisticsTitle: "📊 Statistics Analysis",
-                    achievementsTitle: "⭐ Achievement System",
-                    wrongbookTitle: "📖 Wrong Questions",
-                    leaderboardTitle: "🏆 Leaderboard",
-                    profileTitle: "👤 Profile",
-                    tableNumber: "#",
-                    tableTarget: "Target",
-                    tableNum1: "Num1",
-                    tableNum2: "Num2",
-                    tableResult: "Result",
-                    tableTime: "Time(s)",
-                    clearHistory: "Clear Current History",
-                    viewAllHistory: "View All History",
-                    standardBoard: "📚 Standard Mode",
-                    challengeBoard: "⚡ Challenge Mode",
-                    scoreBoard: "🏆 High Score",
-                    accuracyBoard: "🎯 Accuracy",
-                    myHistory: "📊 My History",
-                    gameCount: "Games Played",
-                    highScore: "High Score",
-                    avgAccuracy: "Avg Accuracy",
-                    joinDate: "Join Date",
-                    syncToCloud: "Sync to Cloud",
-                    syncFromCloud: "Sync from Cloud",
-                    finalScore: "Final Score",
-                    finalCompleted: "Completed",
-                    finalTime: "Time Used",
-                    finalAccuracy: "Accuracy",
-                    playerNamePlaceholder: "Enter your name",
-                    saveScore: "Save Score",
-                    playAgain: "Play Again",
-                    viewLeaderboard: "View Leaderboard",
-                    viewStatistics: "View Statistics",
-                    loadingStats: "Loading statistics...",
-                    languageText: "中文",
-                    gameComplete: "🎉 Congratulations! Completed 30 questions!",
-                    gameTimeout: "⏰ Time's up!",
-                    gameGiveup: "🏁 Game Over",
-                    gameEnd: "🎉 Game Over!"
+                    gameTitle: "🧮 Math Addition Match", gameSubtitle: "Educational Edition | Cloud Sync | Real-time Leaderboard",
+                    history: "📝 History", statistics: "📊 Statistics", achievements: "⭐ Achievements",
+                    wrongBook: "📖 Wrong Questions", leaderboard: "🏆 Leaderboard", profile: "👤 Profile",
+                    modeStandard: "📚 Standard Mode", modeStandardDesc: "Complete 30 questions, compete by time",
+                    modeChallenge: "⚡ Challenge Mode", modeChallengeDesc: "90 seconds, compete by question count",
+                    modePractice: "🎯 Practice Mode", modePracticeDesc: "No time limit, focus on learning",
+                    modeCustom: "⚙️ Custom Mode", modeCustomDesc: "Set your own parameters", numberRange: "Number Range:",
+                    rangeEasy: "0-9 (Easy)", rangeStandard: "0-18 (Standard)", rangeChallenge: "5-18 (Challenge)",
+                    startGame: "🚀 Start Game", startPractice: "🎯 Start Practice", questionCount: "Questions:",
+                    timeLimit: "Time Limit (seconds):", scoreLabel: "Score", completedLabel: "Completed",
+                    timeLeft: "Time Left", timeUsed: "Time Used", accuracyLabel: "Accuracy", targetSum: "Target Sum:",
+                    hintButton: "💡 Hint (10s)", refreshButton: "🔄 Refresh Numbers", endGameButton: "⏹️ End Game",
+                    user: "User", logout: "Logout", loginTitle: "🔐 User Login", registerTitle: "📝 User Registration",
+                    emailLabel: "Email:", emailPlaceholder: "Enter email address", passwordLabel: "Password:",
+                    passwordPlaceholder: "Enter password", usernameLabel: "Username:",
+                    usernamePlaceholder: "Enter username (optional)", loginButton: "Login", registerButton: "Register",
+                    noAccount: "No account?", registerNow: "Register Now", hasAccount: "Already have an account?",
+                    loginNow: "Login Now", historyTitle: "📝 History Records", statisticsTitle: "📊 Statistics Analysis",
+                    achievementsTitle: "⭐ Achievement System", wrongbookTitle: "📖 Wrong Questions",
+                    leaderboardTitle: "🏆 Leaderboard", profileTitle: "👤 Profile", tableNumber: "#",
+                    tableTarget: "Target", tableNum1: "Num1", tableNum2: "Num2", tableResult: "Result",
+                    tableTime: "Time(s)", clearHistory: "Clear Current History", viewAllHistory: "View All History",
+                    standardBoard: "📚 Standard Mode", challengeBoard: "⚡ Challenge Mode", scoreBoard: "🏆 High Score",
+                    accuracyBoard: "🎯 Accuracy", myHistory: "📊 My History", gameCount: "Games Played",
+                    highScore: "High Score", avgAccuracy: "Avg Accuracy", joinDate: "Join Date",
+                    syncWrongQuestions: "Sync Wrong Questions to Cloud", clearWrongQuestions: "Clear Local Wrong Questions",
+                    backupData: "Backup Data to Cloud", restoreData: "Restore Data from Cloud", finalScore: "Final Score",
+                    finalCompleted: "Completed", finalTime: "Time Used", finalAccuracy: "Accuracy",
+                    playerNamePlaceholder: "Enter your name", saveScore: "Save Score", playAgain: "Play Again",
+                    viewLeaderboard: "View Leaderboard", viewStatistics: "View Statistics",
+                    loadingStats: "Loading statistics...", languageText: "中文",
+                    gameComplete: "🎉 Congratulations! Completed 30 questions!", gameTimeout: "⏰ Time's up!",
+                    gameGiveup: "🏁 Game Over", gameEnd: "🎉 Game Over!"
                 }
             };
             
-            // ==================== 全局变量声明 ====================
+            // ==================== 全局变量 ====================
             let supabase;
             let score = 0;
             let selectedCards = [];
@@ -1454,6 +601,20 @@
             let authMode = 'login';
             let currentLanguage = 'zh';
             
+            // 并发控制
+            let isSavingScore = false;
+            let isSyncing = false;
+            
+            // 游戏状态管理
+            let gameState = {
+                lastGameElapsedTime: 0,
+                modeConfigTime: 90,
+                originalTimeLimit: 90
+            };
+            
+            // 成就进度跟踪
+            let achievementProgress = {};
+            
             // 游戏配置
             const MODE_CONFIG = {
                 standard: { questions: 30, time: null, hasTimeLimit: false },
@@ -1468,23 +629,86 @@
                 '5-18': { min: 5, max: 18 }
             };
             
-            // 成就定义
+            // 成就定义 - 添加进度信息
             const ACHIEVEMENTS = [
-                { id: 'first_win', name: { zh: '首战告捷', en: 'First Victory' }, desc: { zh: '完成第一局游戏', en: 'Complete first game' }, icon: '🥇', condition: () => score > 0 },
-                { id: 'fast_5', name: { zh: '速度之星', en: 'Speed Star' }, desc: { zh: '5秒内完成一题', en: 'Complete a question within 5 seconds' }, icon: '⚡', condition: () => gameHistory.some(r => r.time < 5 && r.isCorrect) },
-                { id: 'accuracy_90', name: { zh: '准确大师', en: 'Accuracy Master' }, desc: { zh: '正确率达到90%', en: 'Achieve 90% accuracy' }, icon: '🎯', condition: () => totalAttempts > 0 && (correctCount / totalAttempts) >= 0.9 },
-                { id: 'complete_30', name: { zh: '完成挑战', en: 'Challenge Complete' }, desc: { zh: '完成30题模式', en: 'Complete 30-question mode' }, icon: '🏆', condition: () => currentMode === 'standard' && completedQuestions >= 30 },
-                { id: 'cloud_user', name: { zh: '云端玩家', en: 'Cloud Player' }, desc: { zh: '登录云端账户', en: 'Login to cloud account' }, icon: '☁️', condition: () => !!currentUser },
-                { id: 'score_100', name: { zh: '百分达人', en: 'Centurion' }, desc: { zh: '单局得分达到100分', en: 'Score 100 points in one game' }, icon: '💯', condition: () => score >= 100 },
-                { id: 'time_master', name: { zh: '时间管理', en: 'Time Master' }, desc: { zh: '在挑战模式下完成20题', en: 'Complete 20 questions in challenge mode' }, icon: '⏱️', condition: () => currentMode === 'challenge' && completedQuestions >= 20 },
-                { id: 'practice_master', name: { zh: '练习达人', en: 'Practice Master' }, desc: { zh: '练习模式完成50题', en: 'Complete 50 questions in practice mode' }, icon: '📚', condition: () => currentMode === 'practice' && completedQuestions >= 50 }
+                { 
+                    id: 'first_win', 
+                    name: { zh: '首战告捷', en: 'First Victory' }, 
+                    desc: { zh: '完成第一局游戏', en: 'Complete first game' }, 
+                    icon: '🥇', 
+                    condition: () => achievementProgress.first_win >= 1,
+                    progressCondition: () => achievementProgress.first_win,
+                    maxProgress: 1
+                },
+                { 
+                    id: 'fast_5', 
+                    name: { zh: '速度之星', en: 'Speed Star' }, 
+                    desc: { zh: '5秒内完成一题', en: 'Complete a question within 5 seconds' }, 
+                    icon: '⚡', 
+                    condition: () => achievementProgress.fast_5 >= 1,
+                    progressCondition: () => achievementProgress.fast_5,
+                    maxProgress: 1
+                },
+                { 
+                    id: 'accuracy_90', 
+                    name: { zh: '准确大师', en: 'Accuracy Master' }, 
+                    desc: { zh: '正确率达到90%', en: 'Achieve 90% accuracy' }, 
+                    icon: '🎯', 
+                    condition: () => totalAttempts > 0 && (correctCount / totalAttempts) >= 0.9,
+                    progressCondition: () => totalAttempts > 0 ? (correctCount / totalAttempts) * 100 : 0,
+                    maxProgress: 90
+                },
+                { 
+                    id: 'complete_30', 
+                    name: { zh: '完成挑战', en: 'Challenge Complete' }, 
+                    desc: { zh: '完成30题模式', en: 'Complete 30-question mode' }, 
+                    icon: '🏆', 
+                    condition: () => currentMode === 'standard' && completedQuestions >= 30,
+                    progressCondition: () => completedQuestions,
+                    maxProgress: 30
+                },
+                { 
+                    id: 'cloud_user', 
+                    name: { zh: '云端玩家', en: 'Cloud Player' }, 
+                    desc: { zh: '登录云端账户', en: 'Login to cloud account' }, 
+                    icon: '☁️', 
+                    condition: () => !!currentUser,
+                    progressCondition: () => currentUser ? 100 : 0,
+                    maxProgress: 100
+                },
+                { 
+                    id: 'score_100', 
+                    name: { zh: '百分达人', en: 'Centurion' }, 
+                    desc: { zh: '单局得分达到100分', en: 'Score 100 points in one game' }, 
+                    icon: '💯', 
+                    condition: () => score >= 100,
+                    progressCondition: () => score,
+                    maxProgress: 100
+                },
+                { 
+                    id: 'time_master', 
+                    name: { zh: '时间管理', en: 'Time Master' }, 
+                    desc: { zh: '在挑战模式下完成20题', en: 'Complete 20 questions in challenge mode' }, 
+                    icon: '⏱️', 
+                    condition: () => currentMode === 'challenge' && completedQuestions >= 20,
+                    progressCondition: () => completedQuestions,
+                    maxProgress: 20
+                },
+                { 
+                    id: 'practice_master', 
+                    name: { zh: '练习达人', en: 'Practice Master' }, 
+                    desc: { zh: '练习模式完成50题', en: 'Complete 50 questions in practice mode' }, 
+                    icon: '📚', 
+                    condition: () => currentMode === 'practice' && completedQuestions >= 50,
+                    progressCondition: () => completedQuestions,
+                    maxProgress: 50
+                }
             ];
             
             // ==================== 工具函数 ====================
             function setLanguage(lang) {
                 currentLanguage = lang;
                 localStorage.setItem('mathGameLanguage', lang);
-                
                 document.querySelectorAll('[data-i18n]').forEach(element => {
                     const key = element.getAttribute('data-i18n');
                     if (translations[lang] && translations[lang][key]) {
@@ -1495,12 +719,10 @@
                         }
                     }
                 });
-                
-                document.getElementById('language-text').textContent = 
-                    lang === 'zh' ? 'English' : '中文';
+                document.getElementById('language-text').textContent = lang === 'zh' ? 'English' : '中文';
             }
             
-            function showMessage(text, type = 'info') {
+            function showMessage(text, type = 'info', duration = 2000) {
                 const message = document.createElement('div');
                 message.textContent = text;
                 message.style.cssText = `
@@ -1516,7 +738,21 @@
                     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 `;
                 document.body.appendChild(message);
-                setTimeout(() => message.remove(), 2000);
+                setTimeout(() => message.remove(), duration);
+            }
+            
+            // 显示成就解锁通知
+            function showAchievementUnlock(achievement) {
+                const unlockDiv = document.createElement('div');
+                unlockDiv.className = 'achievement-unlock';
+                unlockDiv.innerHTML = `
+                    <div style="font-size: 3em;">${achievement.icon}</div>
+                    <div style="font-size: 1.5em; font-weight: bold; margin: 10px 0;">🎉 ${currentLanguage === 'zh' ? '成就解锁!' : 'Achievement Unlocked!'}</div>
+                    <div style="font-size: 1.2em; font-weight: bold;">${achievement.name[currentLanguage] || achievement.name.zh}</div>
+                    <div style="margin-top: 10px;">${achievement.desc[currentLanguage] || achievement.desc.zh}</div>
+                `;
+                document.body.appendChild(unlockDiv);
+                setTimeout(() => unlockDiv.remove(), 2000);
             }
             
             function shuffleArray(array) {
@@ -1527,12 +763,214 @@
                 return array;
             }
             
+            // ==================== 输入验证函数 ====================
+            function sanitizeInput(input, maxLength = 100) {
+                if (typeof input !== 'string') input = String(input);
+                return input
+                    .substring(0, maxLength)
+                    .replace(/[<>]/g, '')
+                    .trim();
+            }
+            
+            function validateEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }
+            
+            function validatePassword(password) {
+                return password.length >= 6;
+            }
+            
+            // ==================== 数据备份和恢复 ====================
+            function backupLocalData() {
+                try {
+                    const backupData = {
+                        wrongQuestions: wrongQuestions,
+                        achievements: Array.from(achievements.entries()),
+                        achievementProgress: achievementProgress,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    localStorage.setItem('mathGameBackup', JSON.stringify(backupData));
+                    console.log('本地数据备份完成');
+                    return backupData;
+                } catch (error) {
+                    console.error('数据备份失败:', error);
+                    return null;
+                }
+            }
+            
+            async function backupToCloud() {
+                if (!currentUser) {
+                    showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
+                    return false;
+                }
+                
+                if (isSyncing) {
+                    showMessage(currentLanguage === 'zh' ? '正在同步中，请稍后' : 'Syncing in progress, please wait', 'info');
+                    return false;
+                }
+                
+                isSyncing = true;
+                try {
+                    const backupData = backupLocalData();
+                    if (!backupData) {
+                        showMessage(currentLanguage === 'zh' ? '备份数据失败' : 'Backup data failed', 'error');
+                        return false;
+                    }
+                    
+                    const { error } = await supabase
+                        .from('user_backups')
+                        .upsert({
+                            user_id: currentUser.id,
+                            backup_data: backupData,
+                            updated_at: new Date().toISOString()
+                        });
+                    
+                    if (error) throw error;
+                    
+                    showMessage(currentLanguage === 'zh' ? '数据备份到云端成功' : 'Data backed up to cloud successfully', 'success');
+                    return true;
+                } catch (error) {
+                    console.error('云端备份失败:', error);
+                    showMessage(currentLanguage === 'zh' ? '云端备份失败' : 'Cloud backup failed', 'error');
+                    return false;
+                } finally {
+                    isSyncing = false;
+                }
+            }
+            
+            async function restoreFromCloud() {
+                if (!currentUser) {
+                    showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
+                    return false;
+                }
+                
+                if (isSyncing) {
+                    showMessage(currentLanguage === 'zh' ? '正在同步中，请稍后' : 'Syncing in progress, please wait', 'info');
+                    return false;
+                }
+                
+                if (!confirm(currentLanguage === 'zh' ? 
+                    '确定要从云端恢复数据吗？这会覆盖当前本地数据。' : 
+                    'Are you sure you want to restore data from cloud? This will overwrite current local data.')) {
+                    return false;
+                }
+                
+                isSyncing = true;
+                try {
+                    const { data, error } = await supabase
+                        .from('user_backups')
+                        .select('backup_data')
+                        .eq('user_id', currentUser.id)
+                        .single();
+                    
+                    if (error) throw error;
+                    
+                    if (!data || !data.backup_data) {
+                        showMessage(currentLanguage === 'zh' ? '云端没有找到备份数据' : 'No backup data found in cloud', 'info');
+                        return false;
+                    }
+                    
+                    const backupData = data.backup_data;
+                    
+                    // 恢复数据
+                    wrongQuestions = backupData.wrongQuestions || [];
+                    achievements = new Map(backupData.achievements || []);
+                    achievementProgress = backupData.achievementProgress || {};
+                    
+                    // 保存到本地存储
+                    localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
+                    const achievementsData = {};
+                    achievements.forEach((value, key) => {
+                        achievementsData[key] = value;
+                    });
+                    localStorage.setItem('mathGameAchievements', JSON.stringify(achievementsData));
+                    localStorage.setItem('mathGameAchievementProgress', JSON.stringify(achievementProgress));
+                    
+                    showMessage(currentLanguage === 'zh' ? '数据恢复成功' : 'Data restored successfully', 'success');
+                    return true;
+                } catch (error) {
+                    console.error('数据恢复失败:', error);
+                    showMessage(currentLanguage === 'zh' ? '数据恢复失败' : 'Data restore failed', 'error');
+                    return false;
+                } finally {
+                    isSyncing = false;
+                }
+            }
+            
+            // ==================== 错题去重功能 ====================
+            function recordWrongQuestion(num1, num2, target) {
+                // 创建错题标识
+                const wrongId = `${Math.min(num1, num2)}_${Math.max(num1, num2)}_${target}`;
+                
+                // 检查是否已存在相同的错题
+                const exists = wrongQuestions.some(question => 
+                    `${Math.min(question.num1, question.num2)}_${Math.max(question.num1, question.num2)}_${question.correctSum}` === wrongId
+                );
+                
+                if (!exists) {
+                    const wrongQuestion = {
+                        id: wrongId,
+                        num1: num1,
+                        num2: num2,
+                        wrongSum: num1 + num2,
+                        correctSum: target,
+                        timestamp: new Date().toISOString(),
+                        count: 1  // 错误次数
+                    };
+                    wrongQuestions.push(wrongQuestion);
+                    saveWrongQuestions();
+                } else {
+                    // 更新错误次数
+                    const existingQuestion = wrongQuestions.find(question => 
+                        `${Math.min(question.num1, question.num2)}_${Math.max(question.num1, question.num2)}_${question.correctSum}` === wrongId
+                    );
+                    if (existingQuestion) {
+                        existingQuestion.count++;
+                        existingQuestion.timestamp = new Date().toISOString();
+                        saveWrongQuestions();
+                    }
+                }
+            }
+            
+            // ==================== 修复的时间计算函数 ====================
+            function calculateElapsedTime(reason) {
+                if (!startTime) return 0;
+                
+                let elapsedTime = 0;
+                const modeConfig = MODE_CONFIG[currentMode];
+                
+                if (currentMode === 'challenge') {
+                    const challengeTime = modeConfig.time; // 90秒
+                    
+                    if (reason === 'timeout') {
+                        elapsedTime = challengeTime;
+                    } else if (reason === 'giveup') {
+                        const actualElapsed = Math.floor((new Date() - startTime) / 1000);
+                        elapsedTime = Math.min(actualElapsed, challengeTime);
+                        
+                        if (timeLeft >= 0) {
+                            const calculatedElapsed = challengeTime - timeLeft;
+                            elapsedTime = Math.min(calculatedElapsed, challengeTime);
+                        }
+                    } else {
+                        const actualElapsed = Math.floor((new Date() - startTime) / 1000);
+                        elapsedTime = Math.min(actualElapsed, challengeTime);
+                    }
+                    
+                    elapsedTime = Math.min(elapsedTime, challengeTime);
+                } else {
+                    elapsedTime = Math.floor((new Date() - startTime) / 1000);
+                }
+                
+                return elapsedTime;
+            }
+            
             // ==================== 核心游戏函数 ====================
             function selectMode(mode) {
                 currentMode = mode;
-                document.querySelectorAll('.mode-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
+                document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
                 document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
                 
                 const customSettings = document.getElementById('custom-settings');
@@ -1560,23 +998,26 @@
             function startGame() {
                 if (!currentUser) {
                     showAuthModal();
-                    showMessage(
-                        currentLanguage === 'zh' ? '请先登录再开始游戏' : 'Please login to start game',
-                        'info'
-                    );
+                    showMessage(currentLanguage === 'zh' ? '请先登录再开始游戏' : 'Please login to start game', 'info');
                     return;
                 }
                 
                 resetGame();
                 
                 const range = document.getElementById('number-range').value;
-                const modeConfig = MODE_CONFIG[currentMode];
+                const modeConfig = { ...MODE_CONFIG[currentMode] };
                 
                 if (currentMode === 'custom') {
                     modeConfig.questions = parseInt(document.getElementById('custom-questions').value) || 20;
                     modeConfig.time = parseInt(document.getElementById('custom-time').value) || 60;
-                    timeLeft = modeConfig.time;
                 }
+                
+                if (modeConfig.hasTimeLimit) {
+                    timeLeft = modeConfig.time || 90;
+                }
+                
+                gameState.modeConfigTime = modeConfig.time || 0;
+                gameState.originalTimeLimit = timeLeft;
                 
                 document.getElementById('game-info').style.display = 'grid';
                 document.getElementById('progress-container').style.display = 'block';
@@ -1593,25 +1034,20 @@
                 generateNumberGrid();
                 
                 startTime = new Date();
+                gameState.lastGameElapsedTime = 0;
                 
                 const timeContainer = document.getElementById('time-container');
                 if (modeConfig.hasTimeLimit) {
-                    timeLeft = modeConfig.time;
-                    timeContainer.innerHTML = `
-                        <div class="info-label" data-i18n="timeLeft">剩余时间</div>
-                        <div class="info-value" id="time">${timeLeft}</div>
-                    `;
+                    document.getElementById('time').textContent = timeLeft;
                     timerInterval = setInterval(updateTimer, 1000);
                 } else {
-                    timeContainer.innerHTML = `
-                        <div class="info-label" data-i18n="timeUsed">已用时间</div>
-                        <div class="info-value" id="time">0</div>
-                    `;
                     timerInterval = setInterval(updateElapsedTime, 1000);
                 }
                 
                 hintInterval = setInterval(updateHintCooldown, 1000);
                 gameActive = true;
+                
+                console.log('游戏开始:', { mode: currentMode, timeLeft: timeLeft, startTime: startTime });
             }
             
             function resetGame() {
@@ -1623,8 +1059,8 @@
                 gameHistory = [];
                 gameActive = false;
                 
-                if (timerInterval) clearInterval(timerInterval);
-                if (hintInterval) clearInterval(hintInterval);
+                if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+                if (hintInterval) { clearInterval(hintInterval); hintInterval = null; }
                 
                 document.getElementById('score').textContent = '0';
                 const modeConfig = MODE_CONFIG[currentMode];
@@ -1633,8 +1069,8 @@
                 document.getElementById('accuracy').textContent = '100%';
                 document.getElementById('progress-bar').style.width = '100%';
                 
-                const gameGrid = document.getElementById('game-grid');
-                gameGrid.innerHTML = '';
+                document.getElementById('game-grid').innerHTML = '';
+                gameState.lastGameElapsedTime = 0;
             }
             
             function generateNewTarget() {
@@ -1720,10 +1156,7 @@
                 }
                 
                 if (selectedCards.length >= 2) {
-                    showMessage(
-                        currentLanguage === 'zh' ? '最多只能选择2张卡片！' : 'You can only select 2 cards at most!',
-                        'error'
-                    );
+                    showMessage(currentLanguage === 'zh' ? '最多只能选择2张卡片！' : 'You can only select 2 cards at most!', 'error');
                     return;
                 }
                 
@@ -1752,6 +1185,17 @@
                     time: responseTime,
                     timestamp: new Date().toISOString()
                 });
+                
+                // 更新成就进度
+                if (isCorrect) {
+                    if (responseTime < 5 && !achievementProgress.fast_5) {
+                        achievementProgress.fast_5 = 1;
+                    }
+                    
+                    if (!achievementProgress.first_win) {
+                        achievementProgress.first_win = 1;
+                    }
+                }
                 
                 if (isCorrect) {
                     correctCount++;
@@ -1788,15 +1232,20 @@
                 }
                 
                 selectedCards = [];
+                
+                // 检查并触发成就解锁
+                checkAndTriggerAchievements();
             }
             
             function updateTimer() {
-                if (!gameActive) return;
+                if (!gameActive || !timerInterval) return;
                 
                 const modeConfig = MODE_CONFIG[currentMode];
                 
                 if (modeConfig.hasTimeLimit) {
                     timeLeft--;
+                    if (timeLeft < 0) timeLeft = 0;
+                    
                     document.getElementById('time').textContent = timeLeft;
                     
                     if (modeConfig.time) {
@@ -1841,22 +1290,15 @@
             }
             
             function endGame(reason) {
-                gameActive = false;
-                clearInterval(timerInterval);
-                clearInterval(hintInterval);
+                if (!gameActive) return;
                 
-                let elapsedTime;
-                if (startTime) {
-                    elapsedTime = Math.floor((new Date() - startTime) / 1000);
-                    
-                    // 修复：挑战模式的时间限制
-                    if (currentMode === 'challenge') {
-                        const challengeTime = MODE_CONFIG.challenge.time; // 90秒
-                        elapsedTime = Math.min(elapsedTime, challengeTime);
-                    }
-                } else {
-                    elapsedTime = 0;
-                }
+                gameActive = false;
+                
+                if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+                if (hintInterval) { clearInterval(hintInterval); hintInterval = null; }
+                
+                const elapsedTime = calculateElapsedTime(reason);
+                gameState.lastGameElapsedTime = elapsedTime;
                 
                 const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
                 
@@ -1873,13 +1315,16 @@
                 document.getElementById('result-title').textContent = titleMap[reason] || 
                     (currentLanguage === 'zh' ? '🎉 游戏结束!' : '🎉 Game Over!');
                 
-                // 保存已用时间到全局变量，供saveScore使用
-                window.lastGameElapsedTime = elapsedTime;
-                
                 document.getElementById('game-over').style.display = 'flex';
-                
-                // 更新成就状态
                 updateAchievements();
+                
+                console.log('游戏结束:', {
+                    reason: reason,
+                    mode: currentMode,
+                    elapsedTime: elapsedTime,
+                    completed: completedQuestions,
+                    accuracy: accuracy
+                });
             }
             
             function restartGame() {
@@ -1895,13 +1340,215 @@
                 resetGame();
             }
             
+            // ==================== 成就系统增强 ====================
+            function checkAndTriggerAchievements() {
+                const previousAchievements = new Map(achievements);
+                
+                ACHIEVEMENTS.forEach(ach => {
+                    const achieved = ach.condition();
+                    const wasAchieved = achievements.get(ach.id) || false;
+                    
+                    if (achieved && !wasAchieved) {
+                        achievements.set(ach.id, true);
+                        showAchievementUnlock(ach);
+                    }
+                });
+                
+                // 保存成就状态
+                if (achievements.size !== previousAchievements.size || 
+                    Array.from(achievements.entries()).some(([key, value]) => previousAchievements.get(key) !== value)) {
+                    saveAchievements();
+                }
+            }
+            
+            function updateAchievements() {
+                ACHIEVEMENTS.forEach(ach => {
+                    const achieved = ach.condition();
+                    achievements.set(ach.id, achieved);
+                });
+                saveAchievements();
+            }
+            
+            function saveAchievements() {
+                try {
+                    const achievementsData = {};
+                    achievements.forEach((value, key) => {
+                        achievementsData[key] = value;
+                    });
+                    localStorage.setItem('mathGameAchievements', JSON.stringify(achievementsData));
+                    localStorage.setItem('mathGameAchievementProgress', JSON.stringify(achievementProgress));
+                } catch (e) {
+                    console.error('保存成就失败:', e);
+                }
+            }
+            
+            function loadAchievements() {
+                try {
+                    const saved = localStorage.getItem('mathGameAchievements');
+                    if (saved) {
+                        const achievementsData = JSON.parse(saved);
+                        Object.keys(achievementsData).forEach(key => {
+                            achievements.set(key, achievementsData[key]);
+                        });
+                    }
+                    
+                    const progressSaved = localStorage.getItem('mathGameAchievementProgress');
+                    if (progressSaved) {
+                        achievementProgress = JSON.parse(progressSaved);
+                    }
+                } catch (e) {
+                    console.error('加载成就失败:', e);
+                    achievementProgress = {};
+                }
+            }
+            
+            function showAchievements() {
+                updateAchievements();
+                const container = document.getElementById('achievements-grid');
+                container.innerHTML = '';
+                
+                ACHIEVEMENTS.forEach(ach => {
+                    const achieved = achievements.get(ach.id) || false;
+                    const progress = ach.progressCondition ? ach.progressCondition() : 0;
+                    const maxProgress = ach.maxProgress || 100;
+                    const progressPercent = Math.min((progress / maxProgress) * 100, 100);
+                    
+                    const card = document.createElement('div');
+                    card.className = `achievement-card ${achieved ? '' : 'locked'}`;
+                    card.innerHTML = `
+                        <div class="achievement-icon">${ach.icon}</div>
+                        <div class="achievement-name">${ach.name[currentLanguage] || ach.name.zh}</div>
+                        <div class="achievement-desc">${ach.desc[currentLanguage] || ach.desc.zh}</div>
+                        <div class="progress-indicator">
+                            <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.8em; color: ${achieved ? '#4CAF50' : '#999'}">
+                            ${achieved ? (currentLanguage === 'zh' ? '✓ 已获得' : '✓ Achieved') : 
+                                (currentLanguage === 'zh' ? `${Math.round(progressPercent)}% 完成` : `${Math.round(progressPercent)}% Complete`)}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                
+                document.getElementById('achievements-modal').style.display = 'flex';
+            }
+            
+            // ==================== 错题本功能增强 ====================
+            function showWrongBook() {
+                loadWrongQuestions();
+                const container = document.getElementById('wrong-questions-list');
+                container.innerHTML = '';
+                
+                if (wrongQuestions.length === 0) {
+                    container.innerHTML = `<div style="text-align:center;padding:20px;color:#666;">${currentLanguage === 'zh' ? '错题本为空' : 'Wrong questions list is empty'}</div>`;
+                } else {
+                    // 按错误次数排序
+                    const sortedQuestions = [...wrongQuestions].sort((a, b) => b.count - a.count);
+                    
+                    sortedQuestions.forEach((question, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'wrong-question-item';
+                        item.innerHTML = `
+                            <div>
+                                <strong style="color: #333;">${question.num1} + ${question.num2} = ${question.wrongSum}</strong><br>
+                                <small style="color: #ff4444;">${currentLanguage === 'zh' ? `错误答案 (应为 ${question.correctSum})` : `Wrong answer (should be ${question.correctSum})`}</small><br>
+                                <small style="color: #666;">${currentLanguage === 'zh' ? `错误次数: ${question.count}` : `Errors: ${question.count}`}</small>
+                            </div>
+                            <div>
+                                <small style="color: #666;">${new Date(question.timestamp).toLocaleDateString()}</small>
+                            </div>
+                        `;
+                        container.appendChild(item);
+                    });
+                }
+                
+                document.getElementById('wrongbook-modal').style.display = 'flex';
+            }
+            
+            function loadWrongQuestions() {
+                try {
+                    const saved = localStorage.getItem('mathGameWrongQuestions');
+                    if (saved) {
+                        wrongQuestions = JSON.parse(saved);
+                    } else {
+                        wrongQuestions = [];
+                    }
+                } catch (e) {
+                    wrongQuestions = [];
+                }
+            }
+            
+            function saveWrongQuestions() {
+                try {
+                    localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
+                } catch (e) {
+                    console.error('保存错题失败:', e);
+                }
+            }
+            
+            // ==================== 云端同步错题 ====================
+            async function syncWrongQuestionsToCloud() {
+                if (!currentUser) {
+                    showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
+                    return false;
+                }
+                
+                if (isSyncing) {
+                    showMessage(currentLanguage === 'zh' ? '正在同步中，请稍后' : 'Syncing in progress, please wait', 'info');
+                    return false;
+                }
+                
+                isSyncing = true;
+                try {
+                    const { error } = await supabase
+                        .from('user_wrong_questions')
+                        .upsert({
+                            user_id: currentUser.id,
+                            wrong_questions: wrongQuestions,
+                            count: wrongQuestions.length,
+                            updated_at: new Date().toISOString()
+                        });
+                    
+                    if (error) throw error;
+                    
+                    showMessage(currentLanguage === 'zh' ? '错题同步到云端成功' : 'Wrong questions synced to cloud successfully', 'success');
+                    return true;
+                } catch (error) {
+                    console.error('错题同步失败:', error);
+                    showMessage(currentLanguage === 'zh' ? '错题同步失败' : 'Wrong questions sync failed', 'error');
+                    return false;
+                } finally {
+                    isSyncing = false;
+                }
+            }
+            
+            async function loadWrongQuestionsFromCloud() {
+                if (!currentUser) return false;
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('user_wrong_questions')
+                        .select('wrong_questions')
+                        .eq('user_id', currentUser.id)
+                        .single();
+                    
+                    if (error && error.code !== 'PGRST116') throw error;
+                    
+                    if (data && data.wrong_questions) {
+                        wrongQuestions = data.wrong_questions;
+                        saveWrongQuestions();
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('从云端加载错题失败:', error);
+                }
+                return false;
+            }
+            
             // ==================== 辅助功能 ====================
             function showHint() {
                 if (hintCooldown > 0) {
-                    showMessage(
-                        currentLanguage === 'zh' ? `提示冷却中，还剩${hintCooldown}秒` : `Hint cooldown, ${hintCooldown}s remaining`,
-                        'info'
-                    );
+                    showMessage(currentLanguage === 'zh' ? `提示冷却中，还剩${hintCooldown}秒` : `Hint cooldown, ${hintCooldown}s remaining`, 'info');
                     return;
                 }
                 
@@ -1924,10 +1571,7 @@
                     }
                 }
                 
-                showMessage(
-                    currentLanguage === 'zh' ? '没有找到解决方案，自动刷新数字' : 'No solution found, refreshing numbers',
-                    'info'
-                );
+                showMessage(currentLanguage === 'zh' ? '没有找到解决方案，自动刷新数字' : 'No solution found, refreshing numbers', 'info');
                 refreshNumbers();
             }
             
@@ -1968,129 +1612,6 @@
                 setTimeout(() => { feedback.style.opacity = '0'; }, 1000);
             }
             
-            // ==================== 错题本功能 ====================
-            function showWrongBook() {
-                loadWrongQuestions();
-                const container = document.getElementById('wrong-questions-list');
-                container.innerHTML = '';
-                
-                if (wrongQuestions.length === 0) {
-                    container.innerHTML = `<div style="text-align:center;padding:20px;color:#666;">${currentLanguage === 'zh' ? '错题本为空' : 'Wrong questions list is empty'}</div>`;
-                } else {
-                    wrongQuestions.forEach((question, index) => {
-                        const item = document.createElement('div');
-                        item.className = 'wrong-question-item';
-                        item.innerHTML = `
-                            <div>
-                                <strong style="color: #333;">${question.num1} + ${question.num2} = ${question.wrongSum}</strong><br>
-                                <small style="color: #ff4444;">${currentLanguage === 'zh' ? `错误答案 (应为 ${question.correctSum})` : `Wrong answer (should be ${question.correctSum})`}</small>
-                            </div>
-                            <div>
-                                <small style="color: #666;">${new Date(question.timestamp).toLocaleDateString()}</small>
-                            </div>
-                        `;
-                        container.appendChild(item);
-                    });
-                }
-                
-                document.getElementById('wrongbook-modal').style.display = 'flex';
-            }
-            
-            function recordWrongQuestion(num1, num2, target) {
-                const wrongQuestion = {
-                    num1: num1,
-                    num2: num2,
-                    wrongSum: num1 + num2,
-                    correctSum: target,
-                    timestamp: new Date().toISOString()
-                };
-                wrongQuestions.push(wrongQuestion);
-                saveWrongQuestions();
-            }
-            
-            function loadWrongQuestions() {
-                try {
-                    const saved = localStorage.getItem('mathGameWrongQuestions');
-                    if (saved) {
-                        wrongQuestions = JSON.parse(saved);
-                        console.log('已加载错题:', wrongQuestions.length);
-                    } else {
-                        wrongQuestions = [];
-                        console.log('没有找到保存的错题');
-                    }
-                } catch (e) {
-                    console.error('加载本地错题失败:', e);
-                    wrongQuestions = [];
-                }
-            }
-            
-            function saveWrongQuestions() {
-                try {
-                    localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
-                    console.log('已保存错题:', wrongQuestions.length);
-                } catch (e) {
-                    console.error('保存本地错题失败:', e);
-                }
-            }
-            
-            // ==================== 成就系统 ====================
-            function updateAchievements() {
-                // 重新计算所有成就
-                ACHIEVEMENTS.forEach(ach => {
-                    const achieved = ach.condition();
-                    achievements.set(ach.id, achieved);
-                });
-                
-                // 保存成就状态到本地存储
-                try {
-                    const achievementsData = {};
-                    achievements.forEach((value, key) => {
-                        achievementsData[key] = value;
-                    });
-                    localStorage.setItem('mathGameAchievements', JSON.stringify(achievementsData));
-                } catch (e) {
-                    console.error('保存成就失败:', e);
-                }
-            }
-            
-            function loadAchievements() {
-                try {
-                    const saved = localStorage.getItem('mathGameAchievements');
-                    if (saved) {
-                        const achievementsData = JSON.parse(saved);
-                        Object.keys(achievementsData).forEach(key => {
-                            achievements.set(key, achievementsData[key]);
-                        });
-                    }
-                } catch (e) {
-                    console.error('加载成就失败:', e);
-                }
-            }
-            
-            function showAchievements() {
-                updateAchievements(); // 重新计算当前成就状态
-                
-                const container = document.getElementById('achievements-grid');
-                container.innerHTML = '';
-                
-                ACHIEVEMENTS.forEach(ach => {
-                    const achieved = achievements.get(ach.id) || false;
-                    const card = document.createElement('div');
-                    card.className = `achievement-card ${achieved ? '' : 'locked'}`;
-                    card.innerHTML = `
-                        <div class="achievement-icon">${ach.icon}</div>
-                        <div class="achievement-name">${ach.name[currentLanguage] || ach.name.zh}</div>
-                        <div class="achievement-desc">${ach.desc[currentLanguage] || ach.desc.zh}</div>
-                        <div style="margin-top: 10px; font-size: 0.8em; color: ${achieved ? '#4CAF50' : '#999'}">
-                            ${achieved ? (currentLanguage === 'zh' ? '✓ 已获得' : '✓ Achieved') : (currentLanguage === 'zh' ? '🔒 未获得' : '🔒 Locked')}
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-                
-                document.getElementById('achievements-modal').style.display = 'flex';
-            }
-            
             // ==================== 用户认证系统 ====================
             async function checkAuth() {
                 try {
@@ -2098,6 +1619,8 @@
                     if (user) {
                         currentUser = user;
                         updateUserInfo();
+                        // 登录后自动从云端加载错题
+                        await loadWrongQuestionsFromCloud();
                         return true;
                     }
                     return false;
@@ -2118,6 +1641,9 @@
                     updateUserInfo();
                     closeAuthModal();
                     showMessage(currentLanguage === 'zh' ? '登录成功！' : 'Login successful!', 'success');
+                    
+                    // 登录后自动从云端加载数据
+                    await loadWrongQuestionsFromCloud();
                     return true;
                 } catch (error) {
                     console.error('登录失败:', error);
@@ -2210,13 +1736,23 @@
             }
             
             async function handleAuth() {
-                const email = document.getElementById('auth-email').value.trim();
+                const email = sanitizeInput(document.getElementById('auth-email').value.trim(), 100);
                 const password = document.getElementById('auth-password').value.trim();
-                const username = document.getElementById('auth-username').value.trim();
+                const username = sanitizeInput(document.getElementById('auth-username').value.trim(), 50);
                 
+                // 输入验证
                 if (!email || !password) {
-                    document.getElementById('auth-error').textContent = 
-                        currentLanguage === 'zh' ? '请输入邮箱和密码' : 'Please enter email and password';
+                    document.getElementById('auth-error').textContent = currentLanguage === 'zh' ? '请输入邮箱和密码' : 'Please enter email and password';
+                    return;
+                }
+                
+                if (!validateEmail(email)) {
+                    document.getElementById('auth-error').textContent = currentLanguage === 'zh' ? '请输入有效的邮箱地址' : 'Please enter a valid email address';
+                    return;
+                }
+                
+                if (!validatePassword(password)) {
+                    document.getElementById('auth-error').textContent = currentLanguage === 'zh' ? '密码长度至少为6位' : 'Password must be at least 6 characters long';
                     return;
                 }
                 
@@ -2227,92 +1763,134 @@
                 }
             }
             
-            // ==================== 成绩保存功能 ====================
+            // ==================== 修复的成绩保存功能（带并发控制） ====================
             async function saveScore() {
-                const nameInput = document.getElementById('player-name');
-                let playerName = nameInput.value.trim();
-                
-                if (!playerName && currentUser) {
-                    playerName = currentUser.user_metadata?.username;
-                    if (!playerName && currentUser.email) {
-                        playerName = currentUser.email.split('@')[0];
-                    }
-                }
-                
-                playerName = playerName || 
-                    (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
-                
-                if (!currentUser) {
-                    showMessage(
-                        currentLanguage === 'zh' ? '请先登录保存成绩' : 'Please login to save score',
-                        'error'
-                    );
-                    showAuthModal();
+                if (isSavingScore) {
+                    showMessage(currentLanguage === 'zh' ? '正在保存中，请稍后' : 'Saving in progress, please wait', 'info');
                     return;
                 }
                 
-                // 修复：正确计算已用时间
-                let elapsedTime;
-                if (currentMode === 'challenge') {
-                    // 挑战模式：使用保存的时间或计算最小值
-                    elapsedTime = window.lastGameElapsedTime || 
-                        (startTime ? Math.min(Math.floor((new Date() - startTime) / 1000), MODE_CONFIG.challenge.time) : 0);
-                } else {
-                    elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
-                }
-                
-                const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
-                
-                const scoreData = {
-                    user_id: currentUser.id,
-                    player_name: playerName,
-                    score: score,
-                    completed: completedQuestions,
-                    accuracy: accuracy,
-                    time_used: elapsedTime,
-                    mode: currentMode,
-                    number_range: document.getElementById('number-range').value
-                };
-                
-                // 调试信息
-                console.log('保存成绩数据:', {
-                    mode: currentMode,
-                    elapsedTime: elapsedTime,
-                    completed: completedQuestions,
-                    accuracy: accuracy,
-                    score: score
-                });
+                isSavingScore = true;
                 
                 try {
-                    const { data, error } = await supabase
-                        .from('scores')
-                        .insert([scoreData]);
+                    const nameInput = document.getElementById('player-name');
+                    let playerName = sanitizeInput(nameInput.value.trim(), 50);
                     
-                    if (error) {
-                        showMessage(
-                            (currentLanguage === 'zh' ? '保存成绩失败: ' : 'Save score failed: ') + error.message,
-                            'error'
-                        );
+                    if (!playerName && currentUser) {
+                        playerName = currentUser.user_metadata?.username;
+                        if (!playerName && currentUser.email) {
+                            playerName = currentUser.email.split('@')[0];
+                        }
+                    }
+                    
+                    playerName = playerName || (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
+                    
+                    if (!currentUser) {
+                        showMessage(currentLanguage === 'zh' ? '请先登录保存成绩' : 'Please login to save score', 'error');
+                        showAuthModal();
                         return;
                     }
                     
-                    showMessage(
-                        currentLanguage === 'zh' ? '成绩保存成功！已上传到云端' : 'Score saved successfully! Uploaded to cloud',
-                        'success'
-                    );
-                    nameInput.value = '';
+                    let elapsedTime = gameState.lastGameElapsedTime || 0;
                     
+                    if (currentMode === 'challenge') {
+                        const maxTime = MODE_CONFIG.challenge.time;
+                        if (elapsedTime > maxTime) {
+                            console.warn('挑战模式时间异常，已修正:', elapsedTime, '->', maxTime);
+                            elapsedTime = maxTime;
+                        }
+                    }
+                    
+                    const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+                    
+                    const scoreData = {
+                        user_id: currentUser.id,
+                        player_name: playerName,
+                        score: score,
+                        completed: completedQuestions,
+                        accuracy: accuracy,
+                        time_used: elapsedTime,
+                        mode: currentMode,
+                        number_range: document.getElementById('number-range').value,
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    console.log('保存成绩:', scoreData);
+                    
+                    const { data, error } = await supabase
+                        .from('scores')
+                        .insert([scoreData])
+                        .select();
+                    
+                    if (error) {
+                        console.error('保存成绩失败:', error);
+                        showMessage((currentLanguage === 'zh' ? '保存成绩失败: ' : 'Save score failed: ') + error.message, 'error');
+                        return;
+                    }
+                    
+                    console.log('成绩保存成功:', data);
+                    showMessage(currentLanguage === 'zh' ? '成绩保存成功！已上传到云端' : 'Score saved successfully! Uploaded to cloud', 'success');
+                    
+                    await verifySavedScore(currentUser.id);
+                    
+                    nameInput.value = '';
                     document.getElementById('game-over').style.display = 'none';
                     
                     setTimeout(() => {
                         restartGame();
-                    }, 300);
+                    }, 500);
+                    
                 } catch (error) {
-                    console.error('保存成绩失败:', error);
-                    showMessage(
-                        currentLanguage === 'zh' ? '保存成绩失败' : 'Save score failed',
-                        'error'
-                    );
+                    console.error('保存成绩异常:', error);
+                    showMessage(currentLanguage === 'zh' ? '保存成绩失败，请检查网络连接' : 'Save score failed, please check network connection', 'error');
+                } finally {
+                    isSavingScore = false;
+                }
+            }
+            
+            async function verifySavedScore(userId) {
+                try {
+                    const { data, error } = await supabase
+                        .from('scores')
+                        .select('*')
+                        .eq('user_id', userId)
+                        .order('created_at', { ascending: false })
+                        .limit(1);
+                    
+                    if (error) {
+                        console.error('验证成绩失败:', error);
+                        return;
+                    }
+                    
+                    if (data && data.length > 0) {
+                        console.log('验证成功 - 最新成绩:', data[0]);
+                        
+                        if (data[0].mode === 'challenge' && data[0].time_used > 90) {
+                            console.warn('发现异常数据: time_used > 90', data[0]);
+                            await fixInvalidData(data[0].id);
+                        }
+                    }
+                } catch (error) {
+                    console.error('验证成绩异常:', error);
+                }
+            }
+            
+            async function fixInvalidData(scoreId) {
+                try {
+                    const { error } = await supabase
+                        .from('scores')
+                        .update({ time_used: 90 })
+                        .eq('id', scoreId)
+                        .eq('mode', 'challenge')
+                        .gt('time_used', 90);
+                    
+                    if (error) {
+                        console.error('修复数据失败:', error);
+                    } else {
+                        console.log('异常数据已修复');
+                    }
+                } catch (error) {
+                    console.error('修复数据异常:', error);
                 }
             }
             
@@ -2398,141 +1976,7 @@
                 document.getElementById('history-modal').style.display = 'flex';
             }
             
-            // ==================== 初始化 ====================
-            async function init() {
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
-                    .time-warning { animation: blink 1s infinite; color: #ff4444 !important; }
-                    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-                `;
-                document.head.appendChild(style);
-                
-                // 初始化Supabase
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                
-                // 设置语言
-                const savedLang = localStorage.getItem('mathGameLanguage');
-                if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
-                    currentLanguage = savedLang;
-                } else {
-                    const browserLang = navigator.language.toLowerCase();
-                    currentLanguage = browserLang.startsWith('zh') ? 'zh' : 'en';
-                }
-                
-                setLanguage(currentLanguage);
-                
-                // 检查登录状态
-                const isLoggedIn = await checkAuth();
-                if (!isLoggedIn) {
-                    console.log(currentLanguage === 'zh' ? '未登录，游戏功能受限' : 'Not logged in, game features limited');
-                }
-                
-                // 加载本地数据
-                loadWrongQuestions();
-                loadAchievements();
-                
-                // 默认选择标准模式
-                selectMode('standard');
-                
-                // 绑定事件监听器
-                bindEventListeners();
-                
-                console.log('🎮 数学加法消消乐 - 云端版已加载');
-            }
-            
-            function bindEventListeners() {
-                // 语言切换
-                document.getElementById('language-btn').addEventListener('click', () => {
-                    const newLang = currentLanguage === 'zh' ? 'en' : 'zh';
-                    setLanguage(newLang);
-                    showMessage(
-                        newLang === 'zh' ? '已切换到中文' : 'Switched to English',
-                        'info'
-                    );
-                });
-                
-                // 侧边栏按钮
-                document.getElementById('history-btn').addEventListener('click', showHistory);
-                document.getElementById('statistics-btn').addEventListener('click', showStatistics);
-                document.getElementById('achievements-btn').addEventListener('click', showAchievements);
-                document.getElementById('wrongbook-btn').addEventListener('click', showWrongBook);
-                document.getElementById('leaderboard-btn').addEventListener('click', () => {
-                    document.getElementById('leaderboard-modal').style.display = 'flex';
-                    showLeaderboardTab('standard');
-                });
-                document.getElementById('profile-btn').addEventListener('click', showProfile);
-                document.getElementById('logout-btn').addEventListener('click', logout);
-                
-                // 模式选择
-                document.getElementById('mode-standard').addEventListener('click', () => selectMode('standard'));
-                document.getElementById('mode-challenge').addEventListener('click', () => selectMode('challenge'));
-                document.getElementById('mode-practice').addEventListener('click', () => selectMode('practice'));
-                document.getElementById('mode-custom').addEventListener('click', () => selectMode('custom'));
-                
-                // 开始游戏
-                document.getElementById('start-btn').addEventListener('click', startGame);
-                
-                // 游戏控制
-                document.getElementById('hint-btn').addEventListener('click', showHint);
-                document.getElementById('refresh-btn').addEventListener('click', refreshNumbers);
-                document.getElementById('endgame-btn').addEventListener('click', () => endGame('giveup'));
-                
-                // 登录/注册
-                document.getElementById('close-auth-modal').addEventListener('click', closeAuthModal);
-                document.getElementById('auth-submit-btn').addEventListener('click', handleAuth);
-                document.getElementById('auth-switch-link').addEventListener('click', toggleAuthMode);
-                
-                // 弹窗关闭
-                document.getElementById('close-history-modal').addEventListener('click', () => document.getElementById('history-modal').style.display = 'none');
-                document.getElementById('close-statistics-modal').addEventListener('click', () => document.getElementById('statistics-modal').style.display = 'none');
-                document.getElementById('close-achievements-modal').addEventListener('click', () => document.getElementById('achievements-modal').style.display = 'none');
-                document.getElementById('close-wrongbook-modal').addEventListener('click', () => document.getElementById('wrongbook-modal').style.display = 'none');
-                document.getElementById('close-leaderboard-modal').addEventListener('click', () => document.getElementById('leaderboard-modal').style.display = 'none');
-                document.getElementById('close-profile-modal').addEventListener('click', () => document.getElementById('profile-modal').style.display = 'none');
-                document.getElementById('close-game-over').addEventListener('click', () => {
-                    document.getElementById('game-over').style.display = 'none';
-                    restartGame();
-                });
-                
-                // 历史记录
-                document.getElementById('clear-history-btn').addEventListener('click', () => {
-                    if (confirm(currentLanguage === 'zh' ? '确定要清空本次游戏的历史记录吗？' : 'Are you sure you want to clear the current game history?')) {
-                        gameHistory = [];
-                        showHistory();
-                        showMessage(currentLanguage === 'zh' ? '历史记录已清空' : 'History cleared', 'info');
-                    }
-                });
-                document.getElementById('view-all-history-btn').addEventListener('click', () => {
-                    alert(currentLanguage === 'zh' ? '此功能需要登录后才能使用' : 'This feature requires login');
-                });
-                
-                // 排行榜选项卡
-                document.getElementById('tab-standard').addEventListener('click', () => showLeaderboardTab('standard'));
-                document.getElementById('tab-challenge').addEventListener('click', () => showLeaderboardTab('challenge'));
-                document.getElementById('tab-score').addEventListener('click', () => showLeaderboardTab('score'));
-                document.getElementById('tab-accuracy').addEventListener('click', () => showLeaderboardTab('accuracy'));
-                document.getElementById('tab-myhistory').addEventListener('click', () => showLeaderboardTab('myhistory'));
-                
-                // 游戏结束
-                document.getElementById('save-score-btn').addEventListener('click', saveScore);
-                document.getElementById('play-again-btn').addEventListener('click', restartGame);
-                document.getElementById('view-leaderboard-btn').addEventListener('click', () => {
-                    document.getElementById('game-over').style.display = 'none';
-                    setTimeout(() => {
-                        document.getElementById('leaderboard-modal').style.display = 'flex';
-                        showLeaderboardTab('standard');
-                    }, 300);
-                });
-                document.getElementById('view-statistics-btn').addEventListener('click', () => {
-                    document.getElementById('game-over').style.display = 'none';
-                    setTimeout(() => {
-                        showStatistics();
-                    }, 300);
-                });
-            }
-            
-            // ==================== 排行榜功能 ====================
+            // ==================== 修复的排行榜功能 ====================
             async function showLeaderboardTab(tab) {
                 const tabButtons = document.querySelectorAll('.tab-btn');
                 tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -2546,169 +1990,105 @@
                     return;
                 }
                 
-                let viewName = '';
-                let description = '';
-                
-                switch(tab) {
-                    case 'standard':
-                        viewName = 'standard_leaderboard';
-                        description = currentLanguage === 'zh' ? '标准模式：完成30题的最短用时' : 'Standard Mode: Fastest time to complete 30 questions';
-                        break;
-                    case 'challenge':
-                        viewName = 'challenge_leaderboard';
-                        description = currentLanguage === 'zh' ? '挑战模式：90秒内完成最多题数' : 'Challenge Mode: Most questions completed in 90 seconds';
-                        break;
-                    case 'score':
-                        viewName = 'highscore_leaderboard';
-                        description = currentLanguage === 'zh' ? '高分榜：单局最高得分' : 'High Score: Highest score in a single game';
-                        break;
-                    case 'accuracy':
-                        viewName = 'accuracy_leaderboard';
-                        description = currentLanguage === 'zh' ? '准确率榜：最高正确率（至少完成10题）' : 'Accuracy: Highest accuracy rate (minimum 10 questions)';
-                        break;
-                }
-                
                 try {
-                    const { data, error } = await supabase
-                        .from(viewName)
-                        .select('*')
-                        .limit(20);
+                    let data = await queryScoresDirectly(tab);
                     
-                    if (error) {
-                        console.error('获取排行榜失败:', error);
-                        content.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">${currentLanguage === 'zh' ? '加载失败: ' : 'Load failed: '}${error.message}</div>`;
-                        return;
-                    }
-                    
-                    // 如果没有视图数据，尝试直接从scores表查询
                     if (!data || data.length === 0) {
-                        console.log(`视图 ${viewName} 无数据，尝试直接查询`);
-                        await showDirectLeaderboard(tab, content);
-                        return;
-                    }
-                    
-                    let html = `<div style="margin-bottom: 15px; color: #666; font-size: 0.9em;">${description}</div>`;
-                    html += '<table class="history-table">';
-                    html += `<thead><tr>
-                        <th>${currentLanguage === 'zh' ? '排名' : 'Rank'}</th>
-                        <th>${currentLanguage === 'zh' ? '玩家' : 'Player'}</th>
-                        <th>${currentLanguage === 'zh' ? '模式' : 'Mode'}</th>
-                        <th>${currentLanguage === 'zh' ? '得分' : 'Score'}</th>
-                        <th>${currentLanguage === 'zh' ? '题数' : 'Questions'}</th>
-                        <th>${currentLanguage === 'zh' ? '正确率' : 'Accuracy'}</th>
-                        <th>${currentLanguage === 'zh' ? '用时' : 'Time'}</th>
-                        <th>${currentLanguage === 'zh' ? '时间' : 'Date'}</th>
-                    </tr></thead><tbody>`;
-                    
-                    data.forEach((item, index) => {
-                        const username = item.player_name || 
-                            (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
-                        const isCurrentUser = currentUser && item.user_id === currentUser.id;
-                        
-                        let timeDisplay = item.time_used + (currentLanguage === 'zh' ? '秒' : 's');
-                        if (tab === 'standard') {
-                            timeDisplay = item.time_used + (currentLanguage === 'zh' ? '秒' : 's');
-                        }
-                        
-                        html += `
-                            <tr ${isCurrentUser ? 'style="background-color: #e3f2fd;"' : ''}>
-                                <td>${item.global_rank || index + 1}</td>
-                                <td><strong>${username}</strong> ${isCurrentUser ? 
-                                    `<span style="color:#2196F3;">(${currentLanguage === 'zh' ? '我' : 'Me'})</span>` : ''}</td>
-                                <td>${item.mode || tab}</td>
-                                <td><span style="color:#FF9800;font-weight:bold;">${item.score}</span></td>
-                                <td>${item.completed}</td>
-                                <td><span style="color:#4CAF50;font-weight:bold;">${item.accuracy}%</span></td>
-                                <td>${timeDisplay}</td>
-                                <td>${new Date(item.created_at).toLocaleDateString(currentLanguage === 'zh' ? 'zh-CN' : 'en-US')}</td>
-                            </tr>
-                        `;
-                    });
-                    
-                    html += '</tbody></table>';
-                    content.innerHTML = html;
-                } catch (error) {
-                    console.error('获取排行榜失败:', error);
-                    content.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">${currentLanguage === 'zh' ? '加载失败' : 'Load failed'}</div>`;
-                }
-            }
-            
-            // 直接查询scores表作为后备方案
-            async function showDirectLeaderboard(tab, content) {
-                try {
-                    let query = supabase
-                        .from('scores')
-                        .select('*')
-                        .order('created_at', { ascending: false });
-                    
-                    if (tab === 'standard') {
-                        query = query.eq('mode', 'standard')
-                                    .gte('completed', 30)
-                                    .gte('accuracy', 50)
-                                    .order('time_used', { ascending: true });
-                    } else if (tab === 'challenge') {
-                        query = query.eq('mode', 'challenge')
-                                    .lte('time_used', 90)  // 确保时间不超过90秒
-                                    .order('completed', { ascending: false })
-                                    .order('time_used', { ascending: true });
-                    } else if (tab === 'score') {
-                        query = query.gte('accuracy', 50)
-                                    .order('score', { ascending: false });
-                    } else if (tab === 'accuracy') {
-                        query = query.gte('completed', 10)
-                                    .gte('accuracy', 50)
-                                    .order('accuracy', { ascending: false })
-                                    .order('completed', { ascending: false });
-                    }
-                    
-                    const { data, error } = await query.limit(20);
-                    
-                    if (error || !data || data.length === 0) {
                         content.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">${currentLanguage === 'zh' ? '暂无排行榜数据' : 'No leaderboard data'}</div>`;
                         return;
                     }
                     
-                    let html = `<div style="margin-bottom: 15px; color: #666; font-size: 0.9em;">
-                        ${currentLanguage === 'zh' ? '直接查询结果（视图可能未创建）' : 'Direct Query (view may not exist)'}
-                    </div>`;
-                    html += '<table class="history-table">';
-                    html += `<thead><tr>
-                        <th>${currentLanguage === 'zh' ? '排名' : 'Rank'}</th>
-                        <th>${currentLanguage === 'zh' ? '玩家' : 'Player'}</th>
-                        <th>${currentLanguage === 'zh' ? '模式' : 'Mode'}</th>
-                        <th>${currentLanguage === 'zh' ? '得分' : 'Score'}</th>
-                        <th>${currentLanguage === 'zh' ? '题数' : 'Questions'}</th>
-                        <th>${currentLanguage === 'zh' ? '正确率' : 'Accuracy'}</th>
-                        <th>${currentLanguage === 'zh' ? '用时' : 'Time'}</th>
-                        <th>${currentLanguage === 'zh' ? '时间' : 'Date'}</th>
-                    </tr></thead><tbody>`;
+                    renderLeaderboard(data, tab, content);
                     
-                    data.forEach((item, index) => {
-                        const username = item.player_name || 
-                            (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
-                        const isCurrentUser = currentUser && item.user_id === currentUser.id;
-                        
-                        html += `
-                            <tr ${isCurrentUser ? 'style="background-color: #e3f2fd;"' : ''}>
-                                <td>${index + 1}</td>
-                                <td><strong>${username}</strong> ${isCurrentUser ? 
-                                    `<span style="color:#2196F3;">(${currentLanguage === 'zh' ? '我' : 'Me'})</span>` : ''}</td>
-                                <td>${item.mode}</td>
-                                <td><span style="color:#FF9800;font-weight:bold;">${item.score}</span></td>
-                                <td>${item.completed}</td>
-                                <td><span style="color:#4CAF50;font-weight:bold;">${item.accuracy}%</span></td>
-                                <td>${item.time_used}${currentLanguage === 'zh' ? '秒' : 's'}</td>
-                                <td>${new Date(item.created_at).toLocaleDateString(currentLanguage === 'zh' ? 'zh-CN' : 'en-US')}</td>
-                            </tr>
-                        `;
-                    });
-                    
-                    html += '</tbody></table>';
-                    content.innerHTML = html;
                 } catch (error) {
-                    console.error('直接查询排行榜失败:', error);
-                    content.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">${currentLanguage === 'zh' ? '加载失败' : 'Load failed'}</div>`;
+                    console.error('获取排行榜失败:', error);
+                    content.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">${currentLanguage === 'zh' ? '加载失败: ' : 'Load failed: '}${error.message}</div>`;
                 }
+            }
+            
+            async function queryScoresDirectly(tab) {
+                let query = supabase.from('scores').select('*');
+                
+                switch(tab) {
+                    case 'standard':
+                        query = query.eq('mode', 'standard')
+                                    .gte('completed', 30)
+                                    .order('time_used', { ascending: true });
+                        break;
+                    case 'challenge':
+                        query = query.eq('mode', 'challenge')
+                                    .lte('time_used', 90)
+                                    .order('completed', { ascending: false })
+                                    .order('time_used', { ascending: true });
+                        break;
+                    case 'score':
+                        query = query.order('score', { ascending: false });
+                        break;
+                    case 'accuracy':
+                        query = query.gte('completed', 10)
+                                    .order('accuracy', { ascending: false })
+                                    .order('completed', { ascending: false });
+                        break;
+                }
+                
+                const { data, error } = await query.limit(20);
+                
+                if (error) {
+                    console.error('直接查询失败:', error);
+                    return [];
+                }
+                
+                return data || [];
+            }
+            
+            function renderLeaderboard(data, tab, content) {
+                const descriptions = {
+                    'standard': currentLanguage === 'zh' ? '标准模式：完成30题的最短用时' : 'Standard Mode: Fastest time to complete 30 questions',
+                    'challenge': currentLanguage === 'zh' ? '挑战模式：90秒内完成最多题数' : 'Challenge Mode: Most questions completed in 90 seconds',
+                    'score': currentLanguage === 'zh' ? '高分榜：单局最高得分' : 'High Score: Highest score in a single game',
+                    'accuracy': currentLanguage === 'zh' ? '准确率榜：最高正确率（至少完成10题）' : 'Accuracy: Highest accuracy rate (minimum 10 questions)'
+                };
+                
+                let html = `<div style="margin-bottom: 15px; color: #666; font-size: 0.9em;">${descriptions[tab] || ''}</div>`;
+                html += '<table class="history-table">';
+                html += `<thead><tr>
+                    <th>${currentLanguage === 'zh' ? '排名' : 'Rank'}</th>
+                    <th>${currentLanguage === 'zh' ? '玩家' : 'Player'}</th>
+                    <th>${currentLanguage === 'zh' ? '模式' : 'Mode'}</th>
+                    <th>${currentLanguage === 'zh' ? '得分' : 'Score'}</th>
+                    <th>${currentLanguage === 'zh' ? '题数' : 'Questions'}</th>
+                    <th>${currentLanguage === 'zh' ? '正确率' : 'Accuracy'}</th>
+                    <th>${currentLanguage === 'zh' ? '用时' : 'Time'}</th>
+                    <th>${currentLanguage === 'zh' ? '时间' : 'Date'}</th>
+                </tr></thead><tbody>`;
+                
+                data.forEach((item, index) => {
+                    const username = item.player_name || (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
+                    const isCurrentUser = currentUser && item.user_id === currentUser.id;
+                    const rank = index + 1;
+                    
+                    let timeDisplay = `${item.time_used}${currentLanguage === 'zh' ? '秒' : 's'}`;
+                    if (tab === 'challenge' && item.time_used > 90) {
+                        timeDisplay = `<span style="color:#ff4444;">${item.time_used}${currentLanguage === 'zh' ? '秒(异常)' : 's(invalid)'}</span>`;
+                    }
+                    
+                    html += `
+                        <tr ${isCurrentUser ? 'style="background-color: #e3f2fd;"' : ''}>
+                            <td>${rank}</td>
+                            <td><strong>${username}</strong> ${isCurrentUser ? 
+                                `<span style="color:#2196F3;">(${currentLanguage === 'zh' ? '我' : 'Me'})</span>` : ''}</td>
+                            <td>${item.mode}</td>
+                            <td><span style="color:#FF9800;font-weight:bold;">${item.score}</span></td>
+                            <td>${item.completed}</td>
+                            <td><span style="color:#4CAF50;font-weight:bold;">${item.accuracy}%</span></td>
+                            <td>${timeDisplay}</td>
+                            <td>${new Date(item.created_at).toLocaleDateString(currentLanguage === 'zh' ? 'zh-CN' : 'en-US')}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                content.innerHTML = html;
             }
             
             async function showMyLeaderboardHistory() {
@@ -2775,10 +2155,7 @@
             // ==================== 个人资料功能 ====================
             async function showProfile() {
                 if (!currentUser) {
-                    showMessage(
-                        currentLanguage === 'zh' ? '请先登录查看个人资料' : 'Please login to view profile',
-                        'info'
-                    );
+                    showMessage(currentLanguage === 'zh' ? '请先登录查看个人资料' : 'Please login to view profile', 'info');
                     showAuthModal();
                     return;
                 }
@@ -2817,6 +2194,133 @@
                 }
             }
             
+            // ==================== 初始化 ====================
+            async function init() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .time-warning { animation: blink 1s infinite; color: #ff4444 !important; }
+                    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+                `;
+                document.head.appendChild(style);
+                
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                
+                const savedLang = localStorage.getItem('mathGameLanguage');
+                if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
+                    currentLanguage = savedLang;
+                } else {
+                    const browserLang = navigator.language.toLowerCase();
+                    currentLanguage = browserLang.startsWith('zh') ? 'zh' : 'en';
+                }
+                
+                setLanguage(currentLanguage);
+                
+                const isLoggedIn = await checkAuth();
+                if (!isLoggedIn) {
+                    console.log('未登录状态');
+                }
+                
+                loadWrongQuestions();
+                loadAchievements();
+                
+                selectMode('standard');
+                bindEventListeners();
+                
+                // 定期备份本地数据（每5分钟）
+                setInterval(() => {
+                    backupLocalData();
+                }, 5 * 60 * 1000);
+                
+                console.log('🎮 数学加法消消乐 - 云端版已加载');
+            }
+            
+            function bindEventListeners() {
+                document.getElementById('language-btn').addEventListener('click', () => {
+                    const newLang = currentLanguage === 'zh' ? 'en' : 'zh';
+                    setLanguage(newLang);
+                    showMessage(newLang === 'zh' ? '已切换到中文' : 'Switched to English', 'info');
+                });
+                
+                document.getElementById('history-btn').addEventListener('click', showHistory);
+                document.getElementById('statistics-btn').addEventListener('click', showStatistics);
+                document.getElementById('achievements-btn').addEventListener('click', showAchievements);
+                document.getElementById('wrongbook-btn').addEventListener('click', showWrongBook);
+                document.getElementById('leaderboard-btn').addEventListener('click', () => {
+                    document.getElementById('leaderboard-modal').style.display = 'flex';
+                    showLeaderboardTab('standard');
+                });
+                document.getElementById('profile-btn').addEventListener('click', showProfile);
+                document.getElementById('logout-btn').addEventListener('click', logout);
+                
+                document.getElementById('mode-standard').addEventListener('click', () => selectMode('standard'));
+                document.getElementById('mode-challenge').addEventListener('click', () => selectMode('challenge'));
+                document.getElementById('mode-practice').addEventListener('click', () => selectMode('practice'));
+                document.getElementById('mode-custom').addEventListener('click', () => selectMode('custom'));
+                
+                document.getElementById('start-btn').addEventListener('click', startGame);
+                document.getElementById('hint-btn').addEventListener('click', showHint);
+                document.getElementById('refresh-btn').addEventListener('click', refreshNumbers);
+                document.getElementById('endgame-btn').addEventListener('click', () => endGame('giveup'));
+                
+                document.getElementById('close-auth-modal').addEventListener('click', closeAuthModal);
+                document.getElementById('auth-submit-btn').addEventListener('click', handleAuth);
+                document.getElementById('auth-switch-link').addEventListener('click', toggleAuthMode);
+                
+                document.getElementById('close-history-modal').addEventListener('click', () => document.getElementById('history-modal').style.display = 'none');
+                document.getElementById('close-statistics-modal').addEventListener('click', () => document.getElementById('statistics-modal').style.display = 'none');
+                document.getElementById('close-achievements-modal').addEventListener('click', () => document.getElementById('achievements-modal').style.display = 'none');
+                document.getElementById('close-wrongbook-modal').addEventListener('click', () => document.getElementById('wrongbook-modal').style.display = 'none');
+                document.getElementById('close-leaderboard-modal').addEventListener('click', () => document.getElementById('leaderboard-modal').style.display = 'none');
+                document.getElementById('close-profile-modal').addEventListener('click', () => document.getElementById('profile-modal').style.display = 'none');
+                document.getElementById('close-game-over').addEventListener('click', () => {
+                    document.getElementById('game-over').style.display = 'none';
+                    restartGame();
+                });
+                
+                document.getElementById('clear-history-btn').addEventListener('click', () => {
+                    if (confirm(currentLanguage === 'zh' ? '确定要清空本次游戏的历史记录吗？' : 'Are you sure you want to clear the current game history?')) {
+                        gameHistory = [];
+                        showHistory();
+                        showMessage(currentLanguage === 'zh' ? '历史记录已清空' : 'History cleared', 'info');
+                    }
+                });
+                
+                document.getElementById('sync-wrong-questions-btn').addEventListener('click', syncWrongQuestionsToCloud);
+                document.getElementById('clear-wrong-questions-btn').addEventListener('click', () => {
+                    if (confirm(currentLanguage === 'zh' ? '确定要清空本地错题吗？' : 'Are you sure you want to clear local wrong questions?')) {
+                        wrongQuestions = [];
+                        saveWrongQuestions();
+                        showWrongBook();
+                        showMessage(currentLanguage === 'zh' ? '本地错题已清空' : 'Local wrong questions cleared', 'info');
+                    }
+                });
+                
+                document.getElementById('backup-data-btn').addEventListener('click', backupToCloud);
+                document.getElementById('restore-data-btn').addEventListener('click', restoreFromCloud);
+                
+                document.getElementById('tab-standard').addEventListener('click', () => showLeaderboardTab('standard'));
+                document.getElementById('tab-challenge').addEventListener('click', () => showLeaderboardTab('challenge'));
+                document.getElementById('tab-score').addEventListener('click', () => showLeaderboardTab('score'));
+                document.getElementById('tab-accuracy').addEventListener('click', () => showLeaderboardTab('accuracy'));
+                document.getElementById('tab-myhistory').addEventListener('click', () => showLeaderboardTab('myhistory'));
+                
+                document.getElementById('save-score-btn').addEventListener('click', saveScore);
+                document.getElementById('play-again-btn').addEventListener('click', restartGame);
+                document.getElementById('view-leaderboard-btn').addEventListener('click', () => {
+                    document.getElementById('game-over').style.display = 'none';
+                    setTimeout(() => {
+                        document.getElementById('leaderboard-modal').style.display = 'flex';
+                        showLeaderboardTab('standard');
+                    }, 300);
+                });
+                document.getElementById('view-statistics-btn').addEventListener('click', () => {
+                    document.getElementById('game-over').style.display = 'none';
+                    setTimeout(() => {
+                        showStatistics();
+                    }, 300);
+                });
+            }
+            
             // ==================== 公共接口 ====================
             return {
                 init,
@@ -2840,7 +2344,6 @@
             };
         })();
         
-        // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', () => {
             MathGame.init();
         });
