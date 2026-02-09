@@ -1,0 +1,13 @@
+{
+  "name": "math-game-vercel",
+  "version": "1.0.0",
+  "description": "数学加法消消乐 - 云端版",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  },
+  "keywords": ["math", "game", "education"],
+  "author": "Your Name",
+  "license": "MIT"
+}
