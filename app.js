@@ -1,3 +1,17 @@
+// 确保页面已完全加载
+(function() {
+    console.log('数学加法消消乐开始加载...');
+    
+    // 如果已经有加载错误，显示提示
+    window.addEventListener('error', function(e) {
+        console.error('页面加载错误:', e);
+        // 可以在这里添加错误处理
+    });
+    
+    // 主代码从这里开始...
+    // 将你之前的代码放在这里
+})();
+
 const MathGame = (function() {
     // ==================== Supabase 配置 ====================
     // 安全地从配置获取或使用环境变量
