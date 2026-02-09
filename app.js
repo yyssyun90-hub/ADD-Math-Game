@@ -1,20 +1,30 @@
 const MathGame = (function() {
     // ==================== Supabase 配置 ====================
-    // 从页面配置或环境变量获取
-    const configElement = document.getElementById('supabase-config');
+    // 安全地从配置获取或使用环境变量
     let SUPABASE_URL, SUPABASE_ANON_KEY;
     
-    if (configElement) {
-        try {
+    try {
+        // 首先尝试从页面配置获取
+        const configElement = document.getElementById('supabase-config');
+        if (configElement) {
             const config = JSON.parse(configElement.textContent);
             SUPABASE_URL = config.supabaseUrl;
             SUPABASE_ANON_KEY = config.supabaseKey;
-        } catch (e) {
-            console.error('解析配置失败:', e);
-            // 备用配置（部署后通过环境变量替换）
-            SUPABASE_URL = 'https://ytoailyxejdgtpfwcdci.supabase.co';
-            SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0b2FpbHl4ZWpkZ3RwZndjZGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NDE5NzQsImV4cCI6MjA4NTExNzk3NH0.DvvP8whiE3rW1bDh4qW2zOLTGsknfQ2Utt8wVOxZjV0';
         }
+    } catch (e) {
+        console.warn('解析页面配置失败，使用环境变量');
+    }
+    
+    // 如果没有配置，尝试从环境变量获取
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        // 对于Vercel部署，通过构建时注入
+        SUPABASE_URL = window.__ENV__?.SUPABASE_URL || '';
+        SUPABASE_ANON_KEY = window.__ENV__?.SUPABASE_ANON_KEY || '';
+    }
+    
+    // 如果还是没有，显示错误（生产环境应该配置环境变量）
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        console.error('❌ Supabase配置缺失！请在Vercel设置环境变量。');
     }
     
     // ==================== 多语言支持 ====================
@@ -233,7 +243,7 @@ const MathGame = (function() {
     ];
     
     // ==================== 管理员配置 ====================
-    const ADMIN_EMAILS = ['yyssyun90@gmail.com']; // 
+    const ADMIN_EMAILS = ['yyssyun90@gmail.com'];
     let isAdminUser = false;
     
     // ==================== 工具函数 ====================
@@ -348,7 +358,7 @@ const MathGame = (function() {
                                 <small style="color: #666;">最后活动: ${new Date(user.created_at).toLocaleDateString()}</small>
                             </div>
                             <div>
-                                <button class="btn" onclick="window.showAdminInstructions('${user.user_id}', '${user.player_name}')" 
+                                <button class="btn admin-instruction-btn" data-user-id="${user.user_id}" data-user-name="${user.player_name}" 
                                         style="background: #4CAF50; padding: 5px 10px; font-size: 0.9em;">
                                     管理
                                 </button>
@@ -372,6 +382,15 @@ const MathGame = (function() {
             
             container.innerHTML = html;
             
+            // 为所有管理按钮添加事件监听器
+            container.querySelectorAll('.admin-instruction-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    const userName = this.getAttribute('data-user-name');
+                    showAdminInstructions(userId, userName);
+                });
+            });
+            
         } catch (error) {
             console.error('加载用户列表失败:', error);
             document.getElementById('pending-teachers-list').innerHTML = 
@@ -379,8 +398,8 @@ const MathGame = (function() {
         }
     }
     
-    // 全局函数，供HTML调用
-    window.showAdminInstructions = function(userId, username) {
+    // 管理员操作指南函数
+    function showAdminInstructions(userId, username) {
         const instructions = `
             📋 用户管理指南：
             
@@ -417,12 +436,12 @@ const MathGame = (function() {
                      "role": "teacher",
                      "approved": true,
                      "approved_at": "${new Date().toISOString()}",
-                     "approved_by": "${currentUser.email}"
+                     "approved_by": "${currentUser ? currentUser.email : 'admin'}"
                    }
                 9. 点击 Save
             `);
         }
-    };
+    }
     
     async function loadSystemStatistics() {
         try {
@@ -1758,10 +1777,12 @@ const MathGame = (function() {
     }
     
     // ==================== 修复的排行榜功能 ====================
-    async function showLeaderboardTab(tab) {
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
+    async function showLeaderboardTab(tab, event) {
+        if (event) {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
         
         const content = document.getElementById('leaderboard-content');
         content.innerHTML = `<div style="text-align:center;padding:20px;">${currentLanguage === 'zh' ? '加载中...' : 'Loading...'}</div>`;
@@ -2227,7 +2248,6 @@ const MathGame = (function() {
     
     function printAccountCards() {
         const printContent = document.getElementById('account-cards-container').innerHTML;
-        const originalContent = document.body.innerHTML;
         
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
@@ -2365,51 +2385,63 @@ const MathGame = (function() {
     
     // ==================== 初始化教师工具 ====================
     function initTeacherTools() {
-        document.getElementById('download-template-btn')?.addEventListener('click', downloadExcelTemplate);
+        const downloadBtn = document.getElementById('download-template-btn');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', downloadExcelTemplate);
+        }
         
-        document.getElementById('upload-excel-btn')?.addEventListener('click', async () => {
-            if (isBatchRegistering) {
-                showMessage('正在批量注册中，请稍后', 'info');
-                return;
-            }
-            
-            const fileInput = document.getElementById('excel-file');
-            const defaultPassword = document.getElementById('default-password').value;
-            const className = document.getElementById('class-name').value;
-            
-            if (!fileInput.files || fileInput.files.length === 0) {
-                showMessage('请选择要上传的文件', 'error');
-                return;
-            }
-            
-            if (!defaultPassword) {
-                showMessage('请输入默认密码', 'error');
-                return;
-            }
-            
-            if (!className) {
-                showMessage('请输入班级名称', 'error');
-                return;
-            }
-            
-            isBatchRegistering = true;
-            
-            parseUploadedFile(fileInput.files[0], async (students) => {
-                if (students.length === 0) {
-                    showMessage('文件中没有找到有效的学生数据', 'error');
-                    isBatchRegistering = false;
+        const uploadBtn = document.getElementById('upload-excel-btn');
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', async () => {
+                if (isBatchRegistering) {
+                    showMessage('正在批量注册中，请稍后', 'info');
                     return;
                 }
                 
-                const result = await batchCreateStudents(students, defaultPassword, className);
-                displayBatchResults(result.results);
-                isBatchRegistering = false;
+                const fileInput = document.getElementById('excel-file');
+                const defaultPassword = document.getElementById('default-password').value;
+                const className = document.getElementById('class-name').value;
+                
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    showMessage('请选择要上传的文件', 'error');
+                    return;
+                }
+                
+                if (!defaultPassword) {
+                    showMessage('请输入默认密码', 'error');
+                    return;
+                }
+                
+                if (!className) {
+                    showMessage('请输入班级名称', 'error');
+                    return;
+                }
+                
+                isBatchRegistering = true;
+                
+                parseUploadedFile(fileInput.files[0], async (students) => {
+                    if (students.length === 0) {
+                        showMessage('文件中没有找到有效的学生数据', 'error');
+                        isBatchRegistering = false;
+                        return;
+                    }
+                    
+                    const result = await batchCreateStudents(students, defaultPassword, className);
+                    displayBatchResults(result.results);
+                    isBatchRegistering = false;
+                });
             });
-        });
+        }
         
-        document.getElementById('print-cards-btn')?.addEventListener('click', printAccountCards);
+        const printBtn = document.getElementById('print-cards-btn');
+        if (printBtn) {
+            printBtn.addEventListener('click', printAccountCards);
+        }
         
-        document.getElementById('refresh-students-btn')?.addEventListener('click', loadStudentList);
+        const refreshBtn = document.getElementById('refresh-students-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', loadStudentList);
+        }
         
         document.querySelectorAll('[data-tab]').forEach(tab => {
             tab.addEventListener('click', function() {
@@ -2434,30 +2466,42 @@ const MathGame = (function() {
     
     // ==================== 初始化管理员工具 ====================
     function initAdminTools() {
-        document.getElementById('admin-tools-btn')?.addEventListener('click', async () => {
-            if (!currentUser) {
-                showAuthModal();
-                showMessage('请先登录管理员账号', 'info');
-                return;
-            }
-            
-            isAdminUser = checkIfAdmin();
-            if (!isAdminUser) {
-                showMessage('只有管理员可以访问此功能', 'error');
-                return;
-            }
-            
-            document.getElementById('admin-tools-modal').style.display = 'flex';
-            loadPendingTeachers();
-        });
+        const adminBtn = document.getElementById('admin-tools-btn');
+        if (adminBtn) {
+            adminBtn.addEventListener('click', async () => {
+                if (!currentUser) {
+                    showAuthModal();
+                    showMessage('请先登录管理员账号', 'info');
+                    return;
+                }
+                
+                isAdminUser = checkIfAdmin();
+                if (!isAdminUser) {
+                    showMessage('只有管理员可以访问此功能', 'error');
+                    return;
+                }
+                
+                document.getElementById('admin-tools-modal').style.display = 'flex';
+                loadPendingTeachers();
+            });
+        }
         
-        document.getElementById('close-admin-tools')?.addEventListener('click', () => {
-            document.getElementById('admin-tools-modal').style.display = 'none';
-        });
+        const closeAdminBtn = document.getElementById('close-admin-tools');
+        if (closeAdminBtn) {
+            closeAdminBtn.addEventListener('click', () => {
+                document.getElementById('admin-tools-modal').style.display = 'none';
+            });
+        }
         
-        document.getElementById('refresh-teachers-btn')?.addEventListener('click', loadPendingTeachers);
+        const refreshTeachersBtn = document.getElementById('refresh-teachers-btn');
+        if (refreshTeachersBtn) {
+            refreshTeachersBtn.addEventListener('click', loadPendingTeachers);
+        }
         
-        document.getElementById('refresh-stats-btn')?.addEventListener('click', loadSystemStatistics);
+        const refreshStatsBtn = document.getElementById('refresh-stats-btn');
+        if (refreshStatsBtn) {
+            refreshStatsBtn.addEventListener('click', loadSystemStatistics);
+        }
         
         document.querySelectorAll('#admin-tools-modal [data-tab]').forEach(tab => {
             tab.addEventListener('click', function() {
@@ -2480,6 +2524,7 @@ const MathGame = (function() {
     
     // ==================== 初始化 ====================
     async function init() {
+        // 添加时间警告样式
         const style = document.createElement('style');
         style.textContent = `
             .time-warning { animation: blink 1s infinite; color: #ff4444 !important; }
@@ -2487,8 +2532,20 @@ const MathGame = (function() {
         `;
         document.head.appendChild(style);
         
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // 初始化Supabase客户端
+        try {
+            if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+                throw new Error('Supabase配置缺失');
+            }
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase客户端初始化成功');
+        } catch (error) {
+            console.error('Supabase初始化失败:', error);
+            showMessage('系统配置错误，请联系管理员', 'error');
+            return;
+        }
         
+        // 设置语言
         const savedLang = localStorage.getItem('mathGameLanguage');
         if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
             currentLanguage = savedLang;
@@ -2499,19 +2556,23 @@ const MathGame = (function() {
         
         setLanguage(currentLanguage);
         
+        // 检查登录状态
         const isLoggedIn = await checkAuth();
         if (!isLoggedIn) {
             console.log('未登录状态');
         }
         
+        // 加载本地数据
         loadWrongQuestions();
         loadAchievements();
         
+        // 初始化游戏
         selectMode('standard');
         bindEventListeners();
         initAdminTools();
         initTeacherTools();
         
+        // 定期备份本地数据
         setInterval(() => {
             backupLocalData();
         }, 5 * 60 * 1000);
@@ -2519,25 +2580,29 @@ const MathGame = (function() {
         console.log('🎮 数学加法消消乐 - 云端版已加载');
     }
     
+    // ==================== 绑定事件监听器 ====================
     function bindEventListeners() {
         // 语言切换
-        document.getElementById('language-btn').addEventListener('click', () => {
-            const newLang = currentLanguage === 'zh' ? 'en' : 'zh';
-            setLanguage(newLang);
-            showMessage(newLang === 'zh' ? '已切换到中文' : 'Switched to English', 'info');
-        });
+        const languageBtn = document.getElementById('language-btn');
+        if (languageBtn) {
+            languageBtn.addEventListener('click', () => {
+                const newLang = currentLanguage === 'zh' ? 'en' : 'zh';
+                setLanguage(newLang);
+                showMessage(newLang === 'zh' ? '已切换到中文' : 'Switched to English', 'info');
+            });
+        }
         
         // 侧边栏按钮
-        document.getElementById('history-btn').addEventListener('click', showHistory);
-        document.getElementById('statistics-btn').addEventListener('click', showStatistics);
-        document.getElementById('achievements-btn').addEventListener('click', showAchievements);
-        document.getElementById('wrongbook-btn').addEventListener('click', showWrongBook);
-        document.getElementById('leaderboard-btn').addEventListener('click', () => {
+        document.getElementById('history-btn')?.addEventListener('click', showHistory);
+        document.getElementById('statistics-btn')?.addEventListener('click', showStatistics);
+        document.getElementById('achievements-btn')?.addEventListener('click', showAchievements);
+        document.getElementById('wrongbook-btn')?.addEventListener('click', showWrongBook);
+        document.getElementById('leaderboard-btn')?.addEventListener('click', () => {
             document.getElementById('leaderboard-modal').style.display = 'flex';
             showLeaderboardTab('standard');
         });
-        document.getElementById('profile-btn').addEventListener('click', showProfile);
-        document.getElementById('teacher-tools-btn').addEventListener('click', () => {
+        document.getElementById('profile-btn')?.addEventListener('click', showProfile);
+        document.getElementById('teacher-tools-btn')?.addEventListener('click', () => {
             if (!currentUser) {
                 showAuthModal();
                 showMessage('请先登录教师账号', 'info');
@@ -2554,24 +2619,24 @@ const MathGame = (function() {
             
             document.getElementById('teacher-tools-modal').style.display = 'flex';
         });
-        document.getElementById('logout-btn').addEventListener('click', logout);
+        document.getElementById('logout-btn')?.addEventListener('click', logout);
         
         // 游戏模式选择
-        document.getElementById('mode-standard').addEventListener('click', () => selectMode('standard'));
-        document.getElementById('mode-challenge').addEventListener('click', () => selectMode('challenge'));
-        document.getElementById('mode-practice').addEventListener('click', () => selectMode('practice'));
-        document.getElementById('mode-custom').addEventListener('click', () => selectMode('custom'));
+        document.getElementById('mode-standard')?.addEventListener('click', () => selectMode('standard'));
+        document.getElementById('mode-challenge')?.addEventListener('click', () => selectMode('challenge'));
+        document.getElementById('mode-practice')?.addEventListener('click', () => selectMode('practice'));
+        document.getElementById('mode-custom')?.addEventListener('click', () => selectMode('custom'));
         
         // 游戏控制按钮
-        document.getElementById('start-btn').addEventListener('click', startGame);
-        document.getElementById('hint-btn').addEventListener('click', showHint);
-        document.getElementById('refresh-btn').addEventListener('click', refreshNumbers);
-        document.getElementById('endgame-btn').addEventListener('click', () => endGame('giveup'));
+        document.getElementById('start-btn')?.addEventListener('click', startGame);
+        document.getElementById('hint-btn')?.addEventListener('click', showHint);
+        document.getElementById('refresh-btn')?.addEventListener('click', refreshNumbers);
+        document.getElementById('endgame-btn')?.addEventListener('click', () => endGame('giveup'));
         
         // 认证相关
-        document.getElementById('close-auth-modal').addEventListener('click', closeAuthModal);
-        document.getElementById('auth-submit-btn').addEventListener('click', handleAuth);
-        document.getElementById('auth-switch-link').addEventListener('click', toggleAuthMode);
+        document.getElementById('close-auth-modal')?.addEventListener('click', closeAuthModal);
+        document.getElementById('auth-submit-btn')?.addEventListener('click', handleAuth);
+        document.getElementById('auth-switch-link')?.addEventListener('click', toggleAuthMode);
         document.getElementById('auth-role')?.addEventListener('change', function() {
             if (this.value === 'teacher') {
                 document.getElementById('teacher-register-fields').style.display = 'block';
@@ -2581,20 +2646,20 @@ const MathGame = (function() {
         });
         
         // 关闭弹窗按钮
-        document.getElementById('close-history-modal').addEventListener('click', () => document.getElementById('history-modal').style.display = 'none');
-        document.getElementById('close-statistics-modal').addEventListener('click', () => document.getElementById('statistics-modal').style.display = 'none');
-        document.getElementById('close-achievements-modal').addEventListener('click', () => document.getElementById('achievements-modal').style.display = 'none');
-        document.getElementById('close-wrongbook-modal').addEventListener('click', () => document.getElementById('wrongbook-modal').style.display = 'none');
-        document.getElementById('close-leaderboard-modal').addEventListener('click', () => document.getElementById('leaderboard-modal').style.display = 'none');
-        document.getElementById('close-profile-modal').addEventListener('click', () => document.getElementById('profile-modal').style.display = 'none');
-        document.getElementById('close-teacher-tools').addEventListener('click', () => document.getElementById('teacher-tools-modal').style.display = 'none');
-        document.getElementById('close-game-over').addEventListener('click', () => {
+        document.getElementById('close-history-modal')?.addEventListener('click', () => document.getElementById('history-modal').style.display = 'none');
+        document.getElementById('close-statistics-modal')?.addEventListener('click', () => document.getElementById('statistics-modal').style.display = 'none');
+        document.getElementById('close-achievements-modal')?.addEventListener('click', () => document.getElementById('achievements-modal').style.display = 'none');
+        document.getElementById('close-wrongbook-modal')?.addEventListener('click', () => document.getElementById('wrongbook-modal').style.display = 'none');
+        document.getElementById('close-leaderboard-modal')?.addEventListener('click', () => document.getElementById('leaderboard-modal').style.display = 'none');
+        document.getElementById('close-profile-modal')?.addEventListener('click', () => document.getElementById('profile-modal').style.display = 'none');
+        document.getElementById('close-teacher-tools')?.addEventListener('click', () => document.getElementById('teacher-tools-modal').style.display = 'none');
+        document.getElementById('close-game-over')?.addEventListener('click', () => {
             document.getElementById('game-over').style.display = 'none';
             restartGame();
         });
         
         // 历史记录相关
-        document.getElementById('clear-history-btn').addEventListener('click', () => {
+        document.getElementById('clear-history-btn')?.addEventListener('click', () => {
             if (confirm(currentLanguage === 'zh' ? '确定要清空本次游戏的历史记录吗？' : 'Are you sure you want to clear the current game history?')) {
                 gameHistory = [];
                 showHistory();
@@ -2603,8 +2668,8 @@ const MathGame = (function() {
         });
         
         // 错题本相关
-        document.getElementById('sync-wrong-questions-btn').addEventListener('click', syncWrongQuestionsToCloud);
-        document.getElementById('clear-wrong-questions-btn').addEventListener('click', () => {
+        document.getElementById('sync-wrong-questions-btn')?.addEventListener('click', syncWrongQuestionsToCloud);
+        document.getElementById('clear-wrong-questions-btn')?.addEventListener('click', () => {
             if (confirm(currentLanguage === 'zh' ? '确定要清空本地错题吗？' : 'Are you sure you want to clear local wrong questions?')) {
                 wrongQuestions = [];
                 saveWrongQuestions();
@@ -2614,27 +2679,27 @@ const MathGame = (function() {
         });
         
         // 数据备份恢复
-        document.getElementById('backup-data-btn').addEventListener('click', backupToCloud);
-        document.getElementById('restore-data-btn').addEventListener('click', restoreFromCloud);
+        document.getElementById('backup-data-btn')?.addEventListener('click', backupToCloud);
+        document.getElementById('restore-data-btn')?.addEventListener('click', restoreFromCloud);
         
         // 排行榜选项卡
-        document.getElementById('tab-standard').addEventListener('click', () => showLeaderboardTab('standard'));
-        document.getElementById('tab-challenge').addEventListener('click', () => showLeaderboardTab('challenge'));
-        document.getElementById('tab-score').addEventListener('click', () => showLeaderboardTab('score'));
-        document.getElementById('tab-accuracy').addEventListener('click', () => showLeaderboardTab('accuracy'));
-        document.getElementById('tab-myhistory').addEventListener('click', () => showLeaderboardTab('myhistory'));
+        document.getElementById('tab-standard')?.addEventListener('click', (e) => showLeaderboardTab('standard', e));
+        document.getElementById('tab-challenge')?.addEventListener('click', (e) => showLeaderboardTab('challenge', e));
+        document.getElementById('tab-score')?.addEventListener('click', (e) => showLeaderboardTab('score', e));
+        document.getElementById('tab-accuracy')?.addEventListener('click', (e) => showLeaderboardTab('accuracy', e));
+        document.getElementById('tab-myhistory')?.addEventListener('click', (e) => showLeaderboardTab('myhistory', e));
         
         // 游戏结束相关
-        document.getElementById('save-score-btn').addEventListener('click', saveScore);
-        document.getElementById('play-again-btn').addEventListener('click', restartGame);
-        document.getElementById('view-leaderboard-btn').addEventListener('click', () => {
+        document.getElementById('save-score-btn')?.addEventListener('click', saveScore);
+        document.getElementById('play-again-btn')?.addEventListener('click', restartGame);
+        document.getElementById('view-leaderboard-btn')?.addEventListener('click', () => {
             document.getElementById('game-over').style.display = 'none';
             setTimeout(() => {
                 document.getElementById('leaderboard-modal').style.display = 'flex';
                 showLeaderboardTab('standard');
             }, 300);
         });
-        document.getElementById('view-statistics-btn').addEventListener('click', () => {
+        document.getElementById('view-statistics-btn')?.addEventListener('click', () => {
             document.getElementById('game-over').style.display = 'none';
             setTimeout(() => {
                 showStatistics();
@@ -2661,10 +2726,16 @@ const MathGame = (function() {
         closeAuthModal,
         handleAuth,
         toggleAuthMode,
-        saveScore
+        saveScore,
+        showAdminInstructions // 暴露管理员函数
     };
 })();
 
-document.addEventListener('DOMContentLoaded', () => {
+// 页面加载完成后初始化
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        MathGame.init();
+    });
+} else {
     MathGame.init();
-});
+}
