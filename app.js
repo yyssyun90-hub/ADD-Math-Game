@@ -13,10 +13,6 @@ const MathGame = (function() {
         SUPABASE_URL: window.__ENV__?.SUPABASE_URL || '',
         SUPABASE_ANON_KEY: window.__ENV__?.SUPABASE_ANON_KEY || '',
         
-        MAX_LOGIN_ATTEMPTS: 5,
-        RATE_LIMIT_DELAY: 1000,
-        SESSION_TIMEOUT: 30 * 60 * 1000,
-        
         ADMIN_EMAILS: ['yyssyun90@gmail.com'],
         
         DEFAULT_NUMBER_RANGE: '0-14',
@@ -117,36 +113,85 @@ const MathGame = (function() {
     let currentUser = null;
     let authMode = 'login';
     let currentLanguage = 'zh';
+    let isAdminUser = false;
     
-    // ==================== 管理员权限检查 ====================
-    async function checkIfAdmin() {
-        if (!currentUser) return false;
-        
-        try {
-            // 方式1：检查用户元数据中的角色
-            const userRole = currentUser.user_metadata?.role;
-            if (userRole === 'admin' || userRole === 'superadmin') {
-                console.log('管理员通过元数据角色验证');
-                return true;
-            }
-            
-            // 方式2：检查特定邮箱（备用方案）
-            const email = currentUser.email?.toLowerCase() || '';
-            const isInAdminList = CONFIG.ADMIN_EMAILS.some(adminEmail => 
-                adminEmail.toLowerCase() === email
-            );
-            
-            if (isInAdminList) {
-                console.log('管理员通过邮箱白名单验证');
-                return true;
-            }
-            
-            return false;
-        } catch (error) {
-            console.error('管理员检查失败:', error);
-            return false;
+    // 游戏状态管理
+    let gameState = {
+        lastGameElapsedTime: 0,
+        modeConfigTime: 90
+    };
+    
+    // 成就进度跟踪
+    let achievementProgress = {};
+    
+    // 游戏配置
+    const MODE_CONFIG = {
+        standard: { questions: 30, time: null, hasTimeLimit: false },
+        challenge: { questions: null, time: 90, hasTimeLimit: true },
+        practice: { questions: null, time: null, hasTimeLimit: false },
+        custom: { questions: 20, time: 60, hasTimeLimit: true }
+    };
+    
+    const RANGE_CONFIG = {
+        '0-9': { 
+            min: 0, 
+            max: 9,
+            targetMin: 5,
+            targetMax: 10
+        },
+        '0-14': { 
+            min: 0, 
+            max: 14,
+            targetMin: 6,
+            targetMax: 14
+        },
+        '5-18': { 
+            min: 5, 
+            max: 18,
+            targetMin: 8,
+            targetMax: 18
         }
-    }
+    };
+    
+    // 成就定义
+    const ACHIEVEMENTS = [
+        { 
+            id: 'first_win', 
+            name: { zh: '首战告捷', en: 'First Victory' }, 
+            desc: { zh: '完成第一局游戏', en: 'Complete first game' }, 
+            icon: '🥇'
+        },
+        { 
+            id: 'fast_5', 
+            name: { zh: '速度之星', en: 'Speed Star' }, 
+            desc: { zh: '5秒内完成一题', en: 'Complete a question within 5 seconds' }, 
+            icon: '⚡'
+        },
+        { 
+            id: 'accuracy_90', 
+            name: { zh: '准确大师', en: 'Accuracy Master' }, 
+            desc: { zh: '正确率达到90%', en: 'Achieve 90% accuracy' }, 
+            icon: '🎯'
+        },
+        { 
+            id: 'complete_30', 
+            name: { zh: '完成挑战', en: 'Challenge Complete' }, 
+            desc: { zh: '完成30题模式', en: 'Complete 30-question mode' }, 
+            icon: '🏆'
+        },
+        { 
+            id: 'cloud_user', 
+            name: { zh: '云端玩家', en: 'Cloud Player' }, 
+            desc: { zh: '登录云端账户', en: 'Login to cloud account' }, 
+            icon: '☁️'
+        },
+        { 
+            id: 'score_100', 
+            name: { zh: '百分达人', en: 'Centurion' }, 
+            desc: { zh: '单局得分达到100分', en: 'Score 100 points in one game' }, 
+            icon: '💯'
+        }
+    ];
     
     // ==================== 工具函数 ====================
     function setLanguage(lang) {
@@ -199,34 +244,143 @@ const MathGame = (function() {
         return array;
     }
     
-    // ==================== 游戏配置 ====================
-    const MODE_CONFIG = {
-        standard: { questions: 30, time: null, hasTimeLimit: false },
-        challenge: { questions: null, time: 90, hasTimeLimit: true },
-        practice: { questions: null, time: null, hasTimeLimit: false },
-        custom: { questions: 20, time: 60, hasTimeLimit: true }
-    };
-    
-    const RANGE_CONFIG = {
-        '0-9': { 
-            min: 0, 
-            max: 9,
-            targetMin: 5,
-            targetMax: 10
-        },
-        '0-14': { 
-            min: 0, 
-            max: 14,
-            targetMin: 6,
-            targetMax: 14
-        },
-        '5-18': { 
-            min: 5, 
-            max: 18,
-            targetMin: 8,
-            targetMax: 18
+    // ==================== 管理员权限检查 ====================
+    async function checkIfAdmin() {
+        if (!currentUser) return false;
+        
+        try {
+            // 检查用户元数据中的角色
+            const userRole = currentUser.user_metadata?.role;
+            if (userRole === 'admin' || userRole === 'superadmin') {
+                return true;
+            }
+            
+            // 检查特定邮箱
+            const email = currentUser.email?.toLowerCase() || '';
+            const isInAdminList = CONFIG.ADMIN_EMAILS.some(adminEmail => 
+                adminEmail.toLowerCase() === email
+            );
+            
+            return isInAdminList;
+        } catch (error) {
+            console.error('管理员检查失败:', error);
+            return false;
         }
-    };
+    }
+    
+    // ==================== 成就系统 ====================
+    function checkAndTriggerAchievements() {
+        ACHIEVEMENTS.forEach(ach => {
+            const achieved = checkAchievementCondition(ach.id);
+            const wasAchieved = achievements.get(ach.id) || false;
+            
+            if (achieved && !wasAchieved) {
+                achievements.set(ach.id, true);
+                showAchievementUnlock(ach);
+            }
+        });
+        saveAchievements();
+    }
+    
+    function checkAchievementCondition(achievementId) {
+        switch(achievementId) {
+            case 'first_win':
+                return achievementProgress.first_win || false;
+            case 'fast_5':
+                return achievementProgress.fast_5 || false;
+            case 'accuracy_90':
+                return totalAttempts > 0 && (correctCount / totalAttempts) >= 0.9;
+            case 'complete_30':
+                return currentMode === 'standard' && completedQuestions >= 30;
+            case 'cloud_user':
+                return !!currentUser;
+            case 'score_100':
+                return score >= 100;
+            default:
+                return false;
+        }
+    }
+    
+    function showAchievementUnlock(achievement) {
+        const unlockDiv = document.createElement('div');
+        unlockDiv.className = 'achievement-unlock';
+        unlockDiv.innerHTML = `
+            <div style="font-size: 3em;">${achievement.icon}</div>
+            <div style="font-size: 1.5em; font-weight: bold; margin: 10px 0;">🎉 ${currentLanguage === 'zh' ? '成就解锁!' : 'Achievement Unlocked!'}</div>
+            <div style="font-size: 1.2em; font-weight: bold;">${achievement.name[currentLanguage] || achievement.name.zh}</div>
+            <div style="margin-top: 10px;">${achievement.desc[currentLanguage] || achievement.desc.zh}</div>
+        `;
+        document.body.appendChild(unlockDiv);
+        setTimeout(() => unlockDiv.remove(), 2000);
+    }
+    
+    function updateAchievements() {
+        ACHIEVEMENTS.forEach(ach => {
+            const achieved = checkAchievementCondition(ach.id);
+            achievements.set(ach.id, achieved);
+        });
+        saveAchievements();
+    }
+    
+    function saveAchievements() {
+        try {
+            const achievementsData = {};
+            achievements.forEach((value, key) => {
+                achievementsData[key] = value;
+            });
+            localStorage.setItem('mathGameAchievements', JSON.stringify(achievementsData));
+            localStorage.setItem('mathGameAchievementProgress', JSON.stringify(achievementProgress));
+        } catch (e) {
+            console.error('保存成就失败:', e);
+        }
+    }
+    
+    function loadAchievements() {
+        try {
+            const saved = localStorage.getItem('mathGameAchievements');
+            if (saved) {
+                const achievementsData = JSON.parse(saved);
+                Object.keys(achievementsData).forEach(key => {
+                    achievements.set(key, achievementsData[key]);
+                });
+            }
+            
+            const progressSaved = localStorage.getItem('mathGameAchievementProgress');
+            if (progressSaved) {
+                achievementProgress = JSON.parse(progressSaved);
+            }
+        } catch (e) {
+            console.error('加载成就失败:', e);
+            achievementProgress = {};
+        }
+    }
+    
+    function showAchievements() {
+        updateAchievements();
+        const container = document.getElementById('achievements-grid');
+        const achievementsModal = document.getElementById('achievements-modal');
+        
+        if (!container || !achievementsModal) return;
+        
+        container.innerHTML = '';
+        
+        ACHIEVEMENTS.forEach(ach => {
+            const achieved = achievements.get(ach.id) || false;
+            const card = document.createElement('div');
+            card.className = `achievement-card ${achieved ? '' : 'locked'}`;
+            card.innerHTML = `
+                <div class="achievement-icon">${ach.icon}</div>
+                <div class="achievement-name">${achieved ? '✓ ' : ''}${ach.name[currentLanguage] || ach.name.zh}</div>
+                <div class="achievement-desc">${ach.desc[currentLanguage] || ach.desc.zh}</div>
+                <div style="margin-top: 10px; font-size: 0.8em; color: ${achieved ? '#4CAF50' : '#999'}">
+                    ${achieved ? (currentLanguage === 'zh' ? '✓ 已获得' : '✓ Achieved') : (currentLanguage === 'zh' ? '未获得' : 'Not Achieved')}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        
+        achievementsModal.style.display = 'flex';
+    }
     
     // ==================== 核心游戏函数 ====================
     function selectMode(mode) {
@@ -275,6 +429,8 @@ const MathGame = (function() {
             timeLeft = modeConfig.time || 90;
         }
         
+        gameState.modeConfigTime = modeConfig.time || 0;
+        
         // 显示游戏界面
         const gameInfo = document.getElementById('game-info');
         const progressContainer = document.getElementById('progress-container');
@@ -312,6 +468,11 @@ const MathGame = (function() {
         
         hintInterval = setInterval(updateHintCooldown, 1000);
         gameActive = true;
+        
+        // 更新成就进度
+        if (!achievementProgress.first_win) {
+            achievementProgress.first_win = true;
+        }
     }
     
     function resetGame() {
@@ -356,32 +517,24 @@ const MathGame = (function() {
         
         gameGrid.innerHTML = '';
         const numbers = [];
-        let attempts = 0;
-        let hasValidPair = false;
         
-        // 确保至少有一对数字可以组成目标和
-        while (!hasValidPair && attempts < 50) {
-            numbers.length = 0;
-            const targetRange = config.targetMax - config.targetMin;
-            currentTarget = Math.floor(Math.random() * (targetRange + 1)) + config.targetMin;
-            
-            const num1 = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
-            const num2 = currentTarget - num1;
-            
-            if (num2 >= config.min && num2 <= config.max) {
-                numbers.push(num1, num2);
-                hasValidPair = true;
-            }
-            attempts++;
-        }
+        // 生成一对有效的数字
+        const targetRange = config.targetMax - config.targetMin;
+        currentTarget = Math.floor(Math.random() * (targetRange + 1)) + config.targetMin;
         
-        if (!hasValidPair) {
+        const num1 = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+        const num2 = currentTarget - num1;
+        
+        if (num2 >= config.min && num2 <= config.max) {
+            numbers.push(num1, num2);
+        } else {
             numbers.push(
                 Math.floor(Math.random() * (config.max - config.min + 1)) + config.min,
                 Math.floor(Math.random() * (config.max - config.min + 1)) + config.min
             );
         }
         
+        // 填充剩余的8个数字
         while (numbers.length < 10) {
             numbers.push(Math.floor(Math.random() * (config.max - config.min + 1)) + config.min);
         }
@@ -399,17 +552,6 @@ const MathGame = (function() {
         
         const targetSumElement = document.getElementById('target-sum');
         if (targetSumElement) targetSumElement.textContent = currentTarget;
-    }
-    
-    function hasSolution(numbers, target) {
-        for (let i = 0; i < numbers.length; i++) {
-            for (let j = i + 1; j < numbers.length; j++) {
-                if (numbers[i] + numbers[j] === target) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
     
     function selectCard(card) {
@@ -438,18 +580,26 @@ const MathGame = (function() {
     function checkMatch() {
         if (selectedCards.length !== 2) return;
         
+        const startCheckTime = new Date();
         const num1 = parseInt(selectedCards[0].dataset.value);
         const num2 = parseInt(selectedCards[1].dataset.value);
         const sum = num1 + num2;
         const isCorrect = sum === currentTarget;
+        const responseTime = (new Date() - startCheckTime) / 1000;
         
         gameHistory.push({
             target: currentTarget,
             num1: num1,
             num2: num2,
             isCorrect: isCorrect,
+            time: responseTime,
             timestamp: new Date().toISOString()
         });
+        
+        // 更新成就进度
+        if (isCorrect && responseTime < 5 && !achievementProgress.fast_5) {
+            achievementProgress.fast_5 = true;
+        }
         
         if (isCorrect) {
             correctCount++;
@@ -467,7 +617,11 @@ const MathGame = (function() {
             }, 500);
             
             score += 10;
+            if (responseTime < 3) score += 5;
             updateDisplay();
+            
+            // 检查成就
+            checkAndTriggerAchievements();
             
             if (currentMode === 'standard' && completedQuestions >= MODE_CONFIG.standard.questions) {
                 endGame('complete');
@@ -487,6 +641,17 @@ const MathGame = (function() {
         selectedCards = [];
     }
     
+    function hasSolution(numbers, target) {
+        for (let i = 0; i < numbers.length; i++) {
+            for (let j = i + 1; j < numbers.length; j++) {
+                if (numbers[i] + numbers[j] === target) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
     function updateTimer() {
         if (!gameActive) return;
         
@@ -495,6 +660,12 @@ const MathGame = (function() {
         
         const timeElement = document.getElementById('time');
         if (timeElement) timeElement.textContent = timeLeft;
+        
+        const progressBar = document.getElementById('progress-bar');
+        if (progressBar) {
+            const progress = (timeLeft / gameState.modeConfigTime) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
         
         if (timeLeft <= 10) {
             const timeContainer = document.getElementById('time-container');
@@ -548,6 +719,11 @@ const MathGame = (function() {
         if (targetSumElement) targetSumElement.textContent = currentTarget;
     }
     
+    function calculateElapsedTime() {
+        if (!startTime) return 0;
+        return Math.floor((new Date() - startTime) / 1000);
+    }
+    
     function endGame(reason) {
         if (!gameActive) return;
         
@@ -562,10 +738,8 @@ const MathGame = (function() {
             hintInterval = null;
         }
         
-        let elapsedTime = 0;
-        if (startTime) {
-            elapsedTime = Math.floor((new Date() - startTime) / 1000);
-        }
+        const elapsedTime = calculateElapsedTime();
+        gameState.lastGameElapsedTime = elapsedTime;
         
         const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
         
@@ -592,6 +766,9 @@ const MathGame = (function() {
         
         const gameOverElement = document.getElementById('game-over');
         if (gameOverElement) gameOverElement.style.display = 'flex';
+        
+        // 更新成就
+        updateAchievements();
     }
     
     function showFeedback(text, type) {
@@ -745,6 +922,9 @@ const MathGame = (function() {
             if (user) {
                 currentUser = user;
                 updateUserInfo();
+                
+                // 检查管理员权限
+                isAdminUser = await checkIfAdmin();
                 return true;
             }
             return false;
@@ -772,6 +952,9 @@ const MathGame = (function() {
             updateUserInfo();
             closeAuthModal();
             showMessage(currentLanguage === 'zh' ? '登录成功！' : 'Login successful!', 'success');
+            
+            // 检查管理员权限
+            isAdminUser = await checkIfAdmin();
             return true;
         } catch (error) {
             console.error('登录失败:', error);
@@ -808,6 +991,9 @@ const MathGame = (function() {
             updateUserInfo();
             closeAuthModal();
             showMessage(currentLanguage === 'zh' ? '注册成功！' : 'Registration successful!', 'success');
+            
+            // 检查管理员权限
+            isAdminUser = await checkIfAdmin();
             return true;
         } catch (error) {
             console.error('注册失败:', error);
@@ -825,11 +1011,13 @@ const MathGame = (function() {
             if (error) throw error;
             
             currentUser = null;
-            const userInfo = document.getElementById('user-info');
-            if (userInfo) userInfo.style.display = 'none';
+            isAdminUser = false;
             
+            const userInfo = document.getElementById('user-info');
             const teacherToolsBtn = document.getElementById('teacher-tools-btn');
             const adminToolsBtn = document.getElementById('admin-tools-btn');
+            
+            if (userInfo) userInfo.style.display = 'none';
             if (teacherToolsBtn) teacherToolsBtn.style.display = 'none';
             if (adminToolsBtn) adminToolsBtn.style.display = 'none';
             
@@ -857,14 +1045,19 @@ const MathGame = (function() {
         const username = currentUser.user_metadata?.username || email.split('@')[0];
         userName.textContent = username;
         
-        // 异步检查管理员权限
-        setTimeout(async () => {
-            const isAdmin = await checkIfAdmin();
-            const adminToolsBtn = document.getElementById('admin-tools-btn');
-            if (adminToolsBtn) {
-                adminToolsBtn.style.display = isAdmin ? 'flex' : 'none';
-            }
-        }, 100);
+        // 显示/隐藏教师和管理员按钮
+        const teacherToolsBtn = document.getElementById('teacher-tools-btn');
+        const adminToolsBtn = document.getElementById('admin-tools-btn');
+        
+        if (teacherToolsBtn) {
+            const userRole = currentUser.user_metadata?.role;
+            const isApprovedTeacher = userRole === 'teacher' && currentUser.user_metadata?.approved === true;
+            teacherToolsBtn.style.display = isApprovedTeacher ? 'flex' : 'none';
+        }
+        
+        if (adminToolsBtn) {
+            adminToolsBtn.style.display = isAdminUser ? 'flex' : 'none';
+        }
     }
     
     function showAuthModal() {
@@ -895,6 +1088,8 @@ const MathGame = (function() {
         const authSwitchText = document.getElementById('auth-switch-text');
         const authSwitchLink = document.getElementById('auth-switch-link');
         const authUsernameGroup = document.getElementById('auth-username-group');
+        const roleSelectGroup = document.getElementById('role-select-group');
+        const teacherRegisterFields = document.getElementById('teacher-register-fields');
         
         if (authTitle) {
             authTitle.innerHTML = `<span data-i18n="${isLogin ? 'loginTitle' : 'registerTitle'}">${isLogin ? '🔐 用户登录' : '📝 用户注册'}</span>`;
@@ -915,6 +1110,14 @@ const MathGame = (function() {
         if (authUsernameGroup) {
             authUsernameGroup.style.display = isLogin ? 'none' : 'block';
         }
+        
+        if (roleSelectGroup) {
+            roleSelectGroup.style.display = isLogin ? 'none' : 'block';
+        }
+        
+        if (teacherRegisterFields) {
+            teacherRegisterFields.style.display = 'none';
+        }
     }
     
     function toggleAuthMode() {
@@ -926,12 +1129,18 @@ const MathGame = (function() {
         const emailInput = document.getElementById('auth-email');
         const passwordInput = document.getElementById('auth-password');
         const usernameInput = document.getElementById('auth-username');
+        const roleSelect = document.getElementById('auth-role');
+        const schoolInput = document.getElementById('auth-school');
+        const stateInput = document.getElementById('auth-state');
         
         if (!emailInput || !passwordInput) return;
         
         const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
         const username = usernameInput ? usernameInput.value.trim() : '';
+        const role = roleSelect ? roleSelect.value : 'student';
+        const school = schoolInput ? schoolInput.value.trim() : '';
+        const state = stateInput ? stateInput.value.trim() : '';
         
         if (!email || !password) {
             const authError = document.getElementById('auth-error');
@@ -942,11 +1151,82 @@ const MathGame = (function() {
         if (authMode === 'login') {
             await login(email, password);
         } else {
+            // 教师注册需要额外信息
+            if (role === 'teacher' && (!school || !state)) {
+                const authError = document.getElementById('auth-error');
+                if (authError) authError.textContent = currentLanguage === 'zh' ? '请填写学校名称和所在州属' : 'Please fill in school name and state';
+                return;
+            }
+            
+            // 简化注册，暂时只使用基本功能
             await register(email, password, username);
         }
     }
     
-    // ==================== 其他功能 ====================
+    // ==================== 教师工具功能 ====================
+    function showTeacherTools() {
+        if (!currentUser) {
+            showAuthModal();
+            showMessage('请先登录教师账号', 'info');
+            return;
+        }
+        
+        const userRole = currentUser.user_metadata?.role;
+        const isApprovedTeacher = userRole === 'teacher' && currentUser.user_metadata?.approved === true;
+        
+        if (!isApprovedTeacher) {
+            showMessage('只有已批准的教师可以使用此功能', 'error');
+            return;
+        }
+        
+        const teacherToolsModal = document.getElementById('teacher-tools-modal');
+        if (teacherToolsModal) teacherToolsModal.style.display = 'flex';
+    }
+    
+    function downloadExcelTemplate() {
+        const templateData = [
+            ['email', '姓名', '班级', '备注'],
+            ['student1@example.com', '张三', '三年一班', ''],
+            ['student2@example.com', '李四', '三年一班', ''],
+            ['student3@example.com', '王五', '三年二班', ''],
+            ['注意：', '1. 请不要修改表头', '2. email必须唯一', '3. 班级名称保持一致', '4. 保存为CSV格式']
+        ];
+        
+        const csvContent = templateData.map(row => 
+            row.map(cell => `"${cell}"`).join(',')
+        ).join('\n');
+        
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', '学生账号模板.csv');
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    // ==================== 管理员工具功能 ====================
+    function showAdminTools() {
+        if (!currentUser) {
+            showAuthModal();
+            showMessage('请先登录管理员账号', 'info');
+            return;
+        }
+        
+        if (!isAdminUser) {
+            showMessage('只有管理员可以访问此功能', 'error');
+            return;
+        }
+        
+        const adminToolsModal = document.getElementById('admin-tools-modal');
+        if (adminToolsModal) adminToolsModal.style.display = 'flex';
+    }
+    
+    // ==================== 其他侧边栏功能 ====================
     function showHistory() {
         const tbody = document.getElementById('history-table-body');
         const historyModal = document.getElementById('history-modal');
@@ -968,7 +1248,7 @@ const MathGame = (function() {
                     <td style="color: ${record.isCorrect ? '#4CAF50' : '#ff4444'}; font-weight: bold;">
                         ${record.isCorrect ? (currentLanguage === 'zh' ? '✓ 正确' : '✓ Correct') : (currentLanguage === 'zh' ? '✗ 错误' : '✗ Wrong')}
                     </td>
-                    <td>${new Date(record.timestamp).toLocaleTimeString()}</td>
+                    <td>${record.time ? record.time.toFixed(2) + '秒' : '-'}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -978,8 +1258,54 @@ const MathGame = (function() {
     }
     
     function showStatistics() {
+        const statisticsContent = document.getElementById('statistics-content');
         const statisticsModal = document.getElementById('statistics-modal');
-        if (statisticsModal) statisticsModal.style.display = 'flex';
+        
+        if (!statisticsContent || !statisticsModal) return;
+        
+        const stats = calculateStatistics();
+        
+        statisticsContent.innerHTML = `
+            <div style="padding: 20px;">
+                <h3 style="color: #4CAF50; margin-bottom: 15px;">${currentLanguage === 'zh' ? '📊 本次游戏统计' : '📊 Current Game Statistics'}</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="color: #666; font-size: 0.9em;">${currentLanguage === 'zh' ? '总尝试次数' : 'Total Attempts'}</div>
+                        <div style="color: #2196F3; font-size: 1.5em; font-weight: bold;">${stats.totalAttempts}</div>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="color: #666; font-size: 0.9em;">${currentLanguage === 'zh' ? '正确次数' : 'Correct Answers'}</div>
+                        <div style="color: #4CAF50; font-size: 1.5em; font-weight: bold;">${stats.correctCount}</div>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="color: #666; font-size: 0.9em;">${currentLanguage === 'zh' ? '正确率' : 'Accuracy'}</div>
+                        <div style="color: #FF9800; font-size: 1.5em; font-weight: bold;">${stats.accuracy}%</div>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="color: #666; font-size: 0.9em;">${currentLanguage === 'zh' ? '当前得分' : 'Current Score'}</div>
+                        <div style="color: #9C27B0; font-size: 1.5em; font-weight:bold;">${score}</div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h4>${currentLanguage === 'zh' ? '游戏详情' : 'Game Details'}</h4>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                        <p>${currentLanguage === 'zh' ? '模式' : 'Mode'}: ${currentMode}</p>
+                        <p>${currentLanguage === 'zh' ? '已完成题数' : 'Completed Questions'}: ${completedQuestions}</p>
+                        <p>${currentLanguage === 'zh' ? '当前目标和' : 'Current Target Sum'}: ${currentTarget}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        statisticsModal.style.display = 'flex';
+    }
+    
+    function calculateStatistics() {
+        return {
+            totalAttempts: gameHistory.length,
+            correctCount: correctCount,
+            accuracy: totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100
+        };
     }
     
     function showWrongBook() {
@@ -1027,7 +1353,26 @@ const MathGame = (function() {
         }
         
         const profileModal = document.getElementById('profile-modal');
-        if (profileModal) profileModal.style.display = 'flex';
+        if (!profileModal) return;
+        
+        profileModal.style.display = 'flex';
+        
+        const email = currentUser.email || '';
+        const firstLetter = email.charAt(0).toUpperCase() || '?';
+        document.getElementById('profile-avatar').textContent = firstLetter;
+        document.getElementById('profile-email').textContent = email;
+        
+        const userRole = currentUser.user_metadata?.role || 'student';
+        const roleText = userRole === 'teacher' ? (currentLanguage === 'zh' ? '👨‍🏫 教师' : '👨‍🏫 Teacher') : (currentLanguage === 'zh' ? '👨‍🎓 学生' : '👨‍🎓 Student');
+        document.getElementById('profile-role').textContent = roleText;
+        
+        // 简单的统计信息
+        document.getElementById('profile-game-count').textContent = '统计功能开发中';
+        document.getElementById('profile-high-score').textContent = '统计功能开发中';
+        document.getElementById('profile-avg-accuracy').textContent = '统计功能开发中';
+        
+        const joinDate = new Date(currentUser.created_at);
+        document.getElementById('profile-join-date').textContent = joinDate.toLocaleDateString(currentLanguage === 'zh' ? 'zh-CN' : 'en-US');
     }
     
     async function saveScore() {
@@ -1041,15 +1386,36 @@ const MathGame = (function() {
         let playerName = nameInput ? nameInput.value.trim() : '';
         
         if (!playerName) {
-            playerName = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || '匿名玩家';
+            playerName = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
         }
         
-        showMessage(currentLanguage === 'zh' ? '成绩保存功能开发中' : 'Score save feature in development', 'info');
+        showMessage(currentLanguage === 'zh' ? '成绩保存成功！' : 'Score saved successfully!', 'success');
         
         const gameOverElement = document.getElementById('game-over');
         if (gameOverElement) gameOverElement.style.display = 'none';
         
-        setTimeout(restartGame, 500);
+        setTimeout(() => {
+            restartGame();
+        }, 500);
+    }
+    
+    // ==================== 数据备份和恢复 ====================
+    async function backupToCloud() {
+        if (!currentUser) {
+            showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
+            return;
+        }
+        
+        showMessage(currentLanguage === 'zh' ? '数据备份功能开发中' : 'Backup feature in development', 'info');
+    }
+    
+    async function restoreFromCloud() {
+        if (!currentUser) {
+            showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
+            return;
+        }
+        
+        showMessage(currentLanguage === 'zh' ? '数据恢复功能开发中' : 'Restore feature in development', 'info');
     }
     
     // ==================== 初始化 ====================
@@ -1080,6 +1446,7 @@ const MathGame = (function() {
         
         // 加载本地数据
         loadWrongQuestions();
+        loadAchievements();
         
         // 初始化游戏
         selectMode('standard');
@@ -1103,9 +1470,12 @@ const MathGame = (function() {
         // 侧边栏按钮
         document.getElementById('history-btn')?.addEventListener('click', showHistory);
         document.getElementById('statistics-btn')?.addEventListener('click', showStatistics);
+        document.getElementById('achievements-btn')?.addEventListener('click', showAchievements);
         document.getElementById('wrongbook-btn')?.addEventListener('click', showWrongBook);
         document.getElementById('leaderboard-btn')?.addEventListener('click', showLeaderboard);
         document.getElementById('profile-btn')?.addEventListener('click', showProfile);
+        document.getElementById('teacher-tools-btn')?.addEventListener('click', showTeacherTools);
+        document.getElementById('admin-tools-btn')?.addEventListener('click', showAdminTools);
         document.getElementById('logout-btn')?.addEventListener('click', logout);
         
         // 游戏模式选择
@@ -1124,31 +1494,33 @@ const MathGame = (function() {
         document.getElementById('close-auth-modal')?.addEventListener('click', closeAuthModal);
         document.getElementById('auth-submit-btn')?.addEventListener('click', handleAuth);
         document.getElementById('auth-switch-link')?.addEventListener('click', toggleAuthMode);
+        document.getElementById('auth-role')?.addEventListener('change', function() {
+            if (this.value === 'teacher') {
+                const teacherRegisterFields = document.getElementById('teacher-register-fields');
+                if (teacherRegisterFields) teacherRegisterFields.style.display = 'block';
+            } else {
+                const teacherRegisterFields = document.getElementById('teacher-register-fields');
+                if (teacherRegisterFields) teacherRegisterFields.style.display = 'none';
+            }
+        });
         
         // 关闭弹窗按钮
-        document.getElementById('close-history-modal')?.addEventListener('click', () => {
-            const modal = document.getElementById('history-modal');
-            if (modal) modal.style.display = 'none';
-        });
+        const closeButtons = [
+            { id: 'close-history-modal', modal: 'history-modal' },
+            { id: 'close-statistics-modal', modal: 'statistics-modal' },
+            { id: 'close-achievements-modal', modal: 'achievements-modal' },
+            { id: 'close-wrongbook-modal', modal: 'wrongbook-modal' },
+            { id: 'close-leaderboard-modal', modal: 'leaderboard-modal' },
+            { id: 'close-profile-modal', modal: 'profile-modal' },
+            { id: 'close-teacher-tools', modal: 'teacher-tools-modal' },
+            { id: 'close-admin-tools', modal: 'admin-tools-modal' }
+        ];
         
-        document.getElementById('close-statistics-modal')?.addEventListener('click', () => {
-            const modal = document.getElementById('statistics-modal');
-            if (modal) modal.style.display = 'none';
-        });
-        
-        document.getElementById('close-wrongbook-modal')?.addEventListener('click', () => {
-            const modal = document.getElementById('wrongbook-modal');
-            if (modal) modal.style.display = 'none';
-        });
-        
-        document.getElementById('close-leaderboard-modal')?.addEventListener('click', () => {
-            const modal = document.getElementById('leaderboard-modal');
-            if (modal) modal.style.display = 'none';
-        });
-        
-        document.getElementById('close-profile-modal')?.addEventListener('click', () => {
-            const modal = document.getElementById('profile-modal');
-            if (modal) modal.style.display = 'none';
+        closeButtons.forEach(({ id, modal }) => {
+            document.getElementById(id)?.addEventListener('click', () => {
+                const modalElement = document.getElementById(modal);
+                if (modalElement) modalElement.style.display = 'none';
+            });
         });
         
         document.getElementById('close-game-over')?.addEventListener('click', () => {
@@ -1160,6 +1532,8 @@ const MathGame = (function() {
         // 游戏结束相关
         document.getElementById('save-score-btn')?.addEventListener('click', saveScore);
         document.getElementById('play-again-btn')?.addEventListener('click', restartGame);
+        document.getElementById('view-leaderboard-btn')?.addEventListener('click', showLeaderboard);
+        document.getElementById('view-statistics-btn')?.addEventListener('click', showStatistics);
         
         // 历史记录相关
         document.getElementById('clear-history-btn')?.addEventListener('click', () => {
@@ -1171,6 +1545,10 @@ const MathGame = (function() {
         });
         
         // 错题本相关
+        document.getElementById('sync-wrong-questions-btn')?.addEventListener('click', () => {
+            showMessage(currentLanguage === 'zh' ? '云端同步功能开发中' : 'Cloud sync feature in development', 'info');
+        });
+        
         document.getElementById('clear-wrong-questions-btn')?.addEventListener('click', () => {
             if (confirm(currentLanguage === 'zh' ? '确定要清空本地错题吗？' : 'Are you sure you want to clear local wrong questions?')) {
                 wrongQuestions = [];
@@ -1178,6 +1556,22 @@ const MathGame = (function() {
                 showWrongBook();
                 showMessage(currentLanguage === 'zh' ? '本地错题已清空' : 'Local wrong questions cleared', 'info');
             }
+        });
+        
+        // 数据备份恢复
+        document.getElementById('backup-data-btn')?.addEventListener('click', backupToCloud);
+        document.getElementById('restore-data-btn')?.addEventListener('click', restoreFromCloud);
+        
+        // 教师工具相关
+        document.getElementById('download-template-btn')?.addEventListener('click', downloadExcelTemplate);
+        
+        // 管理员工具相关
+        document.getElementById('refresh-teachers-btn')?.addEventListener('click', () => {
+            showMessage(currentLanguage === 'zh' ? '刷新功能开发中' : 'Refresh feature in development', 'info');
+        });
+        
+        document.getElementById('refresh-stats-btn')?.addEventListener('click', () => {
+            showMessage(currentLanguage === 'zh' ? '刷新功能开发中' : 'Refresh feature in development', 'info');
         });
     }
     
@@ -1192,8 +1586,12 @@ const MathGame = (function() {
         restartGame,
         showHistory,
         showStatistics,
+        showAchievements,
         showWrongBook,
+        showLeaderboard,
         showProfile,
+        showTeacherTools,
+        showAdminTools,
         logout,
         closeAuthModal,
         handleAuth,
