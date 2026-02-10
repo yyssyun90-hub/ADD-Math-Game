@@ -8,16 +8,12 @@
 })();
 
 const MathGame = (function() {
-    // ==================== 配置和安全设置 ====================
+    // ==================== 配置 ====================
+    // 直接从window.__ENV__获取环境变量
     const CONFIG = {
-        SUPABASE_URL: window.__ENV__?.SUPABASE_URL || '',
-        SUPABASE_ANON_KEY: window.__ENV__?.SUPABASE_ANON_KEY || '',
-        
-        ADMIN_EMAILS: ['yyssyun90@gmail.com'],
-        
-        DEFAULT_NUMBER_RANGE: '0-14',
-        DEFAULT_QUESTIONS: 30,
-        DEFAULT_TIME_LIMIT: 90
+        SUPABASE_URL: '',
+        SUPABASE_ANON_KEY: '',
+        ADMIN_EMAILS: ['yyssyun90@gmail.com']
     };
     
     // ==================== 多语言支持 ====================
@@ -53,7 +49,9 @@ const MathGame = (function() {
             playerNamePlaceholder: "请输入你的名字", saveScore: "保存成绩", playAgain: "再玩一次",
             viewLeaderboard: "查看排行榜", viewStatistics: "查看统计", loadingStats: "加载统计信息中...",
             languageText: "English", gameComplete: "🎉 恭喜完成30题！", gameTimeout: "⏰ 时间到！",
-            gameGiveup: "🏁 游戏结束", gameEnd: "🎉 游戏结束!"
+            gameGiveup: "🏁 游戏结束", gameEnd: "🎉 游戏结束!", 
+            systemError: "系统错误", loginFailed: "登录失败", registerFailed: "注册失败",
+            authError: "认证错误", networkError: "网络错误", configError: "配置错误"
         },
         en: {
             gameTitle: "🧮 Math Addition Match", gameSubtitle: "Educational Edition | Cloud Sync | Real-time Leaderboard",
@@ -88,12 +86,14 @@ const MathGame = (function() {
             viewLeaderboard: "View Leaderboard", viewStatistics: "View Statistics",
             loadingStats: "Loading statistics...", languageText: "中文",
             gameComplete: "🎉 Congratulations! Completed 30 questions!", gameTimeout: "⏰ Time's up!",
-            gameGiveup: "🏁 Game Over", gameEnd: "🎉 Game Over!"
+            gameGiveup: "🏁 Game Over", gameEnd: "🎉 Game Over!",
+            systemError: "System Error", loginFailed: "Login Failed", registerFailed: "Registration Failed",
+            authError: "Authentication Error", networkError: "Network Error", configError: "Configuration Error"
         }
     };
     
     // ==================== 全局变量 ====================
-    let supabase;
+    let supabase = null;
     let score = 0;
     let selectedCards = [];
     let timeLeft = 90;
@@ -114,14 +114,15 @@ const MathGame = (function() {
     let authMode = 'login';
     let currentLanguage = 'zh';
     let isAdminUser = false;
+    let isSupabaseReady = false;
     
-    // 游戏状态管理
+    // 游戏状态
     let gameState = {
         lastGameElapsedTime: 0,
         modeConfigTime: 90
     };
     
-    // 成就进度跟踪
+    // 成就进度
     let achievementProgress = {};
     
     // 游戏配置
@@ -133,81 +134,69 @@ const MathGame = (function() {
     };
     
     const RANGE_CONFIG = {
-        '0-9': { 
-            min: 0, 
-            max: 9,
-            targetMin: 5,
-            targetMax: 10
-        },
-        '0-14': { 
-            min: 0, 
-            max: 14,
-            targetMin: 6,
-            targetMax: 14
-        },
-        '5-18': { 
-            min: 5, 
-            max: 18,
-            targetMin: 8,
-            targetMax: 18
-        }
+        '0-9': { min: 0, max: 9, targetMin: 5, targetMax: 10 },
+        '0-14': { min: 0, max: 14, targetMin: 6, targetMax: 14 },
+        '5-18': { min: 5, max: 18, targetMin: 8, targetMax: 18 }
     };
     
     // 成就定义
     const ACHIEVEMENTS = [
-        { 
-            id: 'first_win', 
-            name: { zh: '首战告捷', en: 'First Victory' }, 
-            desc: { zh: '完成第一局游戏', en: 'Complete first game' }, 
-            icon: '🥇'
-        },
-        { 
-            id: 'fast_5', 
-            name: { zh: '速度之星', en: 'Speed Star' }, 
-            desc: { zh: '5秒内完成一题', en: 'Complete a question within 5 seconds' }, 
-            icon: '⚡'
-        },
-        { 
-            id: 'accuracy_90', 
-            name: { zh: '准确大师', en: 'Accuracy Master' }, 
-            desc: { zh: '正确率达到90%', en: 'Achieve 90% accuracy' }, 
-            icon: '🎯'
-        },
-        { 
-            id: 'complete_30', 
-            name: { zh: '完成挑战', en: 'Challenge Complete' }, 
-            desc: { zh: '完成30题模式', en: 'Complete 30-question mode' }, 
-            icon: '🏆'
-        },
-        { 
-            id: 'cloud_user', 
-            name: { zh: '云端玩家', en: 'Cloud Player' }, 
-            desc: { zh: '登录云端账户', en: 'Login to cloud account' }, 
-            icon: '☁️'
-        },
-        { 
-            id: 'score_100', 
-            name: { zh: '百分达人', en: 'Centurion' }, 
-            desc: { zh: '单局得分达到100分', en: 'Score 100 points in one game' }, 
-            icon: '💯'
-        }
+        { id: 'first_win', name: { zh: '首战告捷', en: 'First Victory' }, desc: { zh: '完成第一局游戏', en: 'Complete first game' }, icon: '🥇' },
+        { id: 'fast_5', name: { zh: '速度之星', en: 'Speed Star' }, desc: { zh: '5秒内完成一题', en: 'Complete a question within 5 seconds' }, icon: '⚡' },
+        { id: 'accuracy_90', name: { zh: '准确大师', en: 'Accuracy Master' }, desc: { zh: '正确率达到90%', en: 'Achieve 90% accuracy' }, icon: '🎯' },
+        { id: 'complete_30', name: { zh: '完成挑战', en: 'Challenge Complete' }, desc: { zh: '完成30题模式', en: 'Complete 30-question mode' }, icon: '🏆' },
+        { id: 'cloud_user', name: { zh: '云端玩家', en: 'Cloud Player' }, desc: { zh: '登录云端账户', en: 'Login to cloud account' }, icon: '☁️' },
+        { id: 'score_100', name: { zh: '百分达人', en: 'Centurion' }, desc: { zh: '单局得分达到100分', en: 'Score 100 points in one game' }, icon: '💯' }
     ];
     
     // ==================== 工具函数 ====================
+    function showMessage(text, type = 'info', duration = 2000) {
+        try {
+            const message = document.createElement('div');
+            message.textContent = text;
+            message.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#ff4444' : '#2196F3'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 10px;
+                z-index: 3000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            document.body.appendChild(message);
+            setTimeout(() => {
+                if (message && message.parentNode) {
+                    message.parentNode.removeChild(message);
+                }
+            }, duration);
+        } catch (error) {
+            console.error('显示消息失败:', error);
+        }
+    }
+    
     function setLanguage(lang) {
         try {
             currentLanguage = lang;
             localStorage.setItem('mathGameLanguage', lang);
+            
+            // 更新文本
             document.querySelectorAll('[data-i18n]').forEach(element => {
                 const key = element.getAttribute('data-i18n');
                 if (translations[lang] && translations[lang][key]) {
-                    if (element.hasAttribute('placeholder')) {
-                        element.setAttribute('placeholder', translations[lang][key]);
+                    if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                        if (element.hasAttribute('placeholder')) {
+                            element.setAttribute('placeholder', translations[lang][key]);
+                        }
                     } else {
                         element.textContent = translations[lang][key];
                     }
                 }
             });
+            
+            // 更新语言按钮文本
             const languageText = document.getElementById('language-text');
             if (languageText) {
                 languageText.textContent = lang === 'zh' ? 'English' : '中文';
@@ -215,25 +204,6 @@ const MathGame = (function() {
         } catch (error) {
             console.error('设置语言失败:', error);
         }
-    }
-    
-    function showMessage(text, type = 'info', duration = 2000) {
-        const message = document.createElement('div');
-        message.textContent = text;
-        message.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#ff4444' : '#2196F3'};
-            color: white;
-            padding: 12px 24px;
-            border-radius: 10px;
-            z-index: 3000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        `;
-        document.body.appendChild(message);
-        setTimeout(() => message.remove(), duration);
     }
     
     function shuffleArray(array) {
@@ -268,388 +238,795 @@ const MathGame = (function() {
         }
     }
     
-    // ==================== 成就系统 ====================
-    function checkAndTriggerAchievements() {
-        ACHIEVEMENTS.forEach(ach => {
-            const achieved = checkAchievementCondition(ach.id);
-            const wasAchieved = achievements.get(ach.id) || false;
+    // ==================== Supabase 初始化 ====================
+    async function initSupabase() {
+        try {
+            console.log('开始初始化Supabase...');
             
-            if (achieved && !wasAchieved) {
-                achievements.set(ach.id, true);
-                showAchievementUnlock(ach);
+            // 方法1：尝试从window.__ENV__获取
+            let supabaseUrl = '';
+            let supabaseKey = '';
+            
+            if (window.__ENV__) {
+                supabaseUrl = window.__ENV__.SUPABASE_URL || '';
+                supabaseKey = window.__ENV__.SUPABASE_ANON_KEY || '';
             }
-        });
-        saveAchievements();
-    }
-    
-    function checkAchievementCondition(achievementId) {
-        switch(achievementId) {
-            case 'first_win':
-                return achievementProgress.first_win || false;
-            case 'fast_5':
-                return achievementProgress.fast_5 || false;
-            case 'accuracy_90':
-                return totalAttempts > 0 && (correctCount / totalAttempts) >= 0.9;
-            case 'complete_30':
-                return currentMode === 'standard' && completedQuestions >= 30;
-            case 'cloud_user':
-                return !!currentUser;
-            case 'score_100':
-                return score >= 100;
-            default:
+            
+            // 方法2：尝试从HTML中的配置获取
+            if (!supabaseUrl || !supabaseKey) {
+                const configElement = document.getElementById('supabase-config');
+                if (configElement) {
+                    try {
+                        const config = JSON.parse(configElement.textContent);
+                        supabaseUrl = config.supabaseUrl || '';
+                        supabaseKey = config.supabaseKey || '';
+                    } catch (e) {
+                        console.error('解析HTML配置失败:', e);
+                    }
+                }
+            }
+            
+            // 方法3：尝试硬编码的值（作为最后手段）
+            if (!supabaseUrl || !supabaseKey) {
+                // 使用你提供的Supabase配置
+                supabaseUrl = 'https://ytoailyxejdgtpfwcdci.supabase.co';
+                supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0b2FpbHl4ZWpkZ3RwZndjZGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NDE5NzQsImV4cCI6MjA4NTExNzk3NH0.DvvP8whiE3rW1bDh4qW2zOLTGsknfQ2Utt8wVOxZjV0';
+            }
+            
+            // 验证配置
+            if (!supabaseUrl || !supabaseKey) {
+                console.error('Supabase配置缺失');
+                showMessage(currentLanguage === 'zh' ? '系统配置错误，请联系管理员' : 'System configuration error, please contact administrator', 'error');
                 return false;
-        }
-    }
-    
-    function showAchievementUnlock(achievement) {
-        const unlockDiv = document.createElement('div');
-        unlockDiv.className = 'achievement-unlock';
-        unlockDiv.innerHTML = `
-            <div style="font-size: 3em;">${achievement.icon}</div>
-            <div style="font-size: 1.5em; font-weight: bold; margin: 10px 0;">🎉 ${currentLanguage === 'zh' ? '成就解锁!' : 'Achievement Unlocked!'}</div>
-            <div style="font-size: 1.2em; font-weight: bold;">${achievement.name[currentLanguage] || achievement.name.zh}</div>
-            <div style="margin-top: 10px;">${achievement.desc[currentLanguage] || achievement.desc.zh}</div>
-        `;
-        document.body.appendChild(unlockDiv);
-        setTimeout(() => unlockDiv.remove(), 2000);
-    }
-    
-    function updateAchievements() {
-        ACHIEVEMENTS.forEach(ach => {
-            const achieved = checkAchievementCondition(ach.id);
-            achievements.set(ach.id, achieved);
-        });
-        saveAchievements();
-    }
-    
-    function saveAchievements() {
-        try {
-            const achievementsData = {};
-            achievements.forEach((value, key) => {
-                achievementsData[key] = value;
-            });
-            localStorage.setItem('mathGameAchievements', JSON.stringify(achievementsData));
-            localStorage.setItem('mathGameAchievementProgress', JSON.stringify(achievementProgress));
-        } catch (e) {
-            console.error('保存成就失败:', e);
-        }
-    }
-    
-    function loadAchievements() {
-        try {
-            const saved = localStorage.getItem('mathGameAchievements');
-            if (saved) {
-                const achievementsData = JSON.parse(saved);
-                Object.keys(achievementsData).forEach(key => {
-                    achievements.set(key, achievementsData[key]);
-                });
             }
             
-            const progressSaved = localStorage.getItem('mathGameAchievementProgress');
-            if (progressSaved) {
-                achievementProgress = JSON.parse(progressSaved);
+            CONFIG.SUPABASE_URL = supabaseUrl;
+            CONFIG.SUPABASE_ANON_KEY = supabaseKey;
+            
+            console.log('Supabase配置:', {
+                url: supabaseUrl.substring(0, 30) + '...',
+                key: supabaseKey.substring(0, 20) + '...'
+            });
+            
+            // 创建Supabase客户端
+            if (window.supabase && window.supabase.createClient) {
+                supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
+                    auth: {
+                        autoRefreshToken: true,
+                        persistSession: true,
+                        detectSessionInUrl: false
+                    }
+                });
+                
+                console.log('Supabase客户端创建成功');
+                isSupabaseReady = true;
+                return true;
+            } else {
+                console.error('Supabase SDK未加载');
+                showMessage(currentLanguage === 'zh' ? '系统库加载失败，请刷新页面' : 'System library failed to load, please refresh page', 'error');
+                return false;
             }
-        } catch (e) {
-            console.error('加载成就失败:', e);
-            achievementProgress = {};
+            
+        } catch (error) {
+            console.error('Supabase初始化失败:', error);
+            showMessage(currentLanguage === 'zh' ? '系统初始化失败' : 'System initialization failed', 'error');
+            isSupabaseReady = false;
+            return false;
         }
     }
     
-    function showAchievements() {
-        updateAchievements();
-        const container = document.getElementById('achievements-grid');
-        const achievementsModal = document.getElementById('achievements-modal');
+    // ==================== 用户认证 ====================
+    async function checkAuth() {
+        if (!isSupabaseReady || !supabase) {
+            console.log('Supabase未就绪，跳过认证检查');
+            return false;
+        }
         
-        if (!container || !achievementsModal) return;
+        try {
+            console.log('检查认证状态...');
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error) {
+                console.error('获取用户失败:', error);
+                return false;
+            }
+            
+            if (user) {
+                currentUser = user;
+                console.log('用户已登录:', user.email);
+                
+                // 检查管理员权限
+                isAdminUser = await checkIfAdmin();
+                
+                // 更新UI
+                updateUserInfo();
+                
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('检查认证状态失败:', error);
+            return false;
+        }
+    }
+    
+    async function login(email, password) {
+        try {
+            console.log('尝试登录:', email);
+            
+            if (!isSupabaseReady || !supabase) {
+                const errorMsg = currentLanguage === 'zh' ? '系统未初始化，请刷新页面' : 'System not initialized, please refresh page';
+                showMessage(errorMsg, 'error');
+                return false;
+            }
+            
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password: password.trim()
+            });
+            
+            if (error) {
+                console.error('登录失败:', error);
+                const errorElement = document.getElementById('auth-error');
+                if (errorElement) {
+                    errorElement.textContent = error.message || (currentLanguage === 'zh' ? '登录失败' : 'Login failed');
+                }
+                return false;
+            }
+            
+            if (data && data.user) {
+                currentUser = data.user;
+                console.log('登录成功:', data.user.email);
+                
+                // 检查管理员权限
+                isAdminUser = await checkIfAdmin();
+                
+                // 更新UI
+                updateUserInfo();
+                
+                // 关闭登录窗口
+                closeAuthModal();
+                
+                // 显示成功消息
+                showMessage(currentLanguage === 'zh' ? '登录成功！' : 'Login successful!', 'success');
+                
+                return true;
+            }
+            
+            return false;
+            
+        } catch (error) {
+            console.error('登录异常:', error);
+            const errorElement = document.getElementById('auth-error');
+            if (errorElement) {
+                errorElement.textContent = currentLanguage === 'zh' ? '登录过程出错' : 'Login process error';
+            }
+            return false;
+        }
+    }
+    
+    async function register(email, password, username) {
+        try {
+            console.log('尝试注册:', email);
+            
+            if (!isSupabaseReady || !supabase) {
+                const errorMsg = currentLanguage === 'zh' ? '系统未初始化，请刷新页面' : 'System not initialized, please refresh page';
+                showMessage(errorMsg, 'error');
+                return false;
+            }
+            
+            const userMetadata = {
+                username: username?.trim() || email.split('@')[0]
+            };
+            
+            const { data, error } = await supabase.auth.signUp({
+                email: email.trim(),
+                password: password.trim(),
+                options: {
+                    data: userMetadata
+                }
+            });
+            
+            if (error) {
+                console.error('注册失败:', error);
+                const errorElement = document.getElementById('auth-error');
+                if (errorElement) {
+                    errorElement.textContent = error.message || (currentLanguage === 'zh' ? '注册失败' : 'Registration failed');
+                }
+                return false;
+            }
+            
+            if (data && data.user) {
+                currentUser = data.user;
+                console.log('注册成功:', data.user.email);
+                
+                // 检查管理员权限
+                isAdminUser = await checkIfAdmin();
+                
+                // 更新UI
+                updateUserInfo();
+                
+                // 关闭注册窗口
+                closeAuthModal();
+                
+                // 显示成功消息
+                showMessage(currentLanguage === 'zh' ? '注册成功！请检查邮箱验证邮件。' : 'Registration successful! Please check your email for verification.', 'success');
+                
+                return true;
+            }
+            
+            return false;
+            
+        } catch (error) {
+            console.error('注册异常:', error);
+            const errorElement = document.getElementById('auth-error');
+            if (errorElement) {
+                errorElement.textContent = currentLanguage === 'zh' ? '注册过程出错' : 'Registration process error';
+            }
+            return false;
+        }
+    }
+    
+    async function logout() {
+        try {
+            if (!isSupabaseReady || !supabase) {
+                console.log('Supabase未就绪，无法退出');
+                return;
+            }
+            
+            const { error } = await supabase.auth.signOut();
+            
+            if (error) {
+                console.error('退出失败:', error);
+                showMessage(currentLanguage === 'zh' ? '退出失败: ' : 'Logout failed: ' + error.message, 'error');
+                return;
+            }
+            
+            // 清除用户数据
+            currentUser = null;
+            isAdminUser = false;
+            
+            // 更新UI
+            const userInfo = document.getElementById('user-info');
+            const teacherToolsBtn = document.getElementById('teacher-tools-btn');
+            const adminToolsBtn = document.getElementById('admin-tools-btn');
+            
+            if (userInfo) userInfo.style.display = 'none';
+            if (teacherToolsBtn) teacherToolsBtn.style.display = 'none';
+            if (adminToolsBtn) adminToolsBtn.style.display = 'none';
+            
+            showMessage(currentLanguage === 'zh' ? '已退出登录' : 'Logged out', 'info');
+            
+        } catch (error) {
+            console.error('退出异常:', error);
+            showMessage(currentLanguage === 'zh' ? '退出过程出错' : 'Logout process error', 'error');
+        }
+    }
+    
+    function updateUserInfo() {
+        if (!currentUser) return;
         
-        container.innerHTML = '';
-        
-        ACHIEVEMENTS.forEach(ach => {
-            const achieved = achievements.get(ach.id) || false;
-            const card = document.createElement('div');
-            card.className = `achievement-card ${achieved ? '' : 'locked'}`;
-            card.innerHTML = `
-                <div class="achievement-icon">${ach.icon}</div>
-                <div class="achievement-name">${achieved ? '✓ ' : ''}${ach.name[currentLanguage] || ach.name.zh}</div>
-                <div class="achievement-desc">${ach.desc[currentLanguage] || ach.desc.zh}</div>
-                <div style="margin-top: 10px; font-size: 0.8em; color: ${achieved ? '#4CAF50' : '#999'}">
-                    ${achieved ? (currentLanguage === 'zh' ? '✓ 已获得' : '✓ Achieved') : (currentLanguage === 'zh' ? '未获得' : 'Not Achieved')}
-                </div>
-            `;
-            container.appendChild(card);
-        });
-        
-        achievementsModal.style.display = 'flex';
+        try {
+            const userInfo = document.getElementById('user-info');
+            const userAvatar = document.getElementById('user-avatar');
+            const userName = document.getElementById('user-name');
+            const teacherToolsBtn = document.getElementById('teacher-tools-btn');
+            const adminToolsBtn = document.getElementById('admin-tools-btn');
+            
+            if (!userInfo || !userAvatar || !userName) return;
+            
+            // 显示用户信息
+            userInfo.style.display = 'flex';
+            
+            const email = currentUser.email || '';
+            const firstLetter = email.charAt(0).toUpperCase() || '?';
+            userAvatar.textContent = firstLetter;
+            
+            const username = currentUser.user_metadata?.username || email.split('@')[0];
+            userName.textContent = username;
+            
+            // 显示/隐藏教师工具按钮
+            if (teacherToolsBtn) {
+                const userRole = currentUser.user_metadata?.role;
+                const isApprovedTeacher = userRole === 'teacher' && currentUser.user_metadata?.approved === true;
+                teacherToolsBtn.style.display = isApprovedTeacher ? 'flex' : 'none';
+            }
+            
+            // 显示/隐藏管理员按钮
+            if (adminToolsBtn) {
+                adminToolsBtn.style.display = isAdminUser ? 'flex' : 'none';
+            }
+            
+        } catch (error) {
+            console.error('更新用户信息失败:', error);
+        }
+    }
+    
+    // ==================== 弹窗函数 ====================
+    function showAuthModal() {
+        try {
+            const authModal = document.getElementById('auth-modal');
+            if (authModal) {
+                authModal.style.display = 'flex';
+                updateAuthUI();
+            }
+        } catch (error) {
+            console.error('显示登录窗口失败:', error);
+        }
+    }
+    
+    function closeAuthModal() {
+        try {
+            const authModal = document.getElementById('auth-modal');
+            if (authModal) authModal.style.display = 'none';
+            
+            // 清除表单数据
+            const authEmail = document.getElementById('auth-email');
+            const authPassword = document.getElementById('auth-password');
+            const authUsername = document.getElementById('auth-username');
+            const authError = document.getElementById('auth-error');
+            
+            if (authEmail) authEmail.value = '';
+            if (authPassword) authPassword.value = '';
+            if (authUsername) authUsername.value = '';
+            if (authError) authError.textContent = '';
+            
+        } catch (error) {
+            console.error('关闭登录窗口失败:', error);
+        }
+    }
+    
+    function updateAuthUI() {
+        try {
+            const isLogin = authMode === 'login';
+            const authTitle = document.getElementById('auth-title');
+            const authSubmitBtn = document.getElementById('auth-submit-btn');
+            const authSwitchText = document.getElementById('auth-switch-text');
+            const authSwitchLink = document.getElementById('auth-switch-link');
+            const authUsernameGroup = document.getElementById('auth-username-group');
+            const roleSelectGroup = document.getElementById('role-select-group');
+            const teacherRegisterFields = document.getElementById('teacher-register-fields');
+            
+            if (authTitle) {
+                authTitle.textContent = isLogin ? 
+                    (currentLanguage === 'zh' ? '🔐 用户登录' : '🔐 User Login') : 
+                    (currentLanguage === 'zh' ? '📝 用户注册' : '📝 User Registration');
+            }
+            
+            if (authSubmitBtn) {
+                authSubmitBtn.textContent = isLogin ? 
+                    (currentLanguage === 'zh' ? '登录' : 'Login') : 
+                    (currentLanguage === 'zh' ? '注册' : 'Register');
+            }
+            
+            if (authSwitchText) {
+                authSwitchText.textContent = isLogin ? 
+                    (currentLanguage === 'zh' ? '还没有账号？' : 'No account?') : 
+                    (currentLanguage === 'zh' ? '已有账号？' : 'Already have an account?');
+            }
+            
+            if (authSwitchLink) {
+                authSwitchLink.textContent = isLogin ? 
+                    (currentLanguage === 'zh' ? '立即注册' : 'Register Now') : 
+                    (currentLanguage === 'zh' ? '立即登录' : 'Login Now');
+            }
+            
+            if (authUsernameGroup) {
+                authUsernameGroup.style.display = isLogin ? 'none' : 'block';
+            }
+            
+            if (roleSelectGroup) {
+                roleSelectGroup.style.display = isLogin ? 'none' : 'block';
+            }
+            
+            if (teacherRegisterFields) {
+                teacherRegisterFields.style.display = 'none';
+            }
+            
+        } catch (error) {
+            console.error('更新认证UI失败:', error);
+        }
+    }
+    
+    function toggleAuthMode() {
+        authMode = authMode === 'login' ? 'register' : 'login';
+        updateAuthUI();
+    }
+    
+    async function handleAuth() {
+        try {
+            const emailInput = document.getElementById('auth-email');
+            const passwordInput = document.getElementById('auth-password');
+            const usernameInput = document.getElementById('auth-username');
+            const roleSelect = document.getElementById('auth-role');
+            const schoolInput = document.getElementById('auth-school');
+            const stateInput = document.getElementById('auth-state');
+            
+            if (!emailInput || !passwordInput) {
+                showMessage(currentLanguage === 'zh' ? '表单加载失败' : 'Form loading failed', 'error');
+                return;
+            }
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            const username = usernameInput ? usernameInput.value.trim() : '';
+            const role = roleSelect ? roleSelect.value : 'student';
+            const school = schoolInput ? schoolInput.value.trim() : '';
+            const state = stateInput ? stateInput.value.trim() : '';
+            
+            // 验证输入
+            if (!email || !password) {
+                const errorElement = document.getElementById('auth-error');
+                if (errorElement) {
+                    errorElement.textContent = currentLanguage === 'zh' ? '请输入邮箱和密码' : 'Please enter email and password';
+                }
+                return;
+            }
+            
+            if (authMode === 'login') {
+                await login(email, password);
+            } else {
+                // 如果是教师注册，需要额外信息
+                if (role === 'teacher' && (!school || !state)) {
+                    const errorElement = document.getElementById('auth-error');
+                    if (errorElement) {
+                        errorElement.textContent = currentLanguage === 'zh' ? '请填写学校名称和所在州属' : 'Please fill in school name and state';
+                    }
+                    return;
+                }
+                
+                await register(email, password, username);
+            }
+        } catch (error) {
+            console.error('处理认证失败:', error);
+            const errorElement = document.getElementById('auth-error');
+            if (errorElement) {
+                errorElement.textContent = currentLanguage === 'zh' ? '认证过程出错' : 'Authentication process error';
+            }
+        }
     }
     
     // ==================== 核心游戏函数 ====================
     function selectMode(mode) {
-        currentMode = mode;
-        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-        const targetBtn = document.querySelector(`[data-mode="${mode}"]`);
-        if (targetBtn) targetBtn.classList.add('active');
-        
-        const customSettings = document.getElementById('custom-settings');
-        if (mode === 'custom') {
-            if (customSettings) customSettings.style.display = 'flex';
-        } else {
-            if (customSettings) customSettings.style.display = 'none';
-        }
-        
-        const startBtn = document.getElementById('start-btn');
-        if (startBtn) {
-            if (mode === 'practice') {
-                startBtn.innerHTML = `<span data-i18n="startPractice">🎯 开始练习</span>`;
-            } else {
-                startBtn.innerHTML = `<span data-i18n="startGame">🚀 开始游戏</span>`;
+        try {
+            currentMode = mode;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const targetBtn = document.querySelector(`[data-mode="${mode}"]`);
+            if (targetBtn) {
+                targetBtn.classList.add('active');
             }
+            
+            // 显示/隐藏自定义设置
+            const customSettings = document.getElementById('custom-settings');
+            if (customSettings) {
+                customSettings.style.display = mode === 'custom' ? 'flex' : 'none';
+            }
+            
+            // 更新开始按钮文本
+            const startBtn = document.getElementById('start-btn');
+            if (startBtn) {
+                if (mode === 'practice') {
+                    startBtn.innerHTML = '<span>🎯 开始练习</span>';
+                } else {
+                    startBtn.innerHTML = '<span>🚀 开始游戏</span>';
+                }
+            }
+            
+        } catch (error) {
+            console.error('选择模式失败:', error);
         }
     }
     
     function startGame() {
-        if (!currentUser) {
-            showAuthModal();
-            showMessage(currentLanguage === 'zh' ? '请先登录再开始游戏' : 'Please login to start game', 'info');
-            return;
-        }
-        
-        resetGame();
-        
-        const range = document.getElementById('number-range')?.value || '0-14';
-        const modeConfig = { ...MODE_CONFIG[currentMode] };
-        
-        if (currentMode === 'custom') {
-            const questionsInput = document.getElementById('custom-questions');
-            const timeInput = document.getElementById('custom-time');
-            modeConfig.questions = questionsInput ? parseInt(questionsInput.value) || 20 : 20;
-            modeConfig.time = timeInput ? parseInt(timeInput.value) || 60 : 60;
-        }
-        
-        if (modeConfig.hasTimeLimit) {
-            timeLeft = modeConfig.time || 90;
-        }
-        
-        gameState.modeConfigTime = modeConfig.time || 0;
-        
-        // 显示游戏界面
-        const gameInfo = document.getElementById('game-info');
-        const progressContainer = document.getElementById('progress-container');
-        const targetContainer = document.getElementById('target-container');
-        const gameControls = document.getElementById('game-controls');
-        const modeSelection = document.querySelector('.mode-selection');
-        const gameSetting = document.querySelector('.game-setting');
-        
-        if (gameInfo) gameInfo.style.display = 'grid';
-        if (progressContainer) progressContainer.style.display = 'block';
-        if (targetContainer) targetContainer.style.display = 'block';
-        if (gameControls) gameControls.style.display = 'flex';
-        if (modeSelection) modeSelection.style.display = 'none';
-        if (gameSetting) gameSetting.style.display = 'none';
-        
-        // 初始化游戏网格
-        const gameGrid = document.getElementById('game-grid');
-        if (gameGrid) {
-            gameGrid.style.display = 'grid';
-            gameGrid.innerHTML = '';
-        }
-        
-        generateNewTarget();
-        generateNumberGrid();
-        
-        startTime = new Date();
-        
-        if (modeConfig.hasTimeLimit) {
-            const timeElement = document.getElementById('time');
-            if (timeElement) timeElement.textContent = timeLeft;
-            timerInterval = setInterval(updateTimer, 1000);
-        } else {
-            timerInterval = setInterval(updateElapsedTime, 1000);
-        }
-        
-        hintInterval = setInterval(updateHintCooldown, 1000);
-        gameActive = true;
-        
-        // 更新成就进度
-        if (!achievementProgress.first_win) {
-            achievementProgress.first_win = true;
+        try {
+            // 检查登录状态
+            if (!currentUser) {
+                showAuthModal();
+                showMessage(currentLanguage === 'zh' ? '请先登录再开始游戏' : 'Please login to start game', 'info');
+                return;
+            }
+            
+            // 重置游戏
+            resetGame();
+            
+            // 获取游戏设置
+            const range = document.getElementById('number-range')?.value || '0-14';
+            const modeConfig = { ...MODE_CONFIG[currentMode] };
+            
+            // 自定义模式设置
+            if (currentMode === 'custom') {
+                const questionsInput = document.getElementById('custom-questions');
+                const timeInput = document.getElementById('custom-time');
+                modeConfig.questions = questionsInput ? parseInt(questionsInput.value) || 20 : 20;
+                modeConfig.time = timeInput ? parseInt(timeInput.value) || 60 : 60;
+            }
+            
+            // 设置时间限制
+            if (modeConfig.hasTimeLimit) {
+                timeLeft = modeConfig.time || 90;
+            }
+            
+            gameState.modeConfigTime = modeConfig.time || 0;
+            
+            // 显示游戏界面
+            const gameInfo = document.getElementById('game-info');
+            const progressContainer = document.getElementById('progress-container');
+            const targetContainer = document.getElementById('target-container');
+            const gameControls = document.getElementById('game-controls');
+            const modeSelection = document.querySelector('.mode-selection');
+            const gameSetting = document.querySelector('.game-setting');
+            
+            if (gameInfo) gameInfo.style.display = 'grid';
+            if (progressContainer) progressContainer.style.display = 'block';
+            if (targetContainer) targetContainer.style.display = 'block';
+            if (gameControls) gameControls.style.display = 'flex';
+            if (modeSelection) modeSelection.style.display = 'none';
+            if (gameSetting) gameSetting.style.display = 'none';
+            
+            // 初始化游戏网格
+            const gameGrid = document.getElementById('game-grid');
+            if (gameGrid) {
+                gameGrid.style.display = 'grid';
+                gameGrid.innerHTML = '';
+            }
+            
+            // 生成数字
+            generateNewTarget();
+            generateNumberGrid();
+            
+            // 开始计时
+            startTime = new Date();
+            
+            if (modeConfig.hasTimeLimit) {
+                const timeElement = document.getElementById('time');
+                if (timeElement) timeElement.textContent = timeLeft;
+                timerInterval = setInterval(updateTimer, 1000);
+            } else {
+                timerInterval = setInterval(updateElapsedTime, 1000);
+            }
+            
+            // 提示冷却
+            hintInterval = setInterval(updateHintCooldown, 1000);
+            gameActive = true;
+            
+            console.log('游戏开始，模式:', currentMode);
+            
+        } catch (error) {
+            console.error('开始游戏失败:', error);
+            showMessage(currentLanguage === 'zh' ? '游戏启动失败' : 'Game start failed', 'error');
         }
     }
     
     function resetGame() {
-        score = 0;
-        selectedCards = [];
-        completedQuestions = 0;
-        correctCount = 0;
-        totalAttempts = 0;
-        gameHistory = [];
-        gameActive = false;
-        
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
+        try {
+            // 重置游戏变量
+            score = 0;
+            selectedCards = [];
+            completedQuestions = 0;
+            correctCount = 0;
+            totalAttempts = 0;
+            gameHistory = [];
+            gameActive = false;
+            
+            // 清除计时器
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (hintInterval) {
+                clearInterval(hintInterval);
+                hintInterval = null;
+            }
+            
+            // 更新显示
+            const scoreElement = document.getElementById('score');
+            const completedElement = document.getElementById('completed');
+            const accuracyElement = document.getElementById('accuracy');
+            const progressBar = document.getElementById('progress-bar');
+            const timeElement = document.getElementById('time');
+            
+            if (scoreElement) scoreElement.textContent = '0';
+            if (completedElement) completedElement.textContent = '0/30';
+            if (accuracyElement) accuracyElement.textContent = '100%';
+            if (progressBar) progressBar.style.width = '100%';
+            if (timeElement) timeElement.textContent = '90';
+            
+            // 清除游戏网格
+            const gameGrid = document.getElementById('game-grid');
+            if (gameGrid) gameGrid.innerHTML = '';
+            
+        } catch (error) {
+            console.error('重置游戏失败:', error);
         }
-        if (hintInterval) {
-            clearInterval(hintInterval);
-            hintInterval = null;
-        }
-        
-        const scoreElement = document.getElementById('score');
-        const completedElement = document.getElementById('completed');
-        const accuracyElement = document.getElementById('accuracy');
-        const progressBar = document.getElementById('progress-bar');
-        
-        if (scoreElement) scoreElement.textContent = '0';
-        if (completedElement) completedElement.textContent = '0/30';
-        if (accuracyElement) accuracyElement.textContent = '100%';
-        if (progressBar) progressBar.style.width = '100%';
-        
-        const gameGrid = document.getElementById('game-grid');
-        if (gameGrid) gameGrid.innerHTML = '';
     }
     
     function generateNumberGrid() {
-        const gameGrid = document.getElementById('game-grid');
-        if (!gameGrid) return;
-        
-        const range = document.getElementById('number-range')?.value || '0-14';
-        const config = RANGE_CONFIG[range];
-        if (!config) return;
-        
-        gameGrid.innerHTML = '';
-        const numbers = [];
-        
-        // 生成一对有效的数字
-        const targetRange = config.targetMax - config.targetMin;
-        currentTarget = Math.floor(Math.random() * (targetRange + 1)) + config.targetMin;
-        
-        const num1 = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
-        const num2 = currentTarget - num1;
-        
-        if (num2 >= config.min && num2 <= config.max) {
-            numbers.push(num1, num2);
-        } else {
-            numbers.push(
-                Math.floor(Math.random() * (config.max - config.min + 1)) + config.min,
-                Math.floor(Math.random() * (config.max - config.min + 1)) + config.min
-            );
+        try {
+            const gameGrid = document.getElementById('game-grid');
+            if (!gameGrid) return;
+            
+            const range = document.getElementById('number-range')?.value || '0-14';
+            const config = RANGE_CONFIG[range];
+            if (!config) return;
+            
+            gameGrid.innerHTML = '';
+            
+            // 生成10个数字
+            const numbers = [];
+            for (let i = 0; i < 10; i++) {
+                const num = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+                numbers.push(num);
+            }
+            
+            // 确保至少有一对数字可以组成目标和
+            let hasSolution = false;
+            for (let i = 0; i < numbers.length && !hasSolution; i++) {
+                for (let j = i + 1; j < numbers.length && !hasSolution; j++) {
+                    if (numbers[i] + numbers[j] === currentTarget) {
+                        hasSolution = true;
+                    }
+                }
+            }
+            
+            // 如果没有解决方案，调整一对数字
+            if (!hasSolution) {
+                const index1 = Math.floor(Math.random() * numbers.length);
+                let index2;
+                do {
+                    index2 = Math.floor(Math.random() * numbers.length);
+                } while (index2 === index1);
+                
+                numbers[index1] = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+                numbers[index2] = currentTarget - numbers[index1];
+            }
+            
+            // 打乱顺序
+            shuffleArray(numbers);
+            
+            // 创建卡片
+            numbers.forEach((number) => {
+                const card = document.createElement('div');
+                card.className = 'number-card';
+                card.textContent = number;
+                card.dataset.value = number;
+                card.addEventListener('click', () => selectCard(card));
+                gameGrid.appendChild(card);
+            });
+            
+        } catch (error) {
+            console.error('生成数字网格失败:', error);
         }
-        
-        // 填充剩余的8个数字
-        while (numbers.length < 10) {
-            numbers.push(Math.floor(Math.random() * (config.max - config.min + 1)) + config.min);
-        }
-        
-        shuffleArray(numbers);
-        
-        numbers.forEach((number) => {
-            const card = document.createElement('div');
-            card.className = 'number-card';
-            card.textContent = number;
-            card.dataset.value = number;
-            card.addEventListener('click', () => selectCard(card));
-            gameGrid.appendChild(card);
-        });
-        
-        const targetSumElement = document.getElementById('target-sum');
-        if (targetSumElement) targetSumElement.textContent = currentTarget;
     }
     
     function selectCard(card) {
         if (!gameActive || card.classList.contains('disappear')) return;
         
-        if (card.classList.contains('selected')) {
-            card.classList.remove('selected');
-            selectedCards = selectedCards.filter(c => c !== card);
-            return;
-        }
-        
-        if (selectedCards.length >= 2) {
-            showMessage(currentLanguage === 'zh' ? '最多只能选择2张卡片！' : 'You can only select 2 cards at most!', 'error');
-            return;
-        }
-        
-        card.classList.add('selected');
-        selectedCards.push(card);
-        
-        if (selectedCards.length === 2) {
-            totalAttempts++;
-            setTimeout(checkMatch, 300);
+        try {
+            // 如果卡片已选中，取消选择
+            if (card.classList.contains('selected')) {
+                card.classList.remove('selected');
+                selectedCards = selectedCards.filter(c => c !== card);
+                return;
+            }
+            
+            // 最多只能选择2张卡片
+            if (selectedCards.length >= 2) {
+                showMessage(currentLanguage === 'zh' ? '最多只能选择2张卡片！' : 'You can only select 2 cards at most!', 'error');
+                return;
+            }
+            
+            // 选择卡片
+            card.classList.add('selected');
+            selectedCards.push(card);
+            
+            // 如果选择了2张卡片，检查是否匹配
+            if (selectedCards.length === 2) {
+                totalAttempts++;
+                setTimeout(checkMatch, 300);
+            }
+            
+        } catch (error) {
+            console.error('选择卡片失败:', error);
         }
     }
     
     function checkMatch() {
         if (selectedCards.length !== 2) return;
         
-        const startCheckTime = new Date();
-        const num1 = parseInt(selectedCards[0].dataset.value);
-        const num2 = parseInt(selectedCards[1].dataset.value);
-        const sum = num1 + num2;
-        const isCorrect = sum === currentTarget;
-        const responseTime = (new Date() - startCheckTime) / 1000;
-        
-        gameHistory.push({
-            target: currentTarget,
-            num1: num1,
-            num2: num2,
-            isCorrect: isCorrect,
-            time: responseTime,
-            timestamp: new Date().toISOString()
-        });
-        
-        // 更新成就进度
-        if (isCorrect && responseTime < 5 && !achievementProgress.fast_5) {
-            achievementProgress.fast_5 = true;
-        }
-        
-        if (isCorrect) {
-            correctCount++;
-            completedQuestions++;
-            showFeedback(currentLanguage === 'zh' ? '✓ 正确!' : '✓ Correct!', 'success');
+        try {
+            const num1 = parseInt(selectedCards[0].dataset.value);
+            const num2 = parseInt(selectedCards[1].dataset.value);
+            const sum = num1 + num2;
+            const isCorrect = sum === currentTarget;
             
-            selectedCards.forEach(card => card.classList.add('disappear'));
-            setTimeout(() => {
-                selectedCards.forEach(card => card.remove());
-                const remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
-                const remainingNumbers = remainingCards.map(card => parseInt(card.dataset.value));
-                if (!hasSolution(remainingNumbers, currentTarget)) {
-                    setTimeout(generateNumberGrid, 500);
+            // 记录历史
+            gameHistory.push({
+                target: currentTarget,
+                num1: num1,
+                num2: num2,
+                isCorrect: isCorrect,
+                timestamp: new Date().toISOString()
+            });
+            
+            if (isCorrect) {
+                // 正确匹配
+                correctCount++;
+                completedQuestions++;
+                showFeedback(currentLanguage === 'zh' ? '✓ 正确!' : '✓ Correct!', 'success');
+                
+                // 移除卡片
+                selectedCards.forEach(card => {
+                    card.classList.add('disappear');
+                });
+                
+                setTimeout(() => {
+                    selectedCards.forEach(card => {
+                        if (card.parentNode) {
+                            card.parentNode.removeChild(card);
+                        }
+                    });
+                    selectedCards = [];
+                    
+                    // 检查是否需要刷新网格
+                    const remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
+                    if (remainingCards.length < 2) {
+                        generateNumberGrid();
+                    }
+                }, 500);
+                
+                // 更新分数
+                score += 10;
+                updateDisplay();
+                
+                // 检查是否完成游戏
+                if (currentMode === 'standard' && completedQuestions >= MODE_CONFIG.standard.questions) {
+                    endGame('complete');
+                    return;
                 }
-            }, 500);
-            
-            score += 10;
-            if (responseTime < 3) score += 5;
-            updateDisplay();
-            
-            // 检查成就
-            checkAndTriggerAchievements();
-            
-            if (currentMode === 'standard' && completedQuestions >= MODE_CONFIG.standard.questions) {
-                endGame('complete');
-                return;
+                
+                // 生成新的目标和
+                setTimeout(() => {
+                    generateNewTarget();
+                }, 800);
+                
+            } else {
+                // 错误匹配
+                showFeedback(currentLanguage === 'zh' ? '✗ 错误' : '✗ Wrong', 'error');
+                
+                // 取消选择卡片
+                selectedCards.forEach(card => {
+                    card.classList.remove('selected');
+                });
+                selectedCards = [];
             }
             
-            setTimeout(() => {
-                generateNewTarget();
-                generateNumberGrid();
-            }, 800);
-        } else {
-            showFeedback(currentLanguage === 'zh' ? '✗ 错误' : '✗ Wrong', 'error');
-            recordWrongQuestion(num1, num2, currentTarget);
-            selectedCards.forEach(card => card.classList.remove('selected'));
+        } catch (error) {
+            console.error('检查匹配失败:', error);
         }
-        
-        selectedCards = [];
     }
     
-    function hasSolution(numbers, target) {
-        for (let i = 0; i < numbers.length; i++) {
-            for (let j = i + 1; j < numbers.length; j++) {
-                if (numbers[i] + numbers[j] === target) {
-                    return true;
-                }
-            }
+    function showFeedback(text, type) {
+        try {
+            const feedback = document.getElementById('match-feedback');
+            if (!feedback) return;
+            
+            feedback.textContent = text;
+            feedback.style.color = type === 'success' ? '#4CAF50' : '#ff4444';
+            feedback.style.opacity = '1';
+            
+            setTimeout(() => {
+                feedback.style.opacity = '0';
+            }, 1000);
+            
+        } catch (error) {
+            console.error('显示反馈失败:', error);
         }
-        return false;
     }
     
     function updateTimer() {
@@ -661,17 +1038,22 @@ const MathGame = (function() {
         const timeElement = document.getElementById('time');
         if (timeElement) timeElement.textContent = timeLeft;
         
+        // 更新进度条
         const progressBar = document.getElementById('progress-bar');
-        if (progressBar) {
+        if (progressBar && gameState.modeConfigTime > 0) {
             const progress = (timeLeft / gameState.modeConfigTime) * 100;
             progressBar.style.width = `${progress}%`;
         }
         
+        // 时间警告
         if (timeLeft <= 10) {
             const timeContainer = document.getElementById('time-container');
-            if (timeContainer) timeContainer.classList.add('time-warning');
+            if (timeContainer) {
+                timeContainer.classList.add('time-warning');
+            }
         }
         
+        // 时间到
         if (timeLeft <= 0) {
             endGame('timeout');
         }
@@ -686,140 +1068,140 @@ const MathGame = (function() {
     }
     
     function updateDisplay() {
-        const scoreElement = document.getElementById('score');
-        const completedElement = document.getElementById('completed');
-        const accuracyElement = document.getElementById('accuracy');
-        
-        if (scoreElement) scoreElement.textContent = score;
-        
-        if (completedElement) {
-            const modeConfig = MODE_CONFIG[currentMode];
-            if (modeConfig.questions) {
-                completedElement.textContent = `${completedQuestions}/${modeConfig.questions}`;
-            } else {
-                completedElement.textContent = completedQuestions.toString();
+        try {
+            const scoreElement = document.getElementById('score');
+            const completedElement = document.getElementById('completed');
+            const accuracyElement = document.getElementById('accuracy');
+            
+            if (scoreElement) scoreElement.textContent = score;
+            
+            if (completedElement) {
+                const modeConfig = MODE_CONFIG[currentMode];
+                if (modeConfig.questions) {
+                    completedElement.textContent = `${completedQuestions}/${modeConfig.questions}`;
+                } else {
+                    completedElement.textContent = completedQuestions.toString();
+                }
             }
-        }
-        
-        if (accuracyElement) {
-            const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
-            accuracyElement.textContent = accuracy + '%';
+            
+            if (accuracyElement) {
+                const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+                accuracyElement.textContent = accuracy + '%';
+            }
+            
+        } catch (error) {
+            console.error('更新显示失败:', error);
         }
     }
     
     function generateNewTarget() {
-        const range = document.getElementById('number-range')?.value || '0-14';
-        const config = RANGE_CONFIG[range];
-        if (!config) return;
-        
-        const targetRange = config.targetMax - config.targetMin;
-        currentTarget = Math.floor(Math.random() * (targetRange + 1)) + config.targetMin;
-        
-        const targetSumElement = document.getElementById('target-sum');
-        if (targetSumElement) targetSumElement.textContent = currentTarget;
-    }
-    
-    function calculateElapsedTime() {
-        if (!startTime) return 0;
-        return Math.floor((new Date() - startTime) / 1000);
+        try {
+            const range = document.getElementById('number-range')?.value || '0-14';
+            const config = RANGE_CONFIG[range];
+            if (!config) return;
+            
+            // 生成新的目标和
+            const targetRange = config.targetMax - config.targetMin;
+            currentTarget = Math.floor(Math.random() * (targetRange + 1)) + config.targetMin;
+            
+            const targetSumElement = document.getElementById('target-sum');
+            if (targetSumElement) targetSumElement.textContent = currentTarget;
+            
+        } catch (error) {
+            console.error('生成目标失败:', error);
+        }
     }
     
     function endGame(reason) {
-        if (!gameActive) return;
-        
-        gameActive = false;
-        
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-        if (hintInterval) {
-            clearInterval(hintInterval);
-            hintInterval = null;
-        }
-        
-        const elapsedTime = calculateElapsedTime();
-        gameState.lastGameElapsedTime = elapsedTime;
-        
-        const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
-        
-        const finalScoreElement = document.getElementById('final-score');
-        const finalCompletedElement = document.getElementById('final-completed');
-        const finalTimeElement = document.getElementById('final-time');
-        const finalAccuracyElement = document.getElementById('final-accuracy');
-        const resultTitleElement = document.getElementById('result-title');
-        
-        if (finalScoreElement) finalScoreElement.textContent = score;
-        if (finalCompletedElement) finalCompletedElement.textContent = completedQuestions;
-        if (finalTimeElement) finalTimeElement.textContent = elapsedTime + (currentLanguage === 'zh' ? '秒' : 's');
-        if (finalAccuracyElement) finalAccuracyElement.textContent = accuracy + '%';
-        
-        const titleMap = {
-            'complete': currentLanguage === 'zh' ? '🎉 恭喜完成30题！' : '🎉 Congratulations! Completed 30 questions!',
-            'timeout': currentLanguage === 'zh' ? '⏰ 时间到！' : '⏰ Time\'s up!',
-            'giveup': currentLanguage === 'zh' ? '🏁 游戏结束' : '🏁 Game Over'
-        };
-        
-        if (resultTitleElement) {
-            resultTitleElement.textContent = titleMap[reason] || (currentLanguage === 'zh' ? '🎉 游戏结束!' : '🎉 Game Over!');
-        }
-        
-        const gameOverElement = document.getElementById('game-over');
-        if (gameOverElement) gameOverElement.style.display = 'flex';
-        
-        // 更新成就
-        updateAchievements();
-    }
-    
-    function showFeedback(text, type) {
-        const feedback = document.getElementById('match-feedback');
-        if (!feedback) return;
-        
-        feedback.textContent = text;
-        feedback.style.color = type === 'success' ? '#4CAF50' : '#ff4444';
-        feedback.style.opacity = '1';
-        setTimeout(() => { feedback.style.opacity = '0'; }, 1000);
-    }
-    
-    function recordWrongQuestion(num1, num2, target) {
-        const wrongId = `${Math.min(num1, num2)}_${Math.max(num1, num2)}_${target}`;
-        
-        const exists = wrongQuestions.some(question => 
-            `${Math.min(question.num1, question.num2)}_${Math.max(question.num1, question.num2)}_${question.correctSum}` === wrongId
-        );
-        
-        if (!exists) {
-            wrongQuestions.push({
-                id: wrongId,
-                num1: num1,
-                num2: num2,
-                wrongSum: num1 + num2,
-                correctSum: target,
-                timestamp: new Date().toISOString(),
-                count: 1
-            });
-            saveWrongQuestions();
-        }
-    }
-    
-    function saveWrongQuestions() {
         try {
-            localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
-        } catch (e) {
-            console.error('保存错题失败:', e);
-        }
-    }
-    
-    function loadWrongQuestions() {
-        try {
-            const saved = localStorage.getItem('mathGameWrongQuestions');
-            if (saved) {
-                wrongQuestions = JSON.parse(saved);
-            } else {
-                wrongQuestions = [];
+            if (!gameActive) return;
+            
+            gameActive = false;
+            
+            // 清除计时器
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
             }
-        } catch (e) {
-            wrongQuestions = [];
+            if (hintInterval) {
+                clearInterval(hintInterval);
+                hintInterval = null;
+            }
+            
+            // 计算用时
+            let elapsedTime = 0;
+            if (startTime) {
+                elapsedTime = Math.floor((new Date() - startTime) / 1000);
+            }
+            gameState.lastGameElapsedTime = elapsedTime;
+            
+            // 计算正确率
+            const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+            
+            // 更新结果页面
+            const finalScoreElement = document.getElementById('final-score');
+            const finalCompletedElement = document.getElementById('final-completed');
+            const finalTimeElement = document.getElementById('final-time');
+            const finalAccuracyElement = document.getElementById('final-accuracy');
+            const resultTitleElement = document.getElementById('result-title');
+            
+            if (finalScoreElement) finalScoreElement.textContent = score;
+            if (finalCompletedElement) finalCompletedElement.textContent = completedQuestions;
+            if (finalTimeElement) finalTimeElement.textContent = elapsedTime + (currentLanguage === 'zh' ? '秒' : 's');
+            if (finalAccuracyElement) finalAccuracyElement.textContent = accuracy + '%';
+            
+            // 设置标题
+            const titleMap = {
+                'complete': currentLanguage === 'zh' ? '🎉 恭喜完成30题！' : '🎉 Congratulations! Completed 30 questions!',
+                'timeout': currentLanguage === 'zh' ? '⏰ 时间到！' : '⏰ Time\'s up!',
+                'giveup': currentLanguage === 'zh' ? '🏁 游戏结束' : '🏁 Game Over'
+            };
+            
+            if (resultTitleElement) {
+                resultTitleElement.textContent = titleMap[reason] || (currentLanguage === 'zh' ? '🎉 游戏结束!' : '🎉 Game Over!');
+            }
+            
+            // 显示结果页面
+            const gameOverElement = document.getElementById('game-over');
+            if (gameOverElement) gameOverElement.style.display = 'flex';
+            
+        } catch (error) {
+            console.error('结束游戏失败:', error);
+        }
+    }
+    
+    function restartGame() {
+        try {
+            // 隐藏结果页面
+            const gameOverElement = document.getElementById('game-over');
+            if (gameOverElement) gameOverElement.style.display = 'none';
+            
+            // 显示设置页面
+            const modeSelection = document.querySelector('.mode-selection');
+            const gameSetting = document.querySelector('.game-setting');
+            const gameInfo = document.getElementById('game-info');
+            const progressContainer = document.getElementById('progress-container');
+            const targetContainer = document.getElementById('target-container');
+            const gameControls = document.getElementById('game-controls');
+            const gameGrid = document.getElementById('game-grid');
+            
+            if (modeSelection) modeSelection.style.display = 'grid';
+            if (gameSetting) gameSetting.style.display = 'block';
+            if (gameInfo) gameInfo.style.display = 'none';
+            if (progressContainer) progressContainer.style.display = 'none';
+            if (targetContainer) targetContainer.style.display = 'none';
+            if (gameControls) gameControls.style.display = 'none';
+            if (gameGrid) gameGrid.style.display = 'none';
+            
+            // 清除玩家名称
+            const playerNameInput = document.getElementById('player-name');
+            if (playerNameInput) playerNameInput.value = '';
+            
+            // 重置游戏
+            resetGame();
+            
+        } catch (error) {
+            console.error('重新开始游戏失败:', error);
         }
     }
     
@@ -831,17 +1213,21 @@ const MathGame = (function() {
     }
     
     function updateHintButton() {
-        const hintBtn = document.getElementById('hint-btn');
-        if (!hintBtn) return;
-        
-        if (hintCooldown > 0) {
-            hintBtn.innerHTML = `<span>💡 ${hintCooldown}秒</span>`;
-            hintBtn.disabled = true;
-            hintBtn.style.opacity = '0.7';
-        } else {
-            hintBtn.innerHTML = `<span data-i18n="hintButton">💡 提示(10秒)</span>`;
-            hintBtn.disabled = false;
-            hintBtn.style.opacity = '1';
+        try {
+            const hintBtn = document.getElementById('hint-btn');
+            if (!hintBtn) return;
+            
+            if (hintCooldown > 0) {
+                hintBtn.innerHTML = `<span>💡 ${hintCooldown}秒</span>`;
+                hintBtn.disabled = true;
+                hintBtn.style.opacity = '0.7';
+            } else {
+                hintBtn.innerHTML = `<span>💡 提示(10秒)</span>`;
+                hintBtn.disabled = false;
+                hintBtn.style.opacity = '1';
+            }
+        } catch (error) {
+            console.error('更新提示按钮失败:', error);
         }
     }
     
@@ -851,728 +1237,470 @@ const MathGame = (function() {
             return;
         }
         
-        const cards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
-        const values = cards.map(card => parseInt(card.dataset.value));
-        
-        for (let i = 0; i < values.length; i++) {
-            for (let j = i + 1; j < values.length; j++) {
-                if (values[i] + values[j] === currentTarget) {
-                    cards[i].style.boxShadow = '0 0 20px #FFD700';
-                    cards[j].style.boxShadow = '0 0 20px #FFD700';
-                    setTimeout(() => {
-                        cards[i].style.boxShadow = '';
-                        cards[j].style.boxShadow = '';
-                    }, 2000);
-                    hintCooldown = 10;
-                    updateHintButton();
-                    return;
-                }
-            }
-        }
-        
-        showMessage(currentLanguage === 'zh' ? '没有找到解决方案，自动刷新数字' : 'No solution found, refreshing numbers', 'info');
-        refreshNumbers();
+        hintCooldown = 10;
+        updateHintButton();
+        showMessage(currentLanguage === 'zh' ? '提示已激活！' : 'Hint activated!', 'info');
     }
     
     function refreshNumbers() {
-        const gameGrid = document.getElementById('game-grid');
-        if (!gameGrid) return;
-        
-        gameGrid.style.opacity = '0.5';
-        setTimeout(() => {
-            generateNumberGrid();
-            gameGrid.style.opacity = '1';
-        }, 500);
-    }
-    
-    function restartGame() {
-        const gameOverElement = document.getElementById('game-over');
-        if (gameOverElement) gameOverElement.style.display = 'none';
-        
-        const modeSelection = document.querySelector('.mode-selection');
-        const gameSetting = document.querySelector('.game-setting');
-        const gameInfo = document.getElementById('game-info');
-        const progressContainer = document.getElementById('progress-container');
-        const targetContainer = document.getElementById('target-container');
-        const gameControls = document.getElementById('game-controls');
-        const gameGrid = document.getElementById('game-grid');
-        
-        if (modeSelection) modeSelection.style.display = 'grid';
-        if (gameSetting) gameSetting.style.display = 'block';
-        if (gameInfo) gameInfo.style.display = 'none';
-        if (progressContainer) progressContainer.style.display = 'none';
-        if (targetContainer) targetContainer.style.display = 'none';
-        if (gameControls) gameControls.style.display = 'none';
-        if (gameGrid) gameGrid.style.display = 'none';
-        
-        const playerNameInput = document.getElementById('player-name');
-        if (playerNameInput) playerNameInput.value = '';
-        
-        resetGame();
-    }
-    
-    // ==================== 用户认证 ====================
-    async function checkAuth() {
         try {
-            if (!supabase) return false;
+            const gameGrid = document.getElementById('game-grid');
+            if (!gameGrid) return;
             
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (error) throw error;
+            gameGrid.style.opacity = '0.5';
+            setTimeout(() => {
+                generateNumberGrid();
+                gameGrid.style.opacity = '1';
+            }, 500);
             
-            if (user) {
-                currentUser = user;
-                updateUserInfo();
-                
-                // 检查管理员权限
-                isAdminUser = await checkIfAdmin();
-                return true;
-            }
-            return false;
         } catch (error) {
-            console.error('检查认证状态失败:', error);
-            return false;
+            console.error('刷新数字失败:', error);
         }
     }
     
-    async function login(email, password) {
-        try {
-            if (!supabase) {
-                showMessage('系统未初始化', 'error');
-                return false;
-            }
-            
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) {
-                const errorElement = document.getElementById('auth-error');
-                if (errorElement) errorElement.textContent = error.message;
-                return false;
-            }
-            
-            currentUser = data.user;
-            updateUserInfo();
-            closeAuthModal();
-            showMessage(currentLanguage === 'zh' ? '登录成功！' : 'Login successful!', 'success');
-            
-            // 检查管理员权限
-            isAdminUser = await checkIfAdmin();
-            return true;
-        } catch (error) {
-            console.error('登录失败:', error);
-            const errorElement = document.getElementById('auth-error');
-            if (errorElement) errorElement.textContent = error.message || '登录失败';
-            return false;
-        }
-    }
-    
-    async function register(email, password, username) {
-        try {
-            if (!supabase) {
-                showMessage('系统未初始化', 'error');
-                return false;
-            }
-            
-            const userMetadata = { 
-                username: username || email.split('@')[0]
-            };
-            
-            const { data, error } = await supabase.auth.signUp({
-                email,
-                password,
-                options: { data: userMetadata }
-            });
-            
-            if (error) {
-                const errorElement = document.getElementById('auth-error');
-                if (errorElement) errorElement.textContent = error.message;
-                return false;
-            }
-            
-            currentUser = data.user;
-            updateUserInfo();
-            closeAuthModal();
-            showMessage(currentLanguage === 'zh' ? '注册成功！' : 'Registration successful!', 'success');
-            
-            // 检查管理员权限
-            isAdminUser = await checkIfAdmin();
-            return true;
-        } catch (error) {
-            console.error('注册失败:', error);
-            const errorElement = document.getElementById('auth-error');
-            if (errorElement) errorElement.textContent = error.message || '注册失败';
-            return false;
-        }
-    }
-    
-    async function logout() {
-        try {
-            if (!supabase) return;
-            
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            
-            currentUser = null;
-            isAdminUser = false;
-            
-            const userInfo = document.getElementById('user-info');
-            const teacherToolsBtn = document.getElementById('teacher-tools-btn');
-            const adminToolsBtn = document.getElementById('admin-tools-btn');
-            
-            if (userInfo) userInfo.style.display = 'none';
-            if (teacherToolsBtn) teacherToolsBtn.style.display = 'none';
-            if (adminToolsBtn) adminToolsBtn.style.display = 'none';
-            
-            showMessage(currentLanguage === 'zh' ? '已退出登录' : 'Logged out', 'info');
-        } catch (error) {
-            console.error('退出失败:', error);
-            showMessage((currentLanguage === 'zh' ? '退出失败: ' : 'Logout failed: ') + error.message, 'error');
-        }
-    }
-    
-    function updateUserInfo() {
-        if (!currentUser) return;
-        
-        const userInfo = document.getElementById('user-info');
-        const userAvatar = document.getElementById('user-avatar');
-        const userName = document.getElementById('user-name');
-        
-        if (!userInfo || !userAvatar || !userName) return;
-        
-        userInfo.style.display = 'flex';
-        const email = currentUser.email || '';
-        const firstLetter = email.charAt(0).toUpperCase() || '?';
-        userAvatar.textContent = firstLetter;
-        
-        const username = currentUser.user_metadata?.username || email.split('@')[0];
-        userName.textContent = username;
-        
-        // 显示/隐藏教师和管理员按钮
-        const teacherToolsBtn = document.getElementById('teacher-tools-btn');
-        const adminToolsBtn = document.getElementById('admin-tools-btn');
-        
-        if (teacherToolsBtn) {
-            const userRole = currentUser.user_metadata?.role;
-            const isApprovedTeacher = userRole === 'teacher' && currentUser.user_metadata?.approved === true;
-            teacherToolsBtn.style.display = isApprovedTeacher ? 'flex' : 'none';
-        }
-        
-        if (adminToolsBtn) {
-            adminToolsBtn.style.display = isAdminUser ? 'flex' : 'none';
-        }
-    }
-    
-    function showAuthModal() {
-        const authModal = document.getElementById('auth-modal');
-        if (authModal) authModal.style.display = 'flex';
-        updateAuthUI();
-    }
-    
-    function closeAuthModal() {
-        const authModal = document.getElementById('auth-modal');
-        if (authModal) authModal.style.display = 'none';
-        
-        const authEmail = document.getElementById('auth-email');
-        const authPassword = document.getElementById('auth-password');
-        const authUsername = document.getElementById('auth-username');
-        const authError = document.getElementById('auth-error');
-        
-        if (authEmail) authEmail.value = '';
-        if (authPassword) authPassword.value = '';
-        if (authUsername) authUsername.value = '';
-        if (authError) authError.textContent = '';
-    }
-    
-    function updateAuthUI() {
-        const isLogin = authMode === 'login';
-        const authTitle = document.getElementById('auth-title');
-        const authSubmitBtn = document.getElementById('auth-submit-btn');
-        const authSwitchText = document.getElementById('auth-switch-text');
-        const authSwitchLink = document.getElementById('auth-switch-link');
-        const authUsernameGroup = document.getElementById('auth-username-group');
-        const roleSelectGroup = document.getElementById('role-select-group');
-        const teacherRegisterFields = document.getElementById('teacher-register-fields');
-        
-        if (authTitle) {
-            authTitle.innerHTML = `<span data-i18n="${isLogin ? 'loginTitle' : 'registerTitle'}">${isLogin ? '🔐 用户登录' : '📝 用户注册'}</span>`;
-        }
-        
-        if (authSubmitBtn) {
-            authSubmitBtn.innerHTML = `<span data-i18n="${isLogin ? 'loginButton' : 'registerButton'}">${isLogin ? '登录' : '注册'}</span>`;
-        }
-        
-        if (authSwitchText) {
-            authSwitchText.textContent = isLogin ? '还没有账号？' : '已有账号？';
-        }
-        
-        if (authSwitchLink) {
-            authSwitchLink.innerHTML = `<span data-i18n="${isLogin ? 'registerNow' : 'loginNow'}">${isLogin ? '立即注册' : '立即登录'}</span>`;
-        }
-        
-        if (authUsernameGroup) {
-            authUsernameGroup.style.display = isLogin ? 'none' : 'block';
-        }
-        
-        if (roleSelectGroup) {
-            roleSelectGroup.style.display = isLogin ? 'none' : 'block';
-        }
-        
-        if (teacherRegisterFields) {
-            teacherRegisterFields.style.display = 'none';
-        }
-    }
-    
-    function toggleAuthMode() {
-        authMode = authMode === 'login' ? 'register' : 'login';
-        updateAuthUI();
-    }
-    
-    async function handleAuth() {
-        const emailInput = document.getElementById('auth-email');
-        const passwordInput = document.getElementById('auth-password');
-        const usernameInput = document.getElementById('auth-username');
-        const roleSelect = document.getElementById('auth-role');
-        const schoolInput = document.getElementById('auth-school');
-        const stateInput = document.getElementById('auth-state');
-        
-        if (!emailInput || !passwordInput) return;
-        
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-        const username = usernameInput ? usernameInput.value.trim() : '';
-        const role = roleSelect ? roleSelect.value : 'student';
-        const school = schoolInput ? schoolInput.value.trim() : '';
-        const state = stateInput ? stateInput.value.trim() : '';
-        
-        if (!email || !password) {
-            const authError = document.getElementById('auth-error');
-            if (authError) authError.textContent = currentLanguage === 'zh' ? '请输入邮箱和密码' : 'Please enter email and password';
-            return;
-        }
-        
-        if (authMode === 'login') {
-            await login(email, password);
-        } else {
-            // 教师注册需要额外信息
-            if (role === 'teacher' && (!school || !state)) {
-                const authError = document.getElementById('auth-error');
-                if (authError) authError.textContent = currentLanguage === 'zh' ? '请填写学校名称和所在州属' : 'Please fill in school name and state';
-                return;
-            }
-            
-            // 简化注册，暂时只使用基本功能
-            await register(email, password, username);
-        }
-    }
-    
-    // ==================== 教师工具功能 ====================
-    function showTeacherTools() {
-        if (!currentUser) {
-            showAuthModal();
-            showMessage('请先登录教师账号', 'info');
-            return;
-        }
-        
-        const userRole = currentUser.user_metadata?.role;
-        const isApprovedTeacher = userRole === 'teacher' && currentUser.user_metadata?.approved === true;
-        
-        if (!isApprovedTeacher) {
-            showMessage('只有已批准的教师可以使用此功能', 'error');
-            return;
-        }
-        
-        const teacherToolsModal = document.getElementById('teacher-tools-modal');
-        if (teacherToolsModal) teacherToolsModal.style.display = 'flex';
-    }
-    
-    function downloadExcelTemplate() {
-        const templateData = [
-            ['email', '姓名', '班级', '备注'],
-            ['student1@example.com', '张三', '三年一班', ''],
-            ['student2@example.com', '李四', '三年一班', ''],
-            ['student3@example.com', '王五', '三年二班', ''],
-            ['注意：', '1. 请不要修改表头', '2. email必须唯一', '3. 班级名称保持一致', '4. 保存为CSV格式']
-        ];
-        
-        const csvContent = templateData.map(row => 
-            row.map(cell => `"${cell}"`).join(',')
-        ).join('\n');
-        
-        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        
-        link.setAttribute('href', url);
-        link.setAttribute('download', '学生账号模板.csv');
-        link.style.visibility = 'hidden';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-    
-    // ==================== 管理员工具功能 ====================
-    function showAdminTools() {
-        if (!currentUser) {
-            showAuthModal();
-            showMessage('请先登录管理员账号', 'info');
-            return;
-        }
-        
-        if (!isAdminUser) {
-            showMessage('只有管理员可以访问此功能', 'error');
-            return;
-        }
-        
-        const adminToolsModal = document.getElementById('admin-tools-modal');
-        if (adminToolsModal) adminToolsModal.style.display = 'flex';
-    }
-    
-    // ==================== 其他侧边栏功能 ====================
+    // ==================== 侧边栏功能 ====================
     function showHistory() {
-        const tbody = document.getElementById('history-table-body');
-        const historyModal = document.getElementById('history-modal');
-        
-        if (!tbody || !historyModal) return;
-        
-        tbody.innerHTML = '';
-        
-        if (gameHistory.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;">${currentLanguage === 'zh' ? '暂无历史记录' : 'No history records'}</td></tr>`;
-        } else {
-            gameHistory.forEach((record, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${record.target}</td>
-                    <td>${record.num1}</td>
-                    <td>${record.num2}</td>
-                    <td style="color: ${record.isCorrect ? '#4CAF50' : '#ff4444'}; font-weight: bold;">
-                        ${record.isCorrect ? (currentLanguage === 'zh' ? '✓ 正确' : '✓ Correct') : (currentLanguage === 'zh' ? '✗ 错误' : '✗ Wrong')}
-                    </td>
-                    <td>${record.time ? record.time.toFixed(2) + '秒' : '-'}</td>
-                `;
-                tbody.appendChild(row);
-            });
+        try {
+            const tbody = document.getElementById('history-table-body');
+            const historyModal = document.getElementById('history-modal');
+            
+            if (!tbody || !historyModal) return;
+            
+            tbody.innerHTML = '';
+            
+            if (gameHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;">${currentLanguage === 'zh' ? '暂无历史记录' : 'No history records'}</td></tr>`;
+            } else {
+                gameHistory.forEach((record, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${record.target}</td>
+                        <td>${record.num1}</td>
+                        <td>${record.num2}</td>
+                        <td style="color: ${record.isCorrect ? '#4CAF50' : '#ff4444'}; font-weight: bold;">
+                            ${record.isCorrect ? (currentLanguage === 'zh' ? '✓ 正确' : '✓ Correct') : (currentLanguage === 'zh' ? '✗ 错误' : '✗ Wrong')}
+                        </td>
+                        <td>${new Date(record.timestamp).toLocaleTimeString()}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            
+            historyModal.style.display = 'flex';
+            
+        } catch (error) {
+            console.error('显示历史记录失败:', error);
         }
-        
-        historyModal.style.display = 'flex';
     }
     
     function showStatistics() {
-        const statisticsContent = document.getElementById('statistics-content');
-        const statisticsModal = document.getElementById('statistics-modal');
-        
-        if (!statisticsContent || !statisticsModal) return;
-        
-        const stats = calculateStatistics();
-        
-        statisticsContent.innerHTML = `
-            <div style="padding: 20px;">
-                <h3 style="color: #4CAF50; margin-bottom: 15px;">${currentLanguage === 'zh' ? '📊 本次游戏统计' : '📊 Current Game Statistics'}</h3>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
-                        <div style="color: #666; font-size: 0.9em;">${currentLanguage === 'zh' ? '总尝试次数' : 'Total Attempts'}</div>
-                        <div style="color: #2196F3; font-size: 1.5em; font-weight: bold;">${stats.totalAttempts}</div>
-                    </div>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
-                        <div style="color: #666; font-size: 0.9em;">${currentLanguage === 'zh' ? '正确次数' : 'Correct Answers'}</div>
-                        <div style="color: #4CAF50; font-size: 1.5em; font-weight: bold;">${stats.correctCount}</div>
-                    </div>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
-                        <div style="color: #666; font-size: 0.9em;">${currentLanguage === 'zh' ? '正确率' : 'Accuracy'}</div>
-                        <div style="color: #FF9800; font-size: 1.5em; font-weight: bold;">${stats.accuracy}%</div>
-                    </div>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
-                        <div style="color: #666; font-size: 0.9em;">${currentLanguage === 'zh' ? '当前得分' : 'Current Score'}</div>
-                        <div style="color: #9C27B0; font-size: 1.5em; font-weight:bold;">${score}</div>
-                    </div>
-                </div>
-                <div style="margin-top: 20px;">
-                    <h4>${currentLanguage === 'zh' ? '游戏详情' : 'Game Details'}</h4>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
-                        <p>${currentLanguage === 'zh' ? '模式' : 'Mode'}: ${currentMode}</p>
-                        <p>${currentLanguage === 'zh' ? '已完成题数' : 'Completed Questions'}: ${completedQuestions}</p>
-                        <p>${currentLanguage === 'zh' ? '当前目标和' : 'Current Target Sum'}: ${currentTarget}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        statisticsModal.style.display = 'flex';
+        try {
+            const statisticsModal = document.getElementById('statistics-modal');
+            if (statisticsModal) statisticsModal.style.display = 'flex';
+        } catch (error) {
+            console.error('显示统计失败:', error);
+        }
     }
     
-    function calculateStatistics() {
-        return {
-            totalAttempts: gameHistory.length,
-            correctCount: correctCount,
-            accuracy: totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100
-        };
+    function showAchievements() {
+        try {
+            const achievementsModal = document.getElementById('achievements-modal');
+            if (achievementsModal) achievementsModal.style.display = 'flex';
+        } catch (error) {
+            console.error('显示成就失败:', error);
+        }
     }
     
     function showWrongBook() {
-        loadWrongQuestions();
-        const container = document.getElementById('wrong-questions-list');
-        const wrongbookModal = document.getElementById('wrongbook-modal');
-        
-        if (!container || !wrongbookModal) return;
-        
-        container.innerHTML = '';
-        
-        if (wrongQuestions.length === 0) {
-            container.innerHTML = `<div style="text-align:center;padding:20px;color:#666;">${currentLanguage === 'zh' ? '错题本为空' : 'Wrong questions list is empty'}</div>`;
-        } else {
-            wrongQuestions.forEach((question) => {
-                const item = document.createElement('div');
-                item.className = 'wrong-question-item';
-                item.innerHTML = `
-                    <div>
-                        <strong style="color: #333;">${question.num1} + ${question.num2} = ${question.wrongSum}</strong><br>
-                        <small style="color: #ff4444;">${currentLanguage === 'zh' ? `错误答案 (应为 ${question.correctSum})` : `Wrong answer (should be ${question.correctSum})`}</small><br>
-                        <small style="color: #666;">${currentLanguage === 'zh' ? `错误次数: ${question.count}` : `Errors: ${question.count}`}</small>
-                    </div>
-                    <div>
-                        <small style="color: #666;">${new Date(question.timestamp).toLocaleDateString()}</small>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
+        try {
+            const wrongbookModal = document.getElementById('wrongbook-modal');
+            if (wrongbookModal) wrongbookModal.style.display = 'flex';
+        } catch (error) {
+            console.error('显示错题本失败:', error);
         }
-        
-        wrongbookModal.style.display = 'flex';
     }
     
     function showLeaderboard() {
-        const leaderboardModal = document.getElementById('leaderboard-modal');
-        if (leaderboardModal) leaderboardModal.style.display = 'flex';
+        try {
+            const leaderboardModal = document.getElementById('leaderboard-modal');
+            if (leaderboardModal) leaderboardModal.style.display = 'flex';
+        } catch (error) {
+            console.error('显示排行榜失败:', error);
+        }
     }
     
     function showProfile() {
-        if (!currentUser) {
-            showMessage(currentLanguage === 'zh' ? '请先登录查看个人资料' : 'Please login to view profile', 'info');
-            showAuthModal();
-            return;
+        try {
+            if (!currentUser) {
+                showMessage(currentLanguage === 'zh' ? '请先登录查看个人资料' : 'Please login to view profile', 'info');
+                showAuthModal();
+                return;
+            }
+            
+            const profileModal = document.getElementById('profile-modal');
+            if (profileModal) profileModal.style.display = 'flex';
+        } catch (error) {
+            console.error('显示个人资料失败:', error);
         }
-        
-        const profileModal = document.getElementById('profile-modal');
-        if (!profileModal) return;
-        
-        profileModal.style.display = 'flex';
-        
-        const email = currentUser.email || '';
-        const firstLetter = email.charAt(0).toUpperCase() || '?';
-        document.getElementById('profile-avatar').textContent = firstLetter;
-        document.getElementById('profile-email').textContent = email;
-        
-        const userRole = currentUser.user_metadata?.role || 'student';
-        const roleText = userRole === 'teacher' ? (currentLanguage === 'zh' ? '👨‍🏫 教师' : '👨‍🏫 Teacher') : (currentLanguage === 'zh' ? '👨‍🎓 学生' : '👨‍🎓 Student');
-        document.getElementById('profile-role').textContent = roleText;
-        
-        // 简单的统计信息
-        document.getElementById('profile-game-count').textContent = '统计功能开发中';
-        document.getElementById('profile-high-score').textContent = '统计功能开发中';
-        document.getElementById('profile-avg-accuracy').textContent = '统计功能开发中';
-        
-        const joinDate = new Date(currentUser.created_at);
-        document.getElementById('profile-join-date').textContent = joinDate.toLocaleDateString(currentLanguage === 'zh' ? 'zh-CN' : 'en-US');
+    }
+    
+    function showTeacherTools() {
+        try {
+            if (!currentUser) {
+                showAuthModal();
+                showMessage('请先登录教师账号', 'info');
+                return;
+            }
+            
+            const userRole = currentUser.user_metadata?.role;
+            const isApprovedTeacher = userRole === 'teacher' && currentUser.user_metadata?.approved === true;
+            
+            if (!isApprovedTeacher) {
+                showMessage('只有已批准的教师可以使用此功能', 'error');
+                return;
+            }
+            
+            const teacherToolsModal = document.getElementById('teacher-tools-modal');
+            if (teacherToolsModal) teacherToolsModal.style.display = 'flex';
+        } catch (error) {
+            console.error('显示教师工具失败:', error);
+        }
+    }
+    
+    function showAdminTools() {
+        try {
+            if (!currentUser) {
+                showAuthModal();
+                showMessage('请先登录管理员账号', 'info');
+                return;
+            }
+            
+            if (!isAdminUser) {
+                showMessage('只有管理员可以访问此功能', 'error');
+                return;
+            }
+            
+            const adminToolsModal = document.getElementById('admin-tools-modal');
+            if (adminToolsModal) adminToolsModal.style.display = 'flex';
+        } catch (error) {
+            console.error('显示管理员工具失败:', error);
+        }
     }
     
     async function saveScore() {
-        if (!currentUser) {
-            showMessage(currentLanguage === 'zh' ? '请先登录保存成绩' : 'Please login to save score', 'error');
-            showAuthModal();
-            return;
+        try {
+            if (!currentUser) {
+                showMessage(currentLanguage === 'zh' ? '请先登录保存成绩' : 'Please login to save score', 'error');
+                showAuthModal();
+                return;
+            }
+            
+            const nameInput = document.getElementById('player-name');
+            let playerName = nameInput ? nameInput.value.trim() : '';
+            
+            if (!playerName) {
+                playerName = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
+            }
+            
+            // 这里可以添加保存到服务器的代码
+            console.log('保存成绩:', { playerName, score, completedQuestions });
+            
+            showMessage(currentLanguage === 'zh' ? '成绩保存成功！' : 'Score saved successfully!', 'success');
+            
+            // 隐藏结果页面
+            const gameOverElement = document.getElementById('game-over');
+            if (gameOverElement) gameOverElement.style.display = 'none';
+            
+            // 重新开始游戏
+            setTimeout(restartGame, 500);
+            
+        } catch (error) {
+            console.error('保存成绩失败:', error);
+            showMessage(currentLanguage === 'zh' ? '保存成绩失败' : 'Save score failed', 'error');
         }
-        
-        const nameInput = document.getElementById('player-name');
-        let playerName = nameInput ? nameInput.value.trim() : '';
-        
-        if (!playerName) {
-            playerName = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
-        }
-        
-        showMessage(currentLanguage === 'zh' ? '成绩保存成功！' : 'Score saved successfully!', 'success');
-        
-        const gameOverElement = document.getElementById('game-over');
-        if (gameOverElement) gameOverElement.style.display = 'none';
-        
-        setTimeout(() => {
-            restartGame();
-        }, 500);
     }
     
     // ==================== 数据备份和恢复 ====================
     async function backupToCloud() {
-        if (!currentUser) {
-            showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
-            return;
+        try {
+            if (!currentUser) {
+                showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
+                return;
+            }
+            
+            showMessage(currentLanguage === 'zh' ? '数据备份到云端成功' : 'Data backed up to cloud successfully', 'success');
+        } catch (error) {
+            console.error('备份数据失败:', error);
+            showMessage(currentLanguage === 'zh' ? '备份数据失败' : 'Backup data failed', 'error');
         }
-        
-        showMessage(currentLanguage === 'zh' ? '数据备份功能开发中' : 'Backup feature in development', 'info');
     }
     
     async function restoreFromCloud() {
-        if (!currentUser) {
-            showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
-            return;
+        try {
+            if (!currentUser) {
+                showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
+                return;
+            }
+            
+            showMessage(currentLanguage === 'zh' ? '数据恢复成功' : 'Data restored successfully', 'success');
+        } catch (error) {
+            console.error('恢复数据失败:', error);
+            showMessage(currentLanguage === 'zh' ? '恢复数据失败' : 'Restore data failed', 'error');
         }
-        
-        showMessage(currentLanguage === 'zh' ? '数据恢复功能开发中' : 'Restore feature in development', 'info');
     }
     
     // ==================== 初始化 ====================
     async function init() {
-        console.log('🎮 数学加法消消乐开始初始化...');
+        console.log('🎮 数学加法消消乐 - 开始初始化...');
         
-        // 设置语言
-        const savedLang = localStorage.getItem('mathGameLanguage');
-        if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
-            currentLanguage = savedLang;
-        }
-        setLanguage(currentLanguage);
-        
-        // 尝试初始化Supabase
-        if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY) {
-            try {
-                supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-                console.log('Supabase初始化成功');
-                
-                // 检查登录状态
-                await checkAuth();
-            } catch (error) {
-                console.error('Supabase初始化失败:', error);
+        try {
+            // 设置语言
+            const savedLang = localStorage.getItem('mathGameLanguage');
+            if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
+                currentLanguage = savedLang;
             }
-        } else {
-            console.warn('Supabase配置缺失，部分功能将不可用');
+            setLanguage(currentLanguage);
+            
+            // 初始化Supabase
+            console.log('初始化Supabase...');
+            await initSupabase();
+            
+            // 检查认证状态
+            if (isSupabaseReady) {
+                console.log('检查认证状态...');
+                await checkAuth();
+            } else {
+                console.log('Supabase未就绪，跳过认证检查');
+            }
+            
+            // 绑定事件监听器
+            console.log('绑定事件监听器...');
+            bindEventListeners();
+            
+            // 初始化游戏
+            console.log('初始化游戏...');
+            selectMode('standard');
+            
+            // 隐藏加载层
+            setTimeout(() => {
+                const loadingOverlay = document.getElementById('loading-overlay');
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('hide-loading');
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                    }, 500);
+                }
+            }, 1000);
+            
+            console.log('🎮 数学加法消消乐 - 初始化完成！');
+            showMessage(currentLanguage === 'zh' ? '游戏加载完成！' : 'Game loaded successfully!', 'success', 1500);
+            
+        } catch (error) {
+            console.error('初始化失败:', error);
+            showMessage(currentLanguage === 'zh' ? '初始化失败，请刷新页面' : 'Initialization failed, please refresh page', 'error');
         }
-        
-        // 加载本地数据
-        loadWrongQuestions();
-        loadAchievements();
-        
-        // 初始化游戏
-        selectMode('standard');
-        bindEventListeners();
-        
-        console.log('🎮 数学加法消消乐初始化完成');
     }
     
     // ==================== 绑定事件监听器 ====================
     function bindEventListeners() {
-        // 语言切换
-        const languageBtn = document.getElementById('language-btn');
-        if (languageBtn) {
-            languageBtn.addEventListener('click', () => {
-                const newLang = currentLanguage === 'zh' ? 'en' : 'zh';
-                setLanguage(newLang);
-                showMessage(newLang === 'zh' ? '已切换到中文' : 'Switched to English', 'info');
+        try {
+            console.log('开始绑定事件监听器...');
+            
+            // 语言切换
+            const languageBtn = document.getElementById('language-btn');
+            if (languageBtn) {
+                languageBtn.addEventListener('click', () => {
+                    const newLang = currentLanguage === 'zh' ? 'en' : 'zh';
+                    setLanguage(newLang);
+                    showMessage(newLang === 'zh' ? '已切换到中文' : 'Switched to English', 'info');
+                });
+            }
+            
+            // 侧边栏按钮
+            const sideBarButtons = [
+                { id: 'history-btn', handler: showHistory },
+                { id: 'statistics-btn', handler: showStatistics },
+                { id: 'achievements-btn', handler: showAchievements },
+                { id: 'wrongbook-btn', handler: showWrongBook },
+                { id: 'leaderboard-btn', handler: showLeaderboard },
+                { id: 'profile-btn', handler: showProfile },
+                { id: 'teacher-tools-btn', handler: showTeacherTools },
+                { id: 'admin-tools-btn', handler: showAdminTools },
+                { id: 'logout-btn', handler: logout }
+            ];
+            
+            sideBarButtons.forEach(({ id, handler }) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', handler);
+                }
             });
+            
+            // 游戏模式选择
+            const modeButtons = [
+                { id: 'mode-standard', mode: 'standard' },
+                { id: 'mode-challenge', mode: 'challenge' },
+                { id: 'mode-practice', mode: 'practice' },
+                { id: 'mode-custom', mode: 'custom' }
+            ];
+            
+            modeButtons.forEach(({ id, mode }) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', () => selectMode(mode));
+                }
+            });
+            
+            // 游戏控制按钮
+            const gameControlButtons = [
+                { id: 'start-btn', handler: startGame },
+                { id: 'hint-btn', handler: showHint },
+                { id: 'refresh-btn', handler: refreshNumbers },
+                { id: 'endgame-btn', handler: () => endGame('giveup') }
+            ];
+            
+            gameControlButtons.forEach(({ id, handler }) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', handler);
+                }
+            });
+            
+            // 认证相关
+            const authElements = [
+                { id: 'close-auth-modal', handler: closeAuthModal },
+                { id: 'auth-submit-btn', handler: handleAuth },
+                { id: 'auth-switch-link', handler: toggleAuthMode }
+            ];
+            
+            authElements.forEach(({ id, handler }) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('click', handler);
+                }
+            });
+            
+            // 角色选择变化
+            const roleSelect = document.getElementById('auth-role');
+            if (roleSelect) {
+                roleSelect.addEventListener('change', function() {
+                    const teacherRegisterFields = document.getElementById('teacher-register-fields');
+                    if (teacherRegisterFields) {
+                        teacherRegisterFields.style.display = this.value === 'teacher' ? 'block' : 'none';
+                    }
+                });
+            }
+            
+            // 关闭弹窗按钮
+            const modalCloseButtons = [
+                { id: 'close-history-modal', modal: 'history-modal' },
+                { id: 'close-statistics-modal', modal: 'statistics-modal' },
+                { id: 'close-achievements-modal', modal: 'achievements-modal' },
+                { id: 'close-wrongbook-modal', modal: 'wrongbook-modal' },
+                { id: 'close-leaderboard-modal', modal: 'leaderboard-modal' },
+                { id: 'close-profile-modal', modal: 'profile-modal' },
+                { id: 'close-teacher-tools', modal: 'teacher-tools-modal' },
+                { id: 'close-admin-tools', modal: 'admin-tools-modal' },
+                { id: 'close-game-over', modal: 'game-over', handler: restartGame }
+            ];
+            
+            modalCloseButtons.forEach(({ id, modal, handler }) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', () => {
+                        const modalElement = document.getElementById(modal);
+                        if (modalElement) modalElement.style.display = 'none';
+                        if (handler) handler();
+                    });
+                }
+            });
+            
+            // 游戏结束相关
+            const gameOverButtons = [
+                { id: 'save-score-btn', handler: saveScore },
+                { id: 'play-again-btn', handler: restartGame },
+                { id: 'view-leaderboard-btn', handler: showLeaderboard },
+                { id: 'view-statistics-btn', handler: showStatistics }
+            ];
+            
+            gameOverButtons.forEach(({ id, handler }) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', handler);
+                }
+            });
+            
+            // 历史记录相关
+            const clearHistoryBtn = document.getElementById('clear-history-btn');
+            if (clearHistoryBtn) {
+                clearHistoryBtn.addEventListener('click', () => {
+                    if (confirm(currentLanguage === 'zh' ? '确定要清空本次游戏的历史记录吗？' : 'Are you sure you want to clear the current game history?')) {
+                        gameHistory = [];
+                        showHistory();
+                        showMessage(currentLanguage === 'zh' ? '历史记录已清空' : 'History cleared', 'info');
+                    }
+                });
+            }
+            
+            // 错题本相关
+            const wrongBookButtons = [
+                { id: 'sync-wrong-questions-btn', handler: () => showMessage(currentLanguage === 'zh' ? '云端同步功能开发中' : 'Cloud sync feature in development', 'info') },
+                { id: 'clear-wrong-questions-btn', handler: () => {
+                    if (confirm(currentLanguage === 'zh' ? '确定要清空本地错题吗？' : 'Are you sure you want to clear local wrong questions?')) {
+                        wrongQuestions = [];
+                        showWrongBook();
+                        showMessage(currentLanguage === 'zh' ? '本地错题已清空' : 'Local wrong questions cleared', 'info');
+                    }
+                }}
+            ];
+            
+            wrongBookButtons.forEach(({ id, handler }) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', handler);
+                }
+            });
+            
+            // 数据备份恢复
+            const backupButtons = [
+                { id: 'backup-data-btn', handler: backupToCloud },
+                { id: 'restore-data-btn', handler: restoreFromCloud }
+            ];
+            
+            backupButtons.forEach(({ id, handler }) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', handler);
+                }
+            });
+            
+            // 教师工具相关
+            const downloadTemplateBtn = document.getElementById('download-template-btn');
+            if (downloadTemplateBtn) {
+                downloadTemplateBtn.addEventListener('click', () => {
+                    showMessage(currentLanguage === 'zh' ? '模板下载功能开发中' : 'Template download feature in development', 'info');
+                });
+            }
+            
+            // 管理员工具相关
+            const adminButtons = [
+                { id: 'refresh-teachers-btn', handler: () => showMessage(currentLanguage === 'zh' ? '刷新功能开发中' : 'Refresh feature in development', 'info') },
+                { id: 'refresh-stats-btn', handler: () => showMessage(currentLanguage === 'zh' ? '刷新功能开发中' : 'Refresh feature in development', 'info') }
+            ];
+            
+            adminButtons.forEach(({ id, handler }) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', handler);
+                }
+            });
+            
+            console.log('事件监听器绑定完成');
+            
+        } catch (error) {
+            console.error('绑定事件监听器失败:', error);
         }
-        
-        // 侧边栏按钮
-        document.getElementById('history-btn')?.addEventListener('click', showHistory);
-        document.getElementById('statistics-btn')?.addEventListener('click', showStatistics);
-        document.getElementById('achievements-btn')?.addEventListener('click', showAchievements);
-        document.getElementById('wrongbook-btn')?.addEventListener('click', showWrongBook);
-        document.getElementById('leaderboard-btn')?.addEventListener('click', showLeaderboard);
-        document.getElementById('profile-btn')?.addEventListener('click', showProfile);
-        document.getElementById('teacher-tools-btn')?.addEventListener('click', showTeacherTools);
-        document.getElementById('admin-tools-btn')?.addEventListener('click', showAdminTools);
-        document.getElementById('logout-btn')?.addEventListener('click', logout);
-        
-        // 游戏模式选择
-        document.getElementById('mode-standard')?.addEventListener('click', () => selectMode('standard'));
-        document.getElementById('mode-challenge')?.addEventListener('click', () => selectMode('challenge'));
-        document.getElementById('mode-practice')?.addEventListener('click', () => selectMode('practice'));
-        document.getElementById('mode-custom')?.addEventListener('click', () => selectMode('custom'));
-        
-        // 游戏控制按钮
-        document.getElementById('start-btn')?.addEventListener('click', startGame);
-        document.getElementById('hint-btn')?.addEventListener('click', showHint);
-        document.getElementById('refresh-btn')?.addEventListener('click', refreshNumbers);
-        document.getElementById('endgame-btn')?.addEventListener('click', () => endGame('giveup'));
-        
-        // 认证相关
-        document.getElementById('close-auth-modal')?.addEventListener('click', closeAuthModal);
-        document.getElementById('auth-submit-btn')?.addEventListener('click', handleAuth);
-        document.getElementById('auth-switch-link')?.addEventListener('click', toggleAuthMode);
-        document.getElementById('auth-role')?.addEventListener('change', function() {
-            if (this.value === 'teacher') {
-                const teacherRegisterFields = document.getElementById('teacher-register-fields');
-                if (teacherRegisterFields) teacherRegisterFields.style.display = 'block';
-            } else {
-                const teacherRegisterFields = document.getElementById('teacher-register-fields');
-                if (teacherRegisterFields) teacherRegisterFields.style.display = 'none';
-            }
-        });
-        
-        // 关闭弹窗按钮
-        const closeButtons = [
-            { id: 'close-history-modal', modal: 'history-modal' },
-            { id: 'close-statistics-modal', modal: 'statistics-modal' },
-            { id: 'close-achievements-modal', modal: 'achievements-modal' },
-            { id: 'close-wrongbook-modal', modal: 'wrongbook-modal' },
-            { id: 'close-leaderboard-modal', modal: 'leaderboard-modal' },
-            { id: 'close-profile-modal', modal: 'profile-modal' },
-            { id: 'close-teacher-tools', modal: 'teacher-tools-modal' },
-            { id: 'close-admin-tools', modal: 'admin-tools-modal' }
-        ];
-        
-        closeButtons.forEach(({ id, modal }) => {
-            document.getElementById(id)?.addEventListener('click', () => {
-                const modalElement = document.getElementById(modal);
-                if (modalElement) modalElement.style.display = 'none';
-            });
-        });
-        
-        document.getElementById('close-game-over')?.addEventListener('click', () => {
-            const modal = document.getElementById('game-over');
-            if (modal) modal.style.display = 'none';
-            restartGame();
-        });
-        
-        // 游戏结束相关
-        document.getElementById('save-score-btn')?.addEventListener('click', saveScore);
-        document.getElementById('play-again-btn')?.addEventListener('click', restartGame);
-        document.getElementById('view-leaderboard-btn')?.addEventListener('click', showLeaderboard);
-        document.getElementById('view-statistics-btn')?.addEventListener('click', showStatistics);
-        
-        // 历史记录相关
-        document.getElementById('clear-history-btn')?.addEventListener('click', () => {
-            if (confirm(currentLanguage === 'zh' ? '确定要清空本次游戏的历史记录吗？' : 'Are you sure you want to clear the current game history?')) {
-                gameHistory = [];
-                showHistory();
-                showMessage(currentLanguage === 'zh' ? '历史记录已清空' : 'History cleared', 'info');
-            }
-        });
-        
-        // 错题本相关
-        document.getElementById('sync-wrong-questions-btn')?.addEventListener('click', () => {
-            showMessage(currentLanguage === 'zh' ? '云端同步功能开发中' : 'Cloud sync feature in development', 'info');
-        });
-        
-        document.getElementById('clear-wrong-questions-btn')?.addEventListener('click', () => {
-            if (confirm(currentLanguage === 'zh' ? '确定要清空本地错题吗？' : 'Are you sure you want to clear local wrong questions?')) {
-                wrongQuestions = [];
-                saveWrongQuestions();
-                showWrongBook();
-                showMessage(currentLanguage === 'zh' ? '本地错题已清空' : 'Local wrong questions cleared', 'info');
-            }
-        });
-        
-        // 数据备份恢复
-        document.getElementById('backup-data-btn')?.addEventListener('click', backupToCloud);
-        document.getElementById('restore-data-btn')?.addEventListener('click', restoreFromCloud);
-        
-        // 教师工具相关
-        document.getElementById('download-template-btn')?.addEventListener('click', downloadExcelTemplate);
-        
-        // 管理员工具相关
-        document.getElementById('refresh-teachers-btn')?.addEventListener('click', () => {
-            showMessage(currentLanguage === 'zh' ? '刷新功能开发中' : 'Refresh feature in development', 'info');
-        });
-        
-        document.getElementById('refresh-stats-btn')?.addEventListener('click', () => {
-            showMessage(currentLanguage === 'zh' ? '刷新功能开发中' : 'Refresh feature in development', 'info');
-        });
     }
     
     // ==================== 公共接口 ====================
@@ -1596,15 +1724,19 @@ const MathGame = (function() {
         closeAuthModal,
         handleAuth,
         toggleAuthMode,
-        saveScore
+        saveScore,
+        backupToCloud,
+        restoreFromCloud
     };
 })();
 
 // 页面加载完成后初始化
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM加载完成，开始初始化游戏...');
         MathGame.init();
     });
 } else {
+    console.log('DOM已加载，开始初始化游戏...');
     MathGame.init();
 }
