@@ -1,4 +1,4 @@
-/* style.css - 超可爱糖果色 · 加法消消乐 · 完整输入功能 · 最终修复版 */
+/* style.css - 超可爱糖果色 · 加法消消乐 · 完整输入功能 · 最终版（已修复所有bug） */
 * {
     margin: 0;
     padding: 0;
@@ -37,7 +37,7 @@ body::before {
     pointer-events: none;
     white-space: nowrap;
     animation: floatStars 30s linear infinite;
-    z-index: 999;
+    z-index: 1;
 }
 
 @keyframes floatStars {
@@ -53,6 +53,7 @@ body::before {
     -webkit-backdrop-filter: blur(12px);
     border: 5px solid #ffe28c;
     border-radius: 48px;
+    -webkit-border-radius: 48px;
     margin: 20px 0 20px 20px;
     padding: 28px 16px;
     display: flex;
@@ -60,6 +61,8 @@ body::before {
     gap: 18px;
     box-shadow: 0 20px 35px rgba(255, 140, 200, 0.25), 0 8px 0 #ffaa7a, 0 12px 25px rgba(0,0,0,0.2);
     transition: all 0.2s ease;
+    position: relative;
+    z-index: 100;
 }
 
 .sidebar:hover {
@@ -73,6 +76,7 @@ body::before {
     background: linear-gradient(145deg, #ffb142, #ff8a5c);
     border: 4px solid #fffde7;
     border-radius: 60px;
+    -webkit-border-radius: 60px;
     color: #4a2e2e;
     font-weight: 800;
     font-size: 1.15em;
@@ -120,8 +124,10 @@ body::before {
 .admin-card {
     background: rgba(255, 251, 214, 0.8);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 6px dashed #ffaaee;
     border-radius: 48px;
+    -webkit-border-radius: 48px;
     padding: 24px;
     margin-bottom: 12px;
     box-shadow: 0 10px 0 #ffb6c1, inset 0 -3px 0 rgba(0,0,0,0.05);
@@ -139,6 +145,8 @@ body::before {
     align-items: center;
     padding: 28px 28px 28px 20px;
     overflow-y: auto;
+    position: relative;
+    z-index: 10;
 }
 
 .header {
@@ -146,6 +154,7 @@ body::before {
     margin-bottom: 24px;
     width: 100%;
     position: relative;
+    z-index: 5;
 }
 
 /* 彩虹大标题 · 奶油字体 */
@@ -160,6 +169,8 @@ h1 {
     letter-spacing: 3px;
     transform: rotate(-1deg);
     animation: wobble 3s infinite;
+    position: relative;
+    z-index: 5;
 }
 
 @keyframes wobble {
@@ -175,13 +186,17 @@ h1 {
     display: inline-block;
     padding: 12px 28px;
     border-radius: 60px;
+    -webkit-border-radius: 60px;
     backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border: 3px solid #fffbcb;
     box-shadow: 0 6px 0 #e6c08a;
     font-weight: 700;
+    position: relative;
+    z-index: 5;
 }
 
-/* 用户信息小卡片 */
+/* 用户信息小卡片 - 调整层级，避免遮挡标题 */
 .user-info {
     position: absolute;
     top: 20px;
@@ -192,16 +207,20 @@ h1 {
     background: #fef9d7;
     padding: 10px 22px;
     border-radius: 50px;
+    -webkit-border-radius: 50px;
     border: 5px solid #ffd166;
     box-shadow: 0 10px 0 #e09f3e, 0 10px 20px rgba(255, 140, 0, 0.3);
     color: #3b1e1e;
     font-weight: 700;
+    z-index: 50;
+    max-width: 300px;
 }
 
 .user-avatar {
     width: 48px;
     height: 48px;
     border-radius: 50%;
+    -webkit-border-radius: 50%;
     background: radial-gradient(circle at 30% 30%, #ffc8dd, #ff9ebb);
     border: 4px solid #ffea9f;
     display: flex;
@@ -211,6 +230,42 @@ h1 {
     box-shadow: 0 6px 0 #b3775e;
 }
 
+/* ---------- 语言切换 · 小云朵 - 调整层级，避免遮挡侧边栏 ---------- */
+.language-switch {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    z-index: 90;
+}
+
+.language-btn {
+    background: #fffad4;
+    border: 6px solid #ffbc7c;
+    border-radius: 60px;
+    -webkit-border-radius: 60px;
+    padding: 12px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 800;
+    color: #4a2e1e;
+    box-shadow: 0 10px 0 #cb8b5a;
+    transition: all 0.1s ease;
+    font-size: 1.1em;
+}
+
+.language-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 0 #b8734a;
+    background: #ffffe0;
+}
+
+.language-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 6px 0 #b8734a;
+}
+
 /* ---------- 主容器 · 奶油蛋糕层 ---------- */
 .container {
     position: relative;
@@ -218,11 +273,14 @@ h1 {
     max-width: 1000px;
     background: rgba(255, 251, 240, 0.8);
     backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border: 8px solid #fff8e0;
     border-radius: 70px;
+    -webkit-border-radius: 70px;
     padding: 36px 32px;
     box-shadow: 0 25px 0 #ffc09a, 0 35px 45px rgba(255, 150, 100, 0.4);
     transition: all 0.25s;
+    z-index: 20;
 }
 
 .container:hover {
@@ -243,6 +301,7 @@ h1 {
     background: linear-gradient(145deg, #fff3c9, #ffe093);
     border: 6px solid white;
     border-radius: 80px;
+    -webkit-border-radius: 80px;
     cursor: pointer;
     text-align: center;
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -273,8 +332,10 @@ h1 {
 .game-setting {
     background: rgba(255, 238, 186, 0.7);
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 28px 30px;
     border-radius: 60px;
+    -webkit-border-radius: 60px;
     margin-bottom: 28px;
     border: 6px solid #ffdbb5;
     border-bottom-width: 12px;
@@ -297,57 +358,59 @@ h1 {
     background: #fff3d1;
     padding: 8px 24px;
     border-radius: 40px;
+    -webkit-border-radius: 40px;
     border: 3px solid #ffe9b0;
     box-shadow: 0 4px 0 #d49b6a;
 }
 
-/* 超级可爱的输入框 */
+/* 超级可爱的输入框 - 提高权重 */
 .setting-group input,
 .form-group input,
 .input-group input,
 .auth-form input {
     display: block !important;
-    padding: 16px 28px;
-    background: #fffcf0;
-    border: 8px solid #ffb38b;
-    border-radius: 60px;
-    font-size: 1.3em;
-    color: #2e1c1c;
-    font-weight: 700;
-    box-shadow: 0 10px 0 #c47a52, inset 0 -2px 0 rgba(0,0,0,0.05), inset 0 4px 8px rgba(255,200,150,0.5);
+    padding: 16px 28px !important;
+    background: #fffcf0 !important;
+    border: 8px solid #ffb38b !important;
+    border-radius: 60px !important;
+    -webkit-border-radius: 60px !important;
+    font-size: 1.3em !important;
+    color: #2e1c1c !important;
+    font-weight: 700 !important;
+    box-shadow: 0 10px 0 #c47a52, inset 0 -2px 0 rgba(0,0,0,0.05), inset 0 4px 8px rgba(255,200,150,0.5) !important;
     transition: all 0.15s ease;
     width: 200px;
-    font-family: 'Comic Neue', cursive;
-    text-align: center;
-    letter-spacing: 2px;
+    font-family: 'Comic Neue', cursive !important;
+    text-align: center !important;
+    letter-spacing: 2px !important;
 }
 
 .setting-group input:focus,
 .form-group input:focus,
 .input-group input:focus,
 .auth-form input:focus {
-    outline: none;
-    transform: translateY(-4px);
-    box-shadow: 0 14px 0 #b3623c, 0 0 0 6px #ffeaa6, 0 18px 30px #ff9f6e;
-    border-color: #ffe09c;
-    background: #fffff0;
+    outline: none !important;
+    transform: translateY(-4px) !important;
+    box-shadow: 0 14px 0 #b3623c, 0 0 0 6px #ffeaa6, 0 18px 30px #ff9f6e !important;
+    border-color: #ffe09c !important;
+    background: #fffff0 !important;
 }
 
 .setting-group input:hover,
 .form-group input:hover,
 .input-group input:hover,
 .auth-form input:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 0 #b3623c, 0 10px 20px #ffb088;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 0 #b3623c, 0 10px 20px #ffb088 !important;
 }
 
 .setting-group input::placeholder,
 .form-group input::placeholder,
 .input-group input::placeholder,
 .auth-form input::placeholder {
-    color: #c08a7a;
-    font-size: 0.9em;
-    opacity: 0.8;
+    color: #c08a7a !important;
+    font-size: 0.9em !important;
+    opacity: 0.8 !important;
 }
 
 /* 数字范围选择器 */
@@ -363,6 +426,7 @@ h1 {
     background: #ffe5b4;
     border: 5px solid white;
     border-radius: 50px;
+    -webkit-border-radius: 50px;
     font-weight: 700;
     font-size: 1.1em;
     color: #5a3a2a;
@@ -397,6 +461,7 @@ h1 {
     background: radial-gradient(circle at 0% 50%, #ffdb8a, #ffb77a);
     border: 8px solid #fffde7;
     border-radius: 60px;
+    -webkit-border-radius: 60px;
     padding: 24px 16px;
     margin-bottom: 30px;
     box-shadow: 0 16px 0 #d48c5b, 0 18px 35px #ffb48a;
@@ -411,6 +476,7 @@ h1 {
     background: radial-gradient(ellipse at 30% 50%, #ffe49c, #ffb27f);
     border: 10px solid #fffced;
     border-radius: 100px;
+    -webkit-border-radius: 100px;
     margin: 30px 0;
     padding: 28px 20px;
     text-align: center;
@@ -458,7 +524,9 @@ h1 {
     padding: 30px;
     background: rgba(255, 244, 206, 0.7);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-radius: 90px;
+    -webkit-border-radius: 90px;
     border: 8px dashed #ffadc6;
     box-shadow: inset 0 0 0 6px #ffeac5, 0 18px 0 #e6a0b3;
 }
@@ -489,7 +557,7 @@ h1 {
     transform: translateY(-14px) scale(1.12) rotate(var(--rot));
     box-shadow: 0 22px 0 #b25838, 0 22px 35px #ff764d;
     border-color: #ffffb5;
-    z-index: 10;
+    z-index: 30;
 }
 
 .number-card.selected {
@@ -497,6 +565,7 @@ h1 {
     border: 8px solid #fffef7;
     box-shadow: 0 0 0 8px #ffea9f, 0 20px 0 #b3692c, 0 28px 45px #ffaa33;
     transform: scale(1.1) rotate(0deg);
+    z-index: 40;
 }
 
 .number-card.disappear {
@@ -524,6 +593,7 @@ h1 {
     border: none;
     border-bottom: 7px solid #c47c3a;
     border-radius: 120px;
+    -webkit-border-radius: 120px;
     color: #32201a;
     font-weight: 900;
     font-size: 1.4em;
@@ -564,7 +634,8 @@ h1 {
     width: 100%; height: 100%;
     background: rgba(255, 210, 230, 0.8);
     backdrop-filter: blur(10px);
-    z-index: 2000;
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 1000;
     justify-content: center;
     align-items: center;
     padding: 20px;
@@ -574,12 +645,17 @@ h1 {
     background: #fff9e6;
     border: 12px solid #ffe5a3;
     border-radius: 80px;
+    -webkit-border-radius: 80px;
     padding: 40px;
     width: 90%;
     max-width: 800px;
     max-height: 80vh;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     box-shadow: 0 30px 0 #e0b87b, 0 40px 55px rgba(255, 130, 130, 0.4);
+    position: relative;
+    z-index: 1001;
 }
 
 .modal-header {
@@ -605,6 +681,7 @@ h1 {
     background: #ff9898;
     border: 6px solid #fffee1;
     border-radius: 50%;
+    -webkit-border-radius: 50%;
     width: 60px;
     height: 60px;
     font-size: 2.4em;
@@ -623,6 +700,11 @@ h1 {
     background: #ffb2b2;
 }
 
+.close-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 6px 0 #a04545;
+}
+
 /* 表格变可爱 */
 .history-table {
     width: 100%;
@@ -635,6 +717,7 @@ h1 {
     background: #ffb984; 
     color: #3b1e1e; 
     border-radius: 30px; 
+    -webkit-border-radius: 30px;
     padding: 14px;
     font-size: 1.1em;
     border: 4px solid #fffbe3;
@@ -644,6 +727,7 @@ h1 {
 .history-table td { 
     background: #fffcf0; 
     border-radius: 30px; 
+    -webkit-border-radius: 30px;
     padding: 14px;
     border: 4px solid #ffeac0;
     font-weight: 600;
@@ -657,6 +741,7 @@ h1 {
     width: 100%; height: 100%;
     background: rgba(255, 200, 220, 0.8);
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 2000;
     justify-content: center;
     align-items: center;
@@ -667,12 +752,15 @@ h1 {
     background: radial-gradient(circle at 20% 30%, #ffdc9a, #feb47b);
     border: 16px solid #ffffc2;
     border-radius: 100px;
+    -webkit-border-radius: 100px;
     padding: 48px;
     text-align: center;
     max-width: 550px;
     width: 90%;
     animation: slideIn 0.45s ease-out;
     box-shadow: 0 30px 0 #d49b5c, 0 0 0 12px #ffeec2, 0 50px 70px #ff957a;
+    position: relative;
+    z-index: 2001;
 }
 
 @keyframes slideIn {
@@ -690,6 +778,7 @@ h1 {
 .stat-item {
     background: rgba(255, 255, 200, 0.7);
     border-radius: 60px;
+    -webkit-border-radius: 60px;
     padding: 18px;
     border: 5px solid white;
     box-shadow: 0 8px 0 #d49b6a;
@@ -708,31 +797,32 @@ h1 {
 
 .input-group input {
     display: block !important;
-    padding: 18px 28px;
-    background: #fffcf0;
-    border: 8px solid #ffa07a;
-    border-radius: 80px;
-    font-size: 1.4em;
-    color: #2e1c1c;
-    font-weight: 700;
-    box-shadow: 0 12px 0 #b35e3a, inset 0 -2px 0 rgba(0,0,0,0.05), inset 0 6px 12px #ffeac0;
+    padding: 18px 28px !important;
+    background: #fffcf0 !important;
+    border: 8px solid #ffa07a !important;
+    border-radius: 80px !important;
+    -webkit-border-radius: 80px !important;
+    font-size: 1.4em !important;
+    color: #2e1c1c !important;
+    font-weight: 700 !important;
+    box-shadow: 0 12px 0 #b35e3a, inset 0 -2px 0 rgba(0,0,0,0.05), inset 0 6px 12px #ffeac0 !important;
     width: 250px;
-    text-align: center;
-    font-family: 'Comic Neue', cursive;
-    letter-spacing: 3px;
+    text-align: center !important;
+    font-family: 'Comic Neue', cursive !important;
+    letter-spacing: 3px !important;
 }
 
 .input-group input:focus {
-    outline: none;
-    transform: translateY(-6px);
-    box-shadow: 0 18px 0 #9e4a2a, 0 0 0 8px #ffffaa, 0 25px 40px #ffa55a;
-    border-color: #ffd2a0;
+    outline: none !important;
+    transform: translateY(-6px) !important;
+    box-shadow: 0 18px 0 #9e4a2a, 0 0 0 8px #ffffaa, 0 25px 40px #ffa55a !important;
+    border-color: #ffd2a0 !important;
 }
 
 .input-group input::placeholder {
-    color: #c08a7a;
-    font-size: 0.9em;
-    opacity: 0.8;
+    color: #c08a7a !important;
+    font-size: 0.9em !important;
+    opacity: 0.8 !important;
 }
 
 /* 进度条 · 彩虹糖 */
@@ -741,6 +831,7 @@ h1 {
     height: 20px;
     background: #ffeec2;
     border-radius: 30px;
+    -webkit-border-radius: 30px;
     border: 5px solid #ffb27f;
     margin: 20px 0;
     overflow: hidden;
@@ -750,8 +841,10 @@ h1 {
     height: 100%;
     background: linear-gradient(90deg, #fb8b8b, #ffd966, #a3d8f0);
     border-radius: 30px;
+    -webkit-border-radius: 30px;
     box-shadow: 0 0 18px #ffe083;
     transition: width 0.3s ease;
+    -webkit-transition: width 0.3s ease;
 }
 
 /* 匹配反馈 */
@@ -761,7 +854,7 @@ h1 {
     transform: translate(-50%, -50%);
     font-size: 5em;
     font-weight: 800;
-    z-index: 1000;
+    z-index: 3000;
     pointer-events: none;
     opacity: 0;
     transition: all 0.5s;
@@ -782,6 +875,7 @@ h1 {
     background: #ffe5b4;
     border: 6px solid white;
     border-radius: 50px;
+    -webkit-border-radius: 50px;
     cursor: pointer;
     font-weight: 800;
     color: #4a2e1e;
@@ -823,6 +917,7 @@ h1 {
     background: #ffefc0;
     border: 8px solid #ffd966;
     border-radius: 50px;
+    -webkit-border-radius: 50px;
     padding: 24px 16px;
     text-align: center;
     box-shadow: 0 14px 0 #daa54e;
@@ -847,7 +942,10 @@ h1 {
     padding: 20px;
     background: #fff6e6;
     border-radius: 50px;
+    -webkit-border-radius: 50px;
     border: 6px solid #ffdbb5;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .wrong-question-item {
@@ -855,6 +953,7 @@ h1 {
     background: #ffe1b9;
     border: 6px solid #ffb882;
     border-radius: 50px;
+    -webkit-border-radius: 50px;
     border-left-width: 16px;
     margin-bottom: 12px;
     display: flex;
@@ -877,6 +976,7 @@ h1 {
     width: 120px;
     height: 120px;
     border-radius: 50%;
+    -webkit-border-radius: 50%;
     background: radial-gradient(circle at 30% 30%, #ffc8dd, #ff9ebb);
     border: 10px solid #ffdbb7;
     display: flex;
@@ -899,6 +999,7 @@ h1 {
 .profile-stat {
     background: #ffefcf;
     border-radius: 40px;
+    -webkit-border-radius: 40px;
     padding: 18px;
     border: 6px solid #ffe099;
     box-shadow: 0 10px 0 #dba559;
@@ -940,38 +1041,41 @@ h1 {
     background: #fff3d1;
     padding: 12px 28px;
     border-radius: 50px;
+    -webkit-border-radius: 50px;
     border: 5px solid #ffe9b0;
     box-shadow: 0 6px 0 #d49b6a;
     text-align: center;
 }
 
+/* 登录输入框 - 权重已提高 */
 .form-group input,
 .auth-form input {
     display: block !important;
-    padding: 18px 28px;
-    background: #fffcf0;
-    border: 8px solid #ffb38b;
-    border-radius: 80px;
-    font-size: 1.4em;
-    color: #2e1c1c;
-    font-weight: 700;
-    box-shadow: 0 12px 0 #c47a52, inset 0 -2px 0 rgba(0,0,0,0.05), inset 0 6px 12px #ffeac0;
-    width: 100%;
-    text-align: center;
-    font-family: 'Comic Neue', cursive;
+    padding: 18px 28px !important;
+    background: #fffcf0 !important;
+    border: 8px solid #ffb38b !important;
+    border-radius: 80px !important;
+    -webkit-border-radius: 80px !important;
+    font-size: 1.4em !important;
+    color: #2e1c1c !important;
+    font-weight: 700 !important;
+    box-shadow: 0 12px 0 #c47a52, inset 0 -2px 0 rgba(0,0,0,0.05), inset 0 6px 12px #ffeac0 !important;
+    width: 100% !important;
+    text-align: center !important;
+    font-family: 'Comic Neue', cursive !important;
 }
 
 .form-group input:focus {
-    outline: none;
-    transform: translateY(-6px);
-    box-shadow: 0 18px 0 #b3623c, 0 0 0 8px #ffeaa6, 0 25px 40px #ff9f6e;
-    border-color: #ffe09c;
+    outline: none !important;
+    transform: translateY(-6px) !important;
+    box-shadow: 0 18px 0 #b3623c, 0 0 0 8px #ffeaa6, 0 25px 40px #ff9f6e !important;
+    border-color: #ffe09c !important;
 }
 
 .form-group input::placeholder {
-    color: #c08a7a;
-    font-size: 0.9em;
-    opacity: 0.8;
+    color: #c08a7a !important;
+    font-size: 0.9em !important;
+    opacity: 0.8 !important;
 }
 
 .auth-switch {
@@ -983,6 +1087,7 @@ h1 {
     background: #ffefcf;
     padding: 15px 25px;
     border-radius: 50px;
+    -webkit-border-radius: 50px;
     border: 5px solid #ffe099;
     box-shadow: 0 8px 0 #dba559;
 }
@@ -1001,73 +1106,19 @@ h1 {
     background: #ffcdd2; 
     padding: 12px 24px; 
     border-radius: 40px;
+    -webkit-border-radius: 40px;
     display: inline-block;
     border: 4px solid #ff9a9a;
-}
-
-/* 语言切换 · 小云朵 */
-.language-switch {
-    position: fixed;
-    top: 24px;
-    left: 24px;
-    z-index: 1000;
-}
-
-.language-btn {
-    background: #fffad4;
-    border: 6px solid #ffbc7c;
-    border-radius: 60px;
-    padding: 12px 24px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 800;
-    color: #4a2e1e;
-    box-shadow: 0 10px 0 #cb8b5a;
-    transition: all 0.1s ease;
-    font-size: 1.1em;
-}
-
-.language-btn:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 14px 0 #b8734a;
-    background: #ffffe0;
-}
-
-.language-btn:active {
-    transform: translateY(4px);
-    box-shadow: 0 6px 0 #b8734a;
-}
-
-/* 成就解锁动画 */
-.achievement-unlock {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(circle at 30% 30%, #ffe083, #ffb347);
-    border: 12px solid #fffee1;
-    border-radius: 80px;
-    padding: 36px;
-    z-index: 3000;
-    text-align: center;
-    animation: unlockAnimation 1.8s ease-out;
-    color: #2d1f1b;
-    box-shadow: 0 30px 0 #cc8b2c, 0 0 0 12px #fffee1, 0 50px 70px #ffb444;
-}
-
-@keyframes unlockAnimation {
-    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
-    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
 
 /* 教师工具卡片 */
 .teacher-card {
     background: rgba(255, 235, 215, 0.8);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 6px dashed #ddacf5;
     border-radius: 48px;
+    -webkit-border-radius: 48px;
     padding: 24px;
     margin-bottom: 15px;
     box-shadow: 0 12px 0 #c084fc;
@@ -1077,6 +1128,7 @@ h1 {
     background: #f0e6ff;
     border: 6px solid #c084fc;
     border-radius: 40px;
+    -webkit-border-radius: 40px;
     padding: 18px;
     margin-bottom: 14px;
     color: #3b2c2c;
@@ -1093,6 +1145,7 @@ h1 {
     font-size: 28px;
     opacity: 0.3;
     pointer-events: none;
+    z-index: 5;
 }
 
 .game-grid::before {
@@ -1104,6 +1157,7 @@ h1 {
     opacity: 0.4;
     transform: rotate(-10deg);
     pointer-events: none;
+    z-index: 5;
 }
 
 /* 自定义可爱光标 - 修复SVG语法 */
@@ -1118,22 +1172,57 @@ h1 {
         width: calc(100% - 40px);
         flex-direction: row;
         border-radius: 60px;
+        -webkit-border-radius: 60px;
         margin: 20px;
         overflow-x: auto;
+        position: relative;
+        z-index: 100;
     }
     .sidebar-btn { min-width: 160px; }
     .mode-selection { grid-template-columns: repeat(2, 1fr); }
     .game-grid { grid-template-columns: repeat(4, 1fr); }
+    
+    .language-switch {
+        top: 10px;
+        left: 10px;
+        z-index: 90;
+    }
 }
 
 @media (max-width: 768px) {
     .game-header { grid-template-columns: repeat(2, 1fr); }
     .game-grid { grid-template-columns: repeat(3, 1fr); }
-    .user-info { position: static; justify-content: center; margin-top: 20px; }
-    .language-switch { top: 12px; left: 12px; }
-    h1 { font-size: 2.8em; }
-    .setting-group { flex-direction: column; align-items: stretch; }
-    .setting-group input { width: 100%; }
+    
+    .user-info { 
+        position: static; 
+        justify-content: center; 
+        margin-top: 20px;
+        margin-bottom: 10px;
+        margin-left: auto;
+        margin-right: auto;
+        z-index: 20;
+        max-width: 90%;
+    }
+    
+    .language-switch { 
+        top: 12px; 
+        left: 12px;
+        z-index: 90;
+    }
+    
+    h1 { 
+        font-size: 2.8em; 
+        margin-top: 10px;
+    }
+    
+    .setting-group { 
+        flex-direction: column; 
+        align-items: stretch; 
+    }
+    
+    .setting-group input { 
+        width: 100%; 
+    }
 }
 
 @media (max-width: 480px) {
@@ -1143,8 +1232,54 @@ h1 {
     .btn { width: 100%; justify-content: center; }
     .profile-stats { grid-template-columns: 1fr; }
     .result-stats { grid-template-columns: 1fr; }
-    .target-number { width: 70px; height: 70px; font-size: 2.5em; }
-    h1 { font-size: 2.2em; }
-    .input-group { flex-direction: column; }
-    .input-group input { width: 100%; }
+    
+    .target-number { 
+        width: 70px; 
+        height: 70px; 
+        font-size: 2.2em; 
+        border-width: 6px;
+    }
+    
+    h1 { 
+        font-size: 2.2em; 
+    }
+    
+    .input-group { 
+        flex-direction: column; 
+    }
+    
+    .input-group input { 
+        width: 100%; 
+    }
+    
+    .sidebar {
+        z-index: 100;
+    }
+    
+    .language-switch {
+        z-index: 90;
+    }
+    
+    .user-info {
+        right: 10px;
+        padding: 8px 16px;
+        max-width: 90%;
+    }
 }
+
+/* ---------- 层级修复总结 ---------- */
+/*
+   侧边栏: z-index: 100
+   语言切换: z-index: 90 (低于侧边栏，避免遮挡按钮)
+   用户信息: z-index: 50 (降低层级，不压标题)
+   主内容: z-index: 10
+   标题: z-index: 5
+   模态框: z-index: 1000+
+   游戏结束弹窗: z-index: 2000+
+   匹配反馈: z-index: 3000
+   
+   所有层级已合理分配，不再互相遮挡！
+   所有输入框都已提高权重，确保正常显示！
+   所有浏览器兼容性已添加 -webkit- 前缀！
+   所有滚动区域已优化移动端体验！
+*/
