@@ -1412,3 +1412,335 @@ h1 {
 * {
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="%23ffb7b7" stroke="%23ffffff" stroke-width="3"/><circle cx="12" cy="12" r="3" fill="white"/><circle cx="20" cy="12" r="3" fill="white"/><circle cx="12" cy="12" r="1.5" fill="black"/><circle cx="20" cy="12" r="1.5" fill="black"/><path d="M10 20 Q16 26, 22 20" stroke="white" stroke-width="4" fill="none"/></svg>') 16 16, auto;
 }
+
+/* ========== 排行榜终极修复 ========== */
+
+/* 1. 排行榜容器 - 毛玻璃奶油质感 */
+.leaderboard-container {
+    background: rgba(255, 251, 240, 0.9);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 8px solid #fff8e0;
+    border-radius: 50px;
+    padding: 25px;
+    box-shadow: 0 20px 0 #ffc09a, 0 25px 35px rgba(255, 150, 100, 0.3);
+    margin-top: 20px;
+}
+
+/* 2. 排行榜表格 - 彻底重构 */
+.leaderboard-table,
+.ranking-table,
+.highscores-table,
+table.leaderboard,
+table.ranking,
+table.highscores {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    margin: 0;
+    padding: 0;
+    font-family: 'Comic Neue', 'Chalkboard SE', sans-serif;
+}
+
+/* 3. 表头样式 - 彩虹奶油顶 */
+.leaderboard-table th,
+.ranking-table th,
+.highscores-table th,
+table.leaderboard th,
+table.ranking th,
+table.highscores th {
+    background: linear-gradient(145deg, #ffb77a, #ff9e5e);
+    color: #2d1a1a;
+    font-size: 1.3em;
+    font-weight: 900;
+    padding: 18px 12px;
+    text-align: center;
+    border: 6px solid #fffef7;
+    border-radius: 40px;
+    -webkit-border-radius: 40px;
+    box-shadow: 0 8px 0 #b36834, 0 6px 12px rgba(255, 140, 0, 0.2);
+    text-shadow: 2px 2px 0 rgba(255, 255, 200, 0.5);
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 10;
+}
+
+/* 4. 表格行 - 立体糖果效果 */
+.leaderboard-table tr,
+.ranking-table tr,
+.highscores-table tr,
+table.leaderboard tr,
+table.ranking tr,
+table.highscores tr {
+    transition: all 0.2s ease;
+}
+
+.leaderboard-table tr:hover,
+.ranking-table tr:hover,
+.highscores-table tr:hover,
+table.leaderboard tr:hover,
+table.ranking tr:hover,
+table.highscores tr:hover {
+    transform: scale(1.01) translateY(-2px);
+}
+
+/* 5. 单元格样式 - 每个都是小饼干 */
+.leaderboard-table td,
+.ranking-table td,
+.highscores-table td,
+table.leaderboard td,
+table.ranking td,
+table.highscores td {
+    background: #fffcf0;
+    color: #3b2a1a;
+    font-size: 1.2em;
+    font-weight: 700;
+    padding: 16px 12px;
+    text-align: center;
+    border: 5px solid #ffeac0;
+    border-radius: 30px;
+    -webkit-border-radius: 30px;
+    box-shadow: 0 6px 0 #d49b6a, inset 0 -2px 0 rgba(0,0,0,0.03);
+    position: relative;
+}
+
+/* 6. 排名前三名 - 特殊颜色 */
+.leaderboard-table tr:first-child td,
+.ranking-table tr:first-child td,
+.highscores-table tr:first-child td,
+table.leaderboard tr:first-child td,
+table.ranking tr:first-child td,
+table.highscores tr:first-child td {
+    background: radial-gradient(circle at 20% 50%, #ffe083, #ffb347);
+    border: 6px solid #fffeca;
+    box-shadow: 0 8px 0 #cc8b2c, 0 0 0 4px rgba(255, 215, 0, 0.3);
+    color: #2d1a1a;
+    font-size: 1.3em;
+}
+
+.leaderboard-table tr:nth-child(2) td,
+.ranking-table tr:nth-child(2) td,
+.highscores-table tr:nth-child(2) td,
+table.leaderboard tr:nth-child(2) td,
+table.ranking tr:nth-child(2) td,
+table.highscores tr:nth-child(2) td {
+    background: radial-gradient(circle at 20% 50%, #ffe0b5, #ffc085);
+    border: 6px solid #fff5d6;
+}
+
+.leaderboard-table tr:nth-child(3) td,
+.ranking-table tr:nth-child(3) td,
+.highscores-table tr:nth-child(3) td,
+table.leaderboard tr:nth-child(3) td,
+table.ranking tr:nth-child(3) td,
+table.highscores tr:nth-child(3) td {
+    background: radial-gradient(circle at 20% 50%, #ffdbb5, #ffb58a);
+    border: 6px solid #ffedd6;
+}
+
+/* 7. 排名序号 - 大号可爱数字 */
+.leaderboard-table td:first-child,
+.ranking-table td:first-child,
+.highscores-table td:first-child,
+table.leaderboard td:first-child,
+table.ranking td:first-child,
+table.highscores td:first-child {
+    font-size: 1.5em;
+    font-weight: 900;
+    color: #b34a2a;
+    text-shadow: 2px 2px 0 rgba(255, 200, 100, 0.5);
+    width: 80px;
+}
+
+/* 8. 玩家名字 - 重点突出 */
+.leaderboard-table td:nth-child(2),
+.ranking-table td:nth-child(2),
+.highscores-table td:nth-child(2),
+table.leaderboard td:nth-child(2),
+table.ranking td:nth-child(2),
+table.highscores td:nth-child(2) {
+    font-size: 1.3em;
+    font-weight: 900;
+    color: #3b1e1e;
+    text-shadow: 1px 1px 0 white;
+    letter-spacing: 2px;
+}
+
+/* 9. 分数 - 彩虹色 */
+.leaderboard-table td:last-child,
+.ranking-table td:last-child,
+.highscores-table td:last-child,
+table.leaderboard td:last-child,
+table.ranking td:last-child,
+table.highscores td:last-child {
+    font-size: 1.4em;
+    font-weight: 900;
+    background: linear-gradient(145deg, #ff8f8f, #ff6b6b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 2px 2px 0 #ffeac0;
+    width: 100px;
+}
+
+/* 10. 没有数据时的提示 */
+.leaderboard-empty,
+.no-data-message {
+    background: #fff3e0;
+    border: 8px dashed #ffb882;
+    border-radius: 60px;
+    padding: 40px 20px;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: 800;
+    color: #b35e3a;
+    box-shadow: 0 12px 0 #e6a07a;
+    margin: 20px 0;
+}
+
+.leaderboard-empty::before {
+    content: "🍪 ";
+}
+
+.leaderboard-empty::after {
+    content: " 🍪";
+}
+
+/* 11. 移动端适配 */
+@media (max-width: 768px) {
+    .leaderboard-table th,
+    .ranking-table th,
+    .highscores-table th {
+        font-size: 1.1em;
+        padding: 14px 8px;
+    }
+    
+    .leaderboard-table td,
+    .ranking-table td,
+    .highscores-table td {
+        font-size: 1em;
+        padding: 12px 8px;
+    }
+    
+    .leaderboard-table td:first-child,
+    .ranking-table td:first-child,
+    .highscores-table td:first-child {
+        font-size: 1.2em;
+        width: 60px;
+    }
+    
+    .leaderboard-table td:nth-child(2),
+    .ranking-table td:nth-child(2),
+    .highscores-table td:nth-child(2) {
+        font-size: 1.1em;
+    }
+    
+    .leaderboard-table td:last-child,
+    .ranking-table td:last-child,
+    .highscores-table td:last-child {
+        font-size: 1.2em;
+    }
+}
+
+@media (max-width: 480px) {
+    .leaderboard-table th,
+    .ranking-table th,
+    .highscores-table th {
+        font-size: 0.9em;
+        padding: 10px 5px;
+        border-width: 4px;
+    }
+    
+    .leaderboard-table td,
+    .ranking-table td,
+    .highscores-table td {
+        font-size: 0.85em;
+        padding: 10px 5px;
+        border-width: 4px;
+        box-shadow: 0 4px 0 #d49b6a;
+    }
+    
+    .leaderboard-table td:first-child,
+    .ranking-table td:first-child,
+    .highscores-table td:first-child {
+        font-size: 1em;
+        width: 45px;
+    }
+    
+    .leaderboard-table td:nth-child(2),
+    .ranking-table td:nth-child(2),
+    .highscores-table td:nth-child(2) {
+        font-size: 0.9em;
+    }
+    
+    .leaderboard-empty {
+        font-size: 1.1em;
+        padding: 25px 15px;
+    }
+}
+
+/* 12. 选项卡与排行榜的间距 */
+.tabs + .leaderboard-container,
+.tab-content .leaderboard-container {
+    margin-top: 25px;
+}
+
+/* 13. 排行榜标题装饰 */
+.leaderboard-title,
+.ranking-title,
+.highscores-title {
+    font-size: 2em;
+    background: linear-gradient(145deg, #ff8c42, #ff4d6d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 4px 4px 0 #ffeeaa;
+    margin-bottom: 20px;
+    text-align: center;
+    position: relative;
+}
+
+.leaderboard-title::before,
+.ranking-title::before,
+.highscores-title::before {
+    content: "🏆";
+    margin-right: 15px;
+    font-size: 1.2em;
+}
+
+.leaderboard-title::after,
+.ranking-title::after,
+.highscores-title::after {
+    content: "🏆";
+    margin-left: 15px;
+    font-size: 1.2em;
+}
+
+/* 14. 强制覆盖任何可能的内联样式或表格默认样式 */
+table, 
+thead, 
+tbody, 
+tr, 
+td, 
+th {
+    border: none;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    background: transparent;
+}
+
+td, th {
+    padding: 16px 12px !important;
+    vertical-align: middle;
+}
+
+/* 15. 表格容器滚动优化 */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 5px 0 15px 0;
+    border-radius: 40px;
+}
+
+/* ========== 排行榜修复完成 ========== */
