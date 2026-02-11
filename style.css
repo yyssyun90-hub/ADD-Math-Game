@@ -1,4 +1,4 @@
-/* style.css - 超可爱糖果色 · 加法消消乐 · 完整输入功能 · 最终版（已修复所有bug） */
+/* style.css - 超可爱糖果色 · 加法消消乐 · 第9轮显微镜级修复版 */
 * {
     margin: 0;
     padding: 0;
@@ -45,7 +45,43 @@ body::before {
     to { transform: translateX(100%); }
 }
 
-/* ---------- 毛茸茸侧边栏 · 果冻质感 ---------- */
+/* ---------- 语言切换 · 小云朵 ---------- */
+.language-switch {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    z-index: 9999;
+}
+
+.language-btn {
+    background: #fffad4;
+    border: 6px solid #ffbc7c;
+    border-radius: 60px;
+    -webkit-border-radius: 60px;
+    padding: 12px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 800;
+    color: #4a2e1e;
+    box-shadow: 0 10px 0 #cb8b5a;
+    transition: all 0.1s ease;
+    font-size: 1.1em;
+}
+
+.language-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 0 #b8734a;
+    background: #ffffe0;
+}
+
+.language-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 6px 0 #b8734a;
+}
+
+/* ---------- 毛茸茸侧边栏 ---------- */
 .sidebar {
     width: 240px;
     background: rgba(255, 245, 220, 0.7);
@@ -63,14 +99,15 @@ body::before {
     transition: all 0.2s ease;
     position: relative;
     z-index: 100;
+    transform: translateX(0);
 }
 
 .sidebar:hover {
     box-shadow: 0 25px 45px rgba(255, 100, 150, 0.4), 0 10px 0 #ff8a5c;
-    transform: translateY(-2px);
+    transform: translateX(0) translateY(-2px);
 }
 
-/* 超级可爱按钮 · 像糖果一样 */
+/* 超级可爱按钮 */
 .sidebar-btn {
     padding: 18px 18px;
     background: linear-gradient(145deg, #ffb142, #ff8a5c);
@@ -105,14 +142,12 @@ body::before {
     box-shadow: 0 6px 0 #b34a2a;
 }
 
-/* 各角色色系 */
 .sidebar-btn.secondary { background: linear-gradient(145deg, #6ec8ff, #3f9eff); box-shadow: 0 12px 0 #2a6bb0; }
 .sidebar-btn.achievement { background: linear-gradient(145deg, #ffe083, #ffb347); box-shadow: 0 12px 0 #cc8b2c; }
 .sidebar-btn.wrong { background: linear-gradient(145deg, #ff8f8f, #ff6b6b); box-shadow: 0 12px 0 #b94747; }
 .sidebar-btn.profile, .sidebar-btn.teacher { background: linear-gradient(145deg, #ddacf5, #c084fc); box-shadow: 0 12px 0 #8f5db0; }
 .sidebar-btn.admin { background: linear-gradient(145deg, #ffae5e, #ff8822); box-shadow: 0 12px 0 #c2651a; }
 
-/* 小动物足迹装饰 */
 .sidebar-btn::after {
     content: "🐾";
     font-size: 18px;
@@ -120,7 +155,7 @@ body::before {
     margin-left: 6px;
 }
 
-/* 管理员卡片 · 彩虹独角兽 */
+/* 管理员卡片 */
 .admin-card {
     background: rgba(255, 251, 214, 0.8);
     backdrop-filter: blur(8px);
@@ -137,7 +172,7 @@ body::before {
 .status-approved { color: #2e7d32; font-weight: 800; background: #ccffcc; padding: 6px 14px; border-radius: 40px; display: inline-block; }
 .status-rejected { color: #b71c1c; font-weight: 800; background: #ffcdd2; padding: 6px 14px; border-radius: 40px; display: inline-block; }
 
-/* ---------- 主内容 · 云朵飘飘 ---------- */
+/* ---------- 主内容 ---------- */
 .main-content {
     flex: 1;
     display: flex;
@@ -157,7 +192,7 @@ body::before {
     z-index: 5;
 }
 
-/* 彩虹大标题 · 奶油字体 */
+/* 彩虹大标题 */
 h1 {
     font-size: 3.8em;
     margin-bottom: 8px;
@@ -196,24 +231,21 @@ h1 {
     z-index: 5;
 }
 
-/* 用户信息小卡片 - 调整层级，避免遮挡标题 */
+/* ========== 用户信息 - 统一视觉样式，统一宽度策略 ========== */
 .user-info {
-    position: absolute;
-    top: 20px;
-    right: 20px;
     display: flex;
     align-items: center;
     gap: 12px;
     background: #fef9d7;
-    padding: 10px 22px;
+    border: 5px solid #ffd166;
     border-radius: 50px;
     -webkit-border-radius: 50px;
-    border: 5px solid #ffd166;
     box-shadow: 0 10px 0 #e09f3e, 0 10px 20px rgba(255, 140, 0, 0.3);
     color: #3b1e1e;
     font-weight: 700;
     z-index: 50;
-    max-width: 300px;
+    padding: 10px 22px;
+    max-width: 90%; /* 统一使用90%最大宽度，桌面端用width限制 */
 }
 
 .user-avatar {
@@ -230,43 +262,258 @@ h1 {
     box-shadow: 0 6px 0 #b3775e;
 }
 
-/* ---------- 语言切换 · 小云朵 - 调整层级，避免遮挡侧边栏 ---------- */
-.language-switch {
-    position: fixed;
-    top: 24px;
-    left: 24px;
-    z-index: 90;
+/* ========== 桌面端：≥1024px ========== */
+@media (min-width: 1024px) {
+    h1 {
+        padding-right: 120px;
+    }
+    
+    .user-info {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        width: max-content; /* 内容自适应，不拉伸 */
+        max-width: 300px; /* 最大宽度限制 */
+    }
+    
+    .sidebar {
+        transform: translateX(0);
+    }
+    
+    .sidebar:hover {
+        transform: translateX(0) translateY(-2px);
+    }
 }
 
-.language-btn {
-    background: #fffad4;
-    border: 6px solid #ffbc7c;
-    border-radius: 60px;
-    -webkit-border-radius: 60px;
-    padding: 12px 24px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 800;
-    color: #4a2e1e;
-    box-shadow: 0 10px 0 #cb8b5a;
-    transition: all 0.1s ease;
-    font-size: 1.1em;
+/* ========== 移动端：≤1023px - 只改定位，不改样式 ========== */
+@media (max-width: 1023px) {
+    body { 
+        flex-direction: column; 
+    }
+    
+    .user-info {
+        position: static;
+        margin: 0 auto 20px auto;
+        width: fit-content; /* 内容自适应 */
+        max-width: 90%;
+    }
+    
+    h1 {
+        padding-right: 0;
+    }
+    
+    .sidebar {
+        transform: translateX(50px);
+        width: calc(100% - 70px);
+        margin: 20px 20px 20px 20px;
+    }
+    
+    .sidebar:hover {
+        transform: translateX(50px) translateY(-2px);
+    }
+    
+    .mode-selection { 
+        grid-template-columns: repeat(2, 1fr); 
+    }
 }
 
-.language-btn:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 14px 0 #b8734a;
-    background: #ffffe0;
+/* 手机横屏 & 小平板 - 递减偏移量，确保右边距 */
+@media (max-width: 768px) {
+    .game-header { 
+        grid-template-columns: repeat(2, 1fr); 
+    }
+    
+    .game-grid { 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 15px;
+        padding: 20px;
+    }
+    
+    .sidebar {
+        transform: translateX(40px);
+        width: calc(100% - 65px); /* 增加右边距 */
+        padding: 20px;
+    }
+    
+    .sidebar:hover {
+        transform: translateX(40px) translateY(-2px);
+    }
+    
+    .sidebar-btn { 
+        min-width: 140px; 
+        padding: 14px;
+    }
+    
+    .setting-group { 
+        flex-direction: column; 
+        align-items: stretch; 
+    }
+    
+    .setting-group input { 
+        width: 100%; 
+    }
+    
+    .container::after,
+    .game-grid::before {
+        display: none;
+    }
 }
 
-.language-btn:active {
-    transform: translateY(4px);
-    box-shadow: 0 6px 0 #b8734a;
+/* 手机竖屏 - 进一步递减偏移量，确保右边距至少15px */
+@media (max-width: 480px) {
+    .mode-selection { 
+        grid-template-columns: 1fr; 
+    }
+    
+    .game-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 12px;
+        padding: 16px;
+    }
+    
+    .controls { 
+        flex-direction: column; 
+        gap: 15px;
+    }
+    
+    .btn { 
+        width: 100%; 
+        justify-content: center;
+        padding: 16px 24px;
+        font-size: 1.2em;
+    }
+    
+    .profile-stats { 
+        grid-template-columns: 1fr; 
+    }
+    
+    .result-stats { 
+        grid-template-columns: 1fr; 
+    }
+    
+    .target-number { 
+        width: 70px; 
+        height: 70px; 
+        font-size: 2.2em; 
+        border-width: 6px;
+    }
+    
+    h1 { 
+        font-size: 2.2em; 
+    }
+    
+    .subtitle {
+        font-size: 1.1em;
+        padding: 10px 20px;
+    }
+    
+    .input-group { 
+        flex-direction: column; 
+        gap: 12px;
+    }
+    
+    .input-group input { 
+        width: 100%; 
+    }
+    
+    .sidebar {
+        transform: translateX(32px); /* 从35px减到32px，增加右边距 */
+        width: calc(100% - 58px); /* 从55px增加到58px，右边留白更多 */
+        padding: 16px;
+    }
+    
+    .sidebar:hover {
+        transform: translateX(32px) translateY(-2px);
+    }
+    
+    .sidebar-btn { 
+        min-width: 120px; 
+        padding: 12px;
+        font-size: 1em;
+    }
+    
+    .language-btn {
+        padding: 8px 16px;
+        font-size: 0.9em;
+        border-width: 4px;
+        box-shadow: 0 6px 0 #cb8b5a;
+    }
+    
+    .language-switch {
+        top: 10px;
+        left: 10px;
+    }
 }
 
-/* ---------- 主容器 · 奶油蛋糕层 ---------- */
+/* 超小屏（iPhone SE, 360px以下）- 极致优化右边距 */
+@media (max-width: 360px) {
+    .sidebar {
+        transform: translateX(25px); /* 从28px减到25px */
+        width: calc(100% - 50px); /* 从48px增加到50px */
+        padding: 12px;
+    }
+    
+    .sidebar:hover {
+        transform: translateX(25px) translateY(-2px);
+    }
+    
+    .sidebar-btn { 
+        min-width: 100px; 
+        padding: 10px;
+        font-size: 0.85em;
+    }
+    
+    .language-btn {
+        padding: 6px 12px;
+        font-size: 0.8em;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+    }
+    
+    .target-number {
+        width: 60px;
+        height: 60px;
+        font-size: 1.8em;
+    }
+    
+    .number-card {
+        padding: 20px 8px;
+        font-size: 2em;
+    }
+}
+
+/* 极端小屏（320px以下）- 终极保护 */
+@media (max-width: 320px) {
+    .sidebar {
+        transform: translateX(20px);
+        width: calc(100% - 45px);
+        padding: 10px;
+    }
+    
+    .sidebar:hover {
+        transform: translateX(20px) translateY(-2px);
+    }
+    
+    .sidebar-btn { 
+        min-width: 90px; 
+        padding: 8px;
+        font-size: 0.8em;
+    }
+    
+    .language-btn {
+        padding: 5px 10px;
+        font-size: 0.75em;
+        border-width: 3px;
+    }
+    
+    h1 {
+        font-size: 1.6em;
+    }
+}
+
+/* ---------- 主容器 ---------- */
 .container {
     position: relative;
     width: 100%;
@@ -288,7 +535,7 @@ h1 {
     transform: scale(1.002);
 }
 
-/* 游戏模式选择 · 曲奇饼干 */
+/* 游戏模式选择 */
 .mode-selection {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -328,7 +575,7 @@ h1 {
 .mode-btn .mode-title { font-size: 1.25em; margin-bottom: 6px; }
 .mode-btn .mode-desc { font-size: 0.9em; color: #6b4f4f; }
 
-/* 游戏设置 · 果冻区域 */
+/* 游戏设置 */
 .game-setting {
     background: rgba(255, 238, 186, 0.7);
     backdrop-filter: blur(12px);
@@ -363,7 +610,7 @@ h1 {
     box-shadow: 0 4px 0 #d49b6a;
 }
 
-/* 超级可爱的输入框 - 提高权重 */
+/* 超级可爱的输入框 */
 .setting-group input,
 .form-group input,
 .input-group input,
@@ -453,7 +700,7 @@ h1 {
     color: #2d1a1a;
 }
 
-/* 游戏头部 · 炫彩宝石 */
+/* 游戏头部 */
 .game-header {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -471,7 +718,7 @@ h1 {
 .info-label { font-size: 1em; opacity: 0.9; font-weight: 700; }
 .info-value { font-size: 2.4em; font-weight: 900; text-shadow: 4px 4px 0 rgba(255,255,200,0.6); }
 
-/* 目标和 · 超大棒棒糖 */
+/* 目标和 */
 .target-container {
     background: radial-gradient(ellipse at 30% 50%, #ffe49c, #ffb27f);
     border: 10px solid #fffced;
@@ -497,6 +744,7 @@ h1 {
     background: radial-gradient(circle at 35% 35%, #ff6b6b, #ff3b3b);
     width: 100px;
     height: 100px;
+    border-radius: 50%;
     border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
     display: flex;
     align-items: center;
@@ -514,7 +762,7 @@ h1 {
     50% { transform: translateY(-18px) rotate(3deg); }
 }
 
-/* 游戏网格 · 彩虹糖阵列 */
+/* 游戏网格 */
 .game-grid {
     position: relative;
     display: grid;
@@ -531,10 +779,11 @@ h1 {
     box-shadow: inset 0 0 0 6px #ffeac5, 0 18px 0 #e6a0b3;
 }
 
-/* 数字卡片 · 像是小蛋糕 */
+/* 数字卡片 */
 .number-card {
     background: radial-gradient(circle at 70% 30%, #ffdcb5, #ffb58a);
     border: 7px solid #fffcf0;
+    border-radius: 30px;
     border-radius: 40% 60% 40% 60% / 50% 40% 60% 50%;
     padding: 28px 8px;
     text-align: center;
@@ -578,7 +827,7 @@ h1 {
     100% { transform: scale(0); opacity: 0; }
 }
 
-/* 控制按钮 · 像大软糖 */
+/* 控制按钮 */
 .controls {
     display: flex;
     gap: 25px;
@@ -626,7 +875,7 @@ h1 {
     box-shadow: 0 16px 30px #4fa3ff;
 }
 
-/* ---------- 模态框 · 糖果城堡 ---------- */
+/* ---------- 模态框 ---------- */
 .modal {
     display: none;
     position: fixed;
@@ -705,7 +954,7 @@ h1 {
     box-shadow: 0 6px 0 #a04545;
 }
 
-/* 表格变可爱 */
+/* 表格 */
 .history-table {
     width: 100%;
     border-collapse: separate;
@@ -733,7 +982,7 @@ h1 {
     font-weight: 600;
 }
 
-/* ---------- 游戏结束弹窗 · 保留名字输入 ---------- */
+/* ---------- 游戏结束弹窗 ---------- */
 .game-over {
     display: none;
     position: fixed;
@@ -784,7 +1033,7 @@ h1 {
     box-shadow: 0 8px 0 #d49b6a;
 }
 
-/* 游戏结束输入区域 · 让孩子骄傲地输入自己的名字！ */
+/* 游戏结束输入区域 */
 .input-group {
     display: flex !important;
     gap: 15px;
@@ -825,7 +1074,7 @@ h1 {
     opacity: 0.8 !important;
 }
 
-/* 进度条 · 彩虹糖 */
+/* 进度条 */
 .progress-container {
     width: 100%;
     height: 20px;
@@ -905,7 +1154,7 @@ h1 {
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* 成就卡片 · 亮晶晶 */
+/* 成就卡片 */
 .achievements-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1017,7 +1266,7 @@ h1 {
     color: #3b2a1a; 
 }
 
-/* ---------- 登录/注册 · 让孩子输入自己的名字！ ---------- */
+/* ---------- 登录/注册 ---------- */
 .auth-form {
     display: flex;
     flex-direction: column;
@@ -1047,7 +1296,6 @@ h1 {
     text-align: center;
 }
 
-/* 登录输入框 - 权重已提高 */
 .form-group input,
 .auth-form input {
     display: block !important;
@@ -1160,126 +1408,7 @@ h1 {
     z-index: 5;
 }
 
-/* 自定义可爱光标 - 修复SVG语法 */
+/* 自定义可爱光标 */
 * {
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="%23ffb7b7" stroke="%23ffffff" stroke-width="3"/><circle cx="12" cy="12" r="3" fill="white"/><circle cx="20" cy="12" r="3" fill="white"/><circle cx="12" cy="12" r="1.5" fill="black"/><circle cx="20" cy="12" r="1.5" fill="black"/><path d="M10 20 Q16 26, 22 20" stroke="white" stroke-width="4" fill="none"/></svg>') 16 16, auto;
 }
-
-/* 响应式设计 */
-@media (max-width: 1024px) {
-    body { flex-direction: column; }
-    .sidebar {
-        width: calc(100% - 40px);
-        flex-direction: row;
-        border-radius: 60px;
-        -webkit-border-radius: 60px;
-        margin: 20px;
-        overflow-x: auto;
-        position: relative;
-        z-index: 100;
-    }
-    .sidebar-btn { min-width: 160px; }
-    .mode-selection { grid-template-columns: repeat(2, 1fr); }
-    .game-grid { grid-template-columns: repeat(4, 1fr); }
-    
-    .language-switch {
-        top: 10px;
-        left: 10px;
-        z-index: 90;
-    }
-}
-
-@media (max-width: 768px) {
-    .game-header { grid-template-columns: repeat(2, 1fr); }
-    .game-grid { grid-template-columns: repeat(3, 1fr); }
-    
-    .user-info { 
-        position: static; 
-        justify-content: center; 
-        margin-top: 20px;
-        margin-bottom: 10px;
-        margin-left: auto;
-        margin-right: auto;
-        z-index: 20;
-        max-width: 90%;
-    }
-    
-    .language-switch { 
-        top: 12px; 
-        left: 12px;
-        z-index: 90;
-    }
-    
-    h1 { 
-        font-size: 2.8em; 
-        margin-top: 10px;
-    }
-    
-    .setting-group { 
-        flex-direction: column; 
-        align-items: stretch; 
-    }
-    
-    .setting-group input { 
-        width: 100%; 
-    }
-}
-
-@media (max-width: 480px) {
-    .mode-selection { grid-template-columns: 1fr; }
-    .game-grid { grid-template-columns: repeat(2, 1fr); }
-    .controls { flex-direction: column; }
-    .btn { width: 100%; justify-content: center; }
-    .profile-stats { grid-template-columns: 1fr; }
-    .result-stats { grid-template-columns: 1fr; }
-    
-    .target-number { 
-        width: 70px; 
-        height: 70px; 
-        font-size: 2.2em; 
-        border-width: 6px;
-    }
-    
-    h1 { 
-        font-size: 2.2em; 
-    }
-    
-    .input-group { 
-        flex-direction: column; 
-    }
-    
-    .input-group input { 
-        width: 100%; 
-    }
-    
-    .sidebar {
-        z-index: 100;
-    }
-    
-    .language-switch {
-        z-index: 90;
-    }
-    
-    .user-info {
-        right: 10px;
-        padding: 8px 16px;
-        max-width: 90%;
-    }
-}
-
-/* ---------- 层级修复总结 ---------- */
-/*
-   侧边栏: z-index: 100
-   语言切换: z-index: 90 (低于侧边栏，避免遮挡按钮)
-   用户信息: z-index: 50 (降低层级，不压标题)
-   主内容: z-index: 10
-   标题: z-index: 5
-   模态框: z-index: 1000+
-   游戏结束弹窗: z-index: 2000+
-   匹配反馈: z-index: 3000
-   
-   所有层级已合理分配，不再互相遮挡！
-   所有输入框都已提高权重，确保正常显示！
-   所有浏览器兼容性已添加 -webkit- 前缀！
-   所有滚动区域已优化移动端体验！
-*/
