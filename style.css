@@ -1744,3 +1744,342 @@ td, th {
 }
 
 /* ========== 排行榜修复完成 ========== */
+
+/* ========== 色彩大爆发 - 彩虹能量注入 ========== */
+
+/* 1. 游戏模式 - 彩虹七色 */
+.mode-btn:nth-child(1) { background: linear-gradient(145deg, #ff6b6b, #ff4757); } /* 红 - 经典模式 */
+.mode-btn:nth-child(2) { background: linear-gradient(145deg, #ff9f4b, #ff8c42); } /* 橙 - 限时模式 */
+.mode-btn:nth-child(3) { background: linear-gradient(145deg, #ffd93d, #ffc312); } /* 黄 - 无尽模式 */
+.mode-btn:nth-child(4) { background: linear-gradient(145deg, #6ab04c, #4c9a2a); } /* 绿 - 挑战模式 */
+.mode-btn:nth-child(5) { background: linear-gradient(145deg, #54a0ff, #2e86de); } /* 蓝 - 双人模式 */
+.mode-btn:nth-child(6) { background: linear-gradient(145deg, #9980FA, #5758BB); } /* 紫 - 团队模式 */
+.mode-btn:nth-child(7) { background: linear-gradient(145deg, #f368e0, #ff9ff3); } /* 粉 - 节日模式 */
+.mode-btn:nth-child(8) { background: linear-gradient(145deg, #00d2d3, #01a3a4); } /* 青 - 生存模式 */
+
+/* 2. 数字卡片 - 马卡龙色系 */
+.number-card:nth-child(1) { background: radial-gradient(circle at 30% 30%, #ffb8b8, #ff8787); } /* 粉红 */
+.number-card:nth-child(2) { background: radial-gradient(circle at 30% 30%, #ffd3b8, #ffb08e); } /* 蜜桃 */
+.number-card:nth-child(3) { background: radial-gradient(circle at 30% 30%, #fff5b8, #ffe58f); } /* 香草 */
+.number-card:nth-child(4) { background: radial-gradient(circle at 30% 30%, #c8e6b8, #a5d6a5); } /* 薄荷 */
+.number-card:nth-child(5) { background: radial-gradient(circle at 30% 30%, #b8dfff, #8fc5ff); } /* 天空 */
+.number-card:nth-child(6) { background: radial-gradient(circle at 30% 30%, #d9b8ff, #c084fc); } /* 薰衣草 */
+.number-card:nth-child(7) { background: radial-gradient(circle at 30% 30%, #ffb8e6, #ff9eb5); } /* 草莓 */
+.number-card:nth-child(8) { background: radial-gradient(circle at 30% 30%, #b8ecd9, #8fd9bf); } /* 海蓝 */
+.number-card:nth-child(9) { background: radial-gradient(circle at 30% 30%, #ffe0b8, #ffcc8f); } /* 杏桃 */
+.number-card:nth-child(10) { background: radial-gradient(circle at 30% 30%, #e6c3a0, #d4a373); } /* 拿铁 */
+
+/* 3. 侧边栏按钮 - 专属色系（增强） */
+.sidebar-btn.secondary { 
+    background: linear-gradient(145deg, #74b9ff, #0984e3);
+    box-shadow: 0 12px 0 #0652DD;
+    border-color: #c8d6e5;
+}
+
+.sidebar-btn.achievement { 
+    background: linear-gradient(145deg, #f6e58d, #ffbe76);
+    box-shadow: 0 12px 0 #e67e22;
+    border-color: #fff200;
+}
+
+.sidebar-btn.wrong { 
+    background: linear-gradient(145deg, #ff7979, #eb4d4b);
+    box-shadow: 0 12px 0 #c0392b;
+    border-color: #ffcccc;
+}
+
+.sidebar-btn.profile { 
+    background: linear-gradient(145deg, #e056fd, #be2edd);
+    box-shadow: 0 12px 0 #8e44ad;
+    border-color: #f5e6ff;
+}
+
+.sidebar-btn.teacher { 
+    background: linear-gradient(145deg, #7ed6df, #22a6b3);
+    box-shadow: 0 12px 0 #1e3799;
+    border-color: #dff9fb;
+}
+
+.sidebar-btn.admin { 
+    background: linear-gradient(145deg, #ffb142, #cc8e34);
+    box-shadow: 0 12px 0 #b45f2e;
+    border-color: #ffeaa5;
+}
+
+/* 4. 游戏头部 - 彩虹流光 */
+.game-header {
+    background: linear-gradient(145deg, #ff6b6b, #ff9f4b, #ffd93d, #6ab04c, #54a0ff, #9980FA);
+    background-size: 300% 300%;
+    animation: headerRainbow 8s ease infinite;
+}
+
+@keyframes headerRainbow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 5. 目标和数字 - 多巴胺配色 */
+.target-container {
+    background: linear-gradient(145deg, #ff6b81, #ffa502, #ffd32a, #7bed9f, #70a1ff, #ff7f50);
+    background-size: 300% 300%;
+    animation: targetRainbow 6s ease infinite;
+}
+
+@keyframes targetRainbow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.target-number {
+    background: radial-gradient(circle at 30% 30%, #ff3b3b, #ff1e1e);
+    border-color: #fff5b0;
+    box-shadow: 0 16px 0 #b33939, 0 0 30px #ff6b6b;
+}
+
+/* 6. 按钮 - 渐变色增强 */
+.btn {
+    background: linear-gradient(145deg, #ffaf40, #ff7f50);
+    border-bottom-color: #cc5e3a;
+}
+
+.btn-primary {
+    background: linear-gradient(145deg, #1e90ff, #3742fa);
+    border-bottom-color: #1e3799;
+}
+
+.btn-success {
+    background: linear-gradient(145deg, #7bed9f, #26de81);
+    border-bottom-color: #20bf6b;
+}
+
+.btn-warning {
+    background: linear-gradient(145deg, #ffd32a, #ffa502);
+    border-bottom-color: #e67e22;
+}
+
+.btn-danger {
+    background: linear-gradient(145deg, #ff6b6b, #ee5a24);
+    border-bottom-color: #c0392b;
+}
+
+/* 7. 进度条 - 彩虹渐变 */
+.progress-bar {
+    background: linear-gradient(90deg, #ff6b6b, #ff9f4b, #ffd93d, #6ab04c, #54a0ff, #9980FA);
+    background-size: 300% 100%;
+    animation: progressRainbow 4s ease infinite;
+}
+
+@keyframes progressRainbow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 8. 成就卡片 - 彩虹收集 */
+.achievement-card {
+    background: linear-gradient(145deg, #fff9e6, #ffe6f0);
+    border-color: #ffb8b8;
+}
+
+.achievement-card.unlocked {
+    background: linear-gradient(145deg, #fff9b0, #ffe0b0);
+    border-color: #ffae5e;
+    box-shadow: 0 14px 0 #daa54e, 0 0 0 4px #fff5c0;
+}
+
+.achievement-card:nth-child(1) .achievement-icon { color: #ff6b6b; } /* 红 */
+.achievement-card:nth-child(2) .achievement-icon { color: #ff9f4b; } /* 橙 */
+.achievement-card:nth-child(3) .achievement-icon { color: #ffd93d; } /* 黄 */
+.achievement-card:nth-child(4) .achievement-icon { color: #6ab04c; } /* 绿 */
+.achievement-card:nth-child(5) .achievement-icon { color: #54a0ff; } /* 蓝 */
+.achievement-card:nth-child(6) .achievement-icon { color: #9980FA; } /* 紫 */
+.achievement-card:nth-child(7) .achievement-icon { color: #f368e0; } /* 粉 */
+.achievement-card:nth-child(8) .achievement-icon { color: #00d2d3; } /* 青 */
+
+/* 9. 错题本 - 温柔警示色 */
+.wrong-question-item {
+    background: linear-gradient(145deg, #fff3f3, #ffe5e5);
+    border-color: #ff9a9a;
+    border-left-color: #ff6b6b;
+}
+
+.wrong-question-item:hover {
+    background: linear-gradient(145deg, #ffe9e9, #ffdbdb);
+    border-color: #ff7e7e;
+    transform: translateX(5px);
+}
+
+/* 10. 选项卡 - 冰淇淋色系 */
+.tab-btn {
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    border-color: #dee2e6;
+    color: #495057;
+}
+
+.tab-btn:nth-child(1).active { background: linear-gradient(145deg, #ff8a8a, #ff6b6b); } /* 红 */
+.tab-btn:nth-child(2).active { background: linear-gradient(145deg, #ffb47b, #ff9f4b); } /* 橙 */
+.tab-btn:nth-child(3).active { background: linear-gradient(145deg, #ffe070, #ffd93d); } /* 黄 */
+.tab-btn:nth-child(4).active { background: linear-gradient(145deg, #8bc34a, #6ab04c); } /* 绿 */
+.tab-btn:nth-child(5).active { background: linear-gradient(145deg, #6ec8ff, #54a0ff); } /* 蓝 */
+.tab-btn:nth-child(6).active { background: linear-gradient(145deg, #b5a0ff, #9980FA); } /* 紫 */
+
+/* 11. 模态框标题 - 七彩文字 */
+.modal-title {
+    background: linear-gradient(145deg, #ff6b6b, #ff9f4b, #ffd93d, #6ab04c, #54a0ff, #9980FA);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: titleGlow 3s ease infinite;
+    text-shadow: none;
+}
+
+@keyframes titleGlow {
+    0% { filter: drop-shadow(0 0 5px rgba(255,107,107,0.5)); }
+    33% { filter: drop-shadow(0 0 5px rgba(84,160,255,0.5)); }
+    66% { filter: drop-shadow(0 0 5px rgba(153,128,250,0.5)); }
+    100% { filter: drop-shadow(0 0 5px rgba(255,107,107,0.5)); }
+}
+
+/* 12. 用户头像 - 随机彩虹 */
+.user-avatar {
+    background: radial-gradient(circle at 30% 30%, #ffb8b8, #ff8787);
+    animation: avatarColor 10s infinite;
+}
+
+@keyframes avatarColor {
+    0% { background: radial-gradient(circle at 30% 30%, #ffb8b8, #ff8787); }
+    20% { background: radial-gradient(circle at 30% 30%, #ffd3b8, #ffb08e); }
+    40% { background: radial-gradient(circle at 30% 30%, #fff5b8, #ffe58f); }
+    60% { background: radial-gradient(circle at 30% 30%, #c8e6b8, #a5d6a5); }
+    80% { background: radial-gradient(circle at 30% 30%, #b8dfff, #8fc5ff); }
+    100% { background: radial-gradient(circle at 30% 30%, #ffb8b8, #ff8787); }
+}
+
+/* 13. 匹配反馈 - 炫彩大字 */
+.match-feedback {
+    background: linear-gradient(145deg, #ff6b6b, #ff9f4b, #ffd93d, #6ab04c, #54a0ff, #9980FA);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 60px currentColor;
+    animation: feedbackGlow 1s infinite;
+}
+
+@keyframes feedbackGlow {
+    0% { text-shadow: 0 0 30px #ff6b6b, 0 0 60px #ff6b6b; }
+    25% { text-shadow: 0 0 30px #ffd93d, 0 0 60px #ffd93d; }
+    50% { text-shadow: 0 0 30px #6ab04c, 0 0 60px #6ab04c; }
+    75% { text-shadow: 0 0 30px #54a0ff, 0 0 60px #54a0ff; }
+    100% { text-shadow: 0 0 30px #9980FA, 0 0 60px #9980FA; }
+}
+
+/* 14. 游戏结束统计数字 - 彩虹文字 */
+.stat-item .stat-value {
+    background: linear-gradient(145deg, #ff6b6b, #ff9f4b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 2em;
+    font-weight: 900;
+    text-shadow: 2px 2px 0 #ffeac0;
+}
+
+.stat-item:nth-child(1) .stat-value { background: linear-gradient(145deg, #ff6b6b, #ff4757); }
+.stat-item:nth-child(2) .stat-value { background: linear-gradient(145deg, #ff9f4b, #ff8c42); }
+.stat-item:nth-child(3) .stat-value { background: linear-gradient(145deg, #ffd93d, #ffc312); }
+.stat-item:nth-child(4) .stat-value { background: linear-gradient(145deg, #6ab04c, #4c9a2a); }
+
+/* 15. 输入框 - 糖果色边框 */
+.setting-group input:focus,
+.form-group input:focus,
+.input-group input:focus,
+.auth-form input:focus {
+    border-color: #ff6b6b #ff9f4b #6ab04c #54a0ff !important;
+    border-width: 8px !important;
+    border-style: solid !important;
+}
+
+/* 16. 语言切换按钮 - 彩虹光晕 */
+.language-btn {
+    background: linear-gradient(145deg, #ffffff, #fffad4);
+    animation: languageGlow 4s infinite;
+}
+
+@keyframes languageGlow {
+    0% { box-shadow: 0 10px 0 #cb8b5a, 0 0 20px #ff6b6b; }
+    25% { box-shadow: 0 10px 0 #cb8b5a, 0 0 20px #ffd93d; }
+    50% { box-shadow: 0 10px 0 #cb8b5a, 0 0 20px #6ab04c; }
+    75% { box-shadow: 0 10px 0 #cb8b5a, 0 0 20px #54a0ff; }
+    100% { box-shadow: 0 10px 0 #cb8b5a, 0 0 20px #9980FA; }
+}
+
+/* 17. 滚动条 - 彩虹色 */
+::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+
+::-webkit-scrollbar-track {
+    background: #ffeec2;
+    border-radius: 20px;
+    border: 4px solid #ffb27f;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(145deg, #ff9f4b, #ff8c42);
+    border-radius: 20px;
+    border: 3px solid #fffbe3;
+    box-shadow: inset 0 -2px 0 #cc6b2e;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(145deg, #ffb47b, #ff9f4b);
+    transform: scale(1.1);
+}
+
+/* 18. 加载动画 - 彩虹旋转 */
+@keyframes rainbowSpin {
+    0% { transform: rotate(0deg); border-color: #ff6b6b; }
+    25% { transform: rotate(90deg); border-color: #ffd93d; }
+    50% { transform: rotate(180deg); border-color: #6ab04c; }
+    75% { transform: rotate(270deg); border-color: #54a0ff; }
+    100% { transform: rotate(360deg); border-color: #9980FA; }
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 8px solid #ffeec2;
+    border-top-color: #ff6b6b;
+    border-right-color: #ffd93d;
+    border-bottom-color: #6ab04c;
+    border-left-color: #54a0ff;
+    border-radius: 50%;
+    animation: rainbowSpin 1.2s infinite linear;
+}
+
+/* 19. 彩带装饰 - 动态小彩条 */
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(145deg, #ff6b6b, #ff4757);
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 9998;
+}
+
+/* 20. 响应式色彩保持 */
+@media (max-width: 768px) {
+    .mode-btn:nth-child(n) {
+        background-size: 200% 200%;
+    }
+    
+    .game-header {
+        background-size: 200% 200%;
+    }
+}
+
+/* ========== 色彩增强完成！现在游戏是彩虹色的了！ ========== */
