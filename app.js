@@ -12,168 +12,384 @@ const MathGame = (function() {
     const CONFIG = {
         SUPABASE_URL: 'https://ytoailyxejdgtpfwcdci.supabase.co',
         SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0b2FpbHl4ZWpkZ3RwZndjZGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NDE5NzQsImV4cCI6MjA4NTExNzk3NH0.DvvP8whiE3rW1bDh4qW2zOLTGsknfQ2Utt8wVOxZjV0',
-        ADMIN_EMAILS: ['yyssyun90@gmail.com']
+        ADMIN_EMAILS: ['yyssyun90@gmail.com'],
+        SYNC_INTERVAL: 300000, // 5分钟自动同步
+        CACHE_EXPIRY: 3600000 // 1小时缓存过期
     };
     
     // ==================== 多语言支持 ====================
     const translations = {
         zh: {
-            gameTitle: "🧮 数学加法消消乐", gameSubtitle: "教学优化版 | 支持云端同步 | 实时排行榜",
+            gameTitle: "🧮 数学加法消消乐", gameSubtitle: "教学优化版 | 云端同步 | 实时排行榜",
             history: "📝 历史记录", statistics: "📊 统计", achievements: "⭐ 成就", wrongBook: "📖 错题本",
-            leaderboard: "🏆 排行榜", profile: "👤 个人资料", modeStandard: "📚 标准模式",
-            modeStandardDesc: "完成30题，比拼用时", modeChallenge: "⚡ 挑战模式",
-            modeChallengeDesc: "90秒时间，比拼题数", modePractice: "🎯 练习模式",
-            modePracticeDesc: "无时间限制，专心学习", modeCustom: "⚙️ 自定义",
-            modeCustomDesc: "自设参数，灵活练习", numberRange: "数字范围:", rangeEasy: "0-9 (简单)",
-            rangeStandard: "0-14 (标准)", rangeChallenge: "5-18 (挑战)", startGame: "🚀 开始游戏",
-            startPractice: "🎯 开始练习", questionCount: "题目数量:", timeLimit: "时间限制(秒):",
-            scoreLabel: "得分", completedLabel: "完成题数", timeLeft: "剩余时间", timeUsed: "已用时间",
-            accuracyLabel: "正确率", targetSum: "目标和:", hintButton: "💡 提示(10秒)",
-            refreshButton: "🔄 刷新数字", endGameButton: "⏹️ 结束游戏", user: "用户", logout: "退出",
-            loginTitle: "🔐 用户登录", registerTitle: "📝 用户注册", emailLabel: "邮箱地址:",
-            emailPlaceholder: "请输入邮箱地址", passwordLabel: "密码:", passwordPlaceholder: "请输入密码",
-            usernameLabel: "用户名:", usernamePlaceholder: "请输入用户名（可选）", loginButton: "登录",
-            registerButton: "注册", noAccount: "还没有账号？", registerNow: "立即注册",
-            hasAccount: "已有账号？", loginNow: "立即登录", historyTitle: "📝 历史记录",
-            statisticsTitle: "📊 统计分析", achievementsTitle: "⭐ 成就系统", wrongbookTitle: "📖 错题本",
-            leaderboardTitle: "🏆 排行榜", profileTitle: "👤 个人资料", tableNumber: "#",
-            tableTarget: "目标", tableNum1: "数字1", tableNum2: "数字2", tableResult: "结果",
-            tableTime: "用时(秒)", clearHistory: "清空本次记录", viewAllHistory: "查看所有记录",
-            standardBoard: "📚 标准模式", challengeBoard: "⚡ 挑战模式", scoreBoard: "🏆 高分榜",
-            accuracyBoard: "🎯 准确率", myHistory: "📊 我的历史", gameCount: "游戏次数",
-            highScore: "最高得分", avgAccuracy: "平均正确率", joinDate: "注册时间",
-            syncWrongQuestions: "同步错题到云端", clearWrongQuestions: "清空本地错题",
-            backupData: "备份数据到云端", restoreData: "从云端恢复数据", finalScore: "最终得分",
-            finalCompleted: "完成题数", finalTime: "用时", finalAccuracy: "正确率",
-            playerNamePlaceholder: "请输入你的名字", saveScore: "保存成绩", playAgain: "再玩一次",
-            viewLeaderboard: "查看排行榜", viewStatistics: "查看统计", loadingStats: "加载统计信息中...",
-            languageText: "English", gameComplete: "🎉 恭喜完成30题！", gameTimeout: "⏰ 时间到！",
-            gameGiveup: "🏁 游戏结束", gameEnd: "🎉 游戏结束!",
-            // 排行榜翻译
-            rank: "排名", player: "玩家", score: "得分", accuracy: "准确率", time: "用时", date: "日期",
-            easyMode: "简单模式", standardMode: "标准模式", challengeMode: "挑战模式",
-            noData: "暂无数据", myBest: "我的最佳", globalRank: "全球排名",
+            leaderboard: "🏆 排行榜", profile: "👤 个人资料", 
+            modeStandard: "📚 挑战30", 
+            modeStandardDesc: "完成30题，比拼用时", 
+            modeChallenge: "⚡ 激情90秒",
+            modeChallengeDesc: "90秒时间，比拼题数", 
+            modePractice: "🎯 练习模式",
+            modePracticeDesc: "无时间限制，专心学习", 
+            modeCustom: "⚙️ 自定义",
+            modeCustomDesc: "自设参数，灵活练习", 
+            numberRange: "数字范围:", 
+            rangeEasy: "0-9 (简单)",
+            rangeStandard: "0-14 (标准)", 
+            rangeChallenge: "5-18 (挑战)", 
+            startGame: "🚀 开始游戏",
+            startPractice: "🎯 开始练习", 
+            questionCount: "题目数量:", 
+            timeLimit: "时间限制(秒):",
+            scoreLabel: "得分", 
+            completedLabel: "完成题数", 
+            timeLeft: "剩余时间", 
+            timeUsed: "已用时间",
+            accuracyLabel: "正确率", 
+            targetSum: "目标和:", 
+            hintButton: "💡 提示(10秒)",
+            refreshButton: "🔄 刷新数字", 
+            endGameButton: "⏹️ 结束游戏", 
+            user: "用户", 
+            logout: "退出",
+            loginTitle: "🔐 用户登录", 
+            registerTitle: "📝 用户注册", 
+            emailLabel: "邮箱地址:",
+            emailPlaceholder: "请输入邮箱地址", 
+            passwordLabel: "密码:", 
+            passwordPlaceholder: "请输入密码",
+            usernameLabel: "用户名:", 
+            usernamePlaceholder: "请输入用户名（可选）", 
+            loginButton: "登录",
+            registerButton: "注册", 
+            noAccount: "还没有账号？", 
+            registerNow: "立即注册",
+            hasAccount: "已有账号？", 
+            loginNow: "立即登录", 
+            historyTitle: "📝 历史记录",
+            statisticsTitle: "📊 统计分析", 
+            achievementsTitle: "⭐ 成就系统", 
+            wrongbookTitle: "📖 错题本",
+            leaderboardTitle: "🏆 排行榜", 
+            profileTitle: "👤 个人资料", 
+            tableNumber: "#",
+            tableTarget: "目标", 
+            tableNum1: "数字1", 
+            tableNum2: "数字2", 
+            tableResult: "结果",
+            tableTime: "用时(秒)", 
+            clearHistory: "清空本次记录", 
+            viewAllHistory: "查看所有记录",
+            
+            // ========== 云端同步相关翻译 ==========
+            cloudSync: "☁️ 云端同步",
+            syncing: "🔄 同步中...",
+            syncSuccess: "✅ 同步成功",
+            syncFailed: "❌ 同步失败",
+            lastSync: "上次同步",
+            syncNow: "立即同步",
+            autoSync: "自动同步",
+            cloudData: "云端数据",
+            localData: "本地数据",
+            mergeData: "合并数据",
+            overwriteCloud: "覆盖云端",
+            overwriteLocal: "覆盖本地",
+            dataVersion: "数据版本",
+            dataSize: "数据大小",
+            syncHistory: "同步历史",
+            
+            // ========== 排行榜全新设计 ==========
+            leaderboardEasy: "🟢 简单模式排行榜",
+            leaderboardStandard: "🟠 挑战30排行榜",
+            leaderboardChallenge: "🔴 激情90秒排行榜",
+            leaderboardEasyScore: "🏆 简单模式 - 高分榜",
+            leaderboardStandardScore: "🏆 挑战30 - 高分榜",
+            leaderboardChallengeScore: "🏆 激情90秒 - 高分榜",
+            leaderboardEasyAccuracy: "🎯 简单模式 - 准确率榜",
+            leaderboardStandardAccuracy: "🎯 挑战30 - 准确率榜",
+            leaderboardChallengeAccuracy: "🎯 激情90秒 - 准确率榜",
+            leaderboardEasySpeed: "⚡ 简单模式 - 速度榜",
+            leaderboardStandardSpeed: "⚡ 挑战30 - 速度榜",
+            leaderboardChallengeSpeed: "⚡ 激情90秒 - 速度榜",
+            
+            rank: "排名", 
+            player: "玩家", 
+            score: "得分", 
+            accuracy: "准确率", 
+            time: "用时", 
+            date: "日期",
+            easyMode: "简单模式", 
+            standardMode: "挑战30", 
+            challengeMode: "激情90秒",
+            noData: "暂无数据", 
+            myBest: "我的最佳", 
+            globalRank: "全球排名",
+            
             // 统计页面翻译
-            totalGames: "总游戏次数", totalQuestions: "总答题数", totalCorrect: "总正确数",
-            avgTimePerQuestion: "平均每题用时", bestScore: "最佳得分", bestAccuracy: "最佳正确率",
-            modeStats: "模式统计", recentGames: "最近10局",
-            // 成就系统阶梯式翻译
+            totalGames: "总游戏次数", 
+            totalQuestions: "总答题数", 
+            totalCorrect: "总正确数",
+            avgTimePerQuestion: "平均每题用时", 
+            bestScore: "最佳得分", 
+            bestAccuracy: "最佳正确率",
+            modeStats: "模式统计", 
+            recentGames: "最近10局",
+            
+            // ========== 成就系统 - 整齐排列 ==========
             achievementProgress: "成就进度",
             level: "等级",
             completed: "已完成",
             notCompleted: "未完成",
-            // 成就分类
-            categoryVictory: "🏆 胜利者",
-            categoryScore: "💯 得分王",
-            categoryAccuracy: "🎯 神枪手",
-            categorySpeed: "⚡ 闪电侠",
-            categoryPersistence: "💪 毅力帝",
-            categoryMaster: "👑 数学大师",
-            // 阶梯成就名称
-            victoryBronze: "初出茅庐",
-            victorySilver: "小试牛刀",
-            victoryGold: "常胜将军",
-            victoryPlatinum: "战神降临",
-            scoreBronze: "小有收获",
-            scoreSilver: "财富积累",
-            scoreGold: "百战百胜",
-            scorePlatinum: "分数收割机",
-            accuracyBronze: "稳扎稳打",
-            accuracySilver: "精准打击",
-            accuracyGold: "百步穿杨",
-            accuracyPlatinum: "弹无虚发",
-            speedBronze: "反应敏捷",
-            speedSilver: "风驰电掣",
-            speedGold: "光速思维",
-            speedPlatinum: "瞬间永恒",
-            persistenceBronze: "持之以恒",
-            persistenceSilver: "坚持不懈",
-            persistenceGold: "百炼成钢",
-            persistencePlatinum: "永恒传说",
-            masterBronze: "数学新秀",
-            masterSilver: "解题高手",
-            masterGold: "数学精英",
-            masterPlatinum: "数学之神"
+            
+            // 成就分类（带精美图标）
+            categoryVictory: "🏆 胜利者勋章",
+            categoryScore: "💯 得分王冠", 
+            categoryAccuracy: "🎯 神枪手徽章",
+            categorySpeed: "⚡ 闪电侠印记",
+            categoryPersistence: "💪 毅力帝荣耀",
+            categoryMaster: "👑 数学大师称号",
+            
+            // 阶梯成就名称（整齐对齐）
+            victoryBronze: "🥉 初出茅庐",
+            victorySilver: "🥈 小试牛刀",
+            victoryGold: "🥇 常胜将军",
+            victoryPlatinum: "🏆 战神降临",
+            
+            scoreBronze: "🥉 小有收获",
+            scoreSilver: "🥈 财富积累",
+            scoreGold: "🥇 百战百胜",
+            scorePlatinum: "💯 分数收割机",
+            
+            accuracyBronze: "🥉 稳扎稳打",
+            accuracySilver: "🥈 精准打击",
+            accuracyGold: "🥇 百步穿杨",
+            accuracyPlatinum: "🎯 弹无虚发",
+            
+            speedBronze: "🥉 反应敏捷",
+            speedSilver: "🥈 风驰电掣",
+            speedGold: "🥇 光速思维",
+            speedPlatinum: "⚡ 瞬间永恒",
+            
+            persistenceBronze: "🥉 持之以恒",
+            persistenceSilver: "🥈 坚持不懈",
+            persistenceGold: "🥇 百炼成钢",
+            persistencePlatinum: "💪 永恒传说",
+            
+            masterBronze: "🥉 数学新秀",
+            masterSilver: "🥈 解题高手",
+            masterGold: "🥇 数学精英",
+            masterPlatinum: "👑 数学之神",
+            
+            // 成就描述
+            victoryBronzeDesc: "完成第1局游戏",
+            victorySilverDesc: "完成10局游戏",
+            victoryGoldDesc: "完成50局游戏",
+            victoryPlatinumDesc: "完成100局游戏",
+            scoreBronzeDesc: "单局得分达到30分",
+            scoreSilverDesc: "单局得分达到50分",
+            scoreGoldDesc: "单局得分达到100分",
+            scorePlatinumDesc: "单局得分达到200分",
+            accuracyBronzeDesc: "单局准确率达到60%",
+            accuracySilverDesc: "单局准确率达到75%",
+            accuracyGoldDesc: "单局准确率达到90%",
+            accuracyPlatinumDesc: "单局准确率达到100%",
+            speedBronzeDesc: "5秒内完成一题",
+            speedSilverDesc: "3秒内完成一题",
+            speedGoldDesc: "2秒内完成一题",
+            speedPlatinumDesc: "1秒内完成一题",
+            persistenceBronzeDesc: "累计完成50题",
+            persistenceSilverDesc: "累计完成200题",
+            persistenceGoldDesc: "累计完成500题",
+            persistencePlatinumDesc: "累计完成1000题",
+            masterBronzeDesc: "解锁5个青铜级成就",
+            masterSilverDesc: "解锁5个白银级成就",
+            masterGoldDesc: "解锁3个黄金级成就",
+            masterPlatinumDesc: "解锁1个铂金级成就"
         },
         en: {
-            gameTitle: "🧮 Math Addition Match", gameSubtitle: "Educational Edition | Cloud Sync | Real-time Leaderboard",
-            history: "📝 History", statistics: "📊 Statistics", achievements: "⭐ Achievements",
-            wrongBook: "📖 Wrong Questions", leaderboard: "🏆 Leaderboard", profile: "👤 Profile",
-            modeStandard: "📚 Standard Mode", modeStandardDesc: "Complete 30 questions, compete by time",
-            modeChallenge: "⚡ Challenge Mode", modeChallengeDesc: "90 seconds, compete by question count",
-            modePractice: "🎯 Practice Mode", modePracticeDesc: "No time limit, focus on learning",
-            modeCustom: "⚙️ Custom Mode", modeCustomDesc: "Set your own parameters", numberRange: "Number Range:",
-            rangeEasy: "0-9 (Easy)", rangeStandard: "0-14 (Standard)", rangeChallenge: "5-18 (Challenge)",
-            startGame: "🚀 Start Game", startPractice: "🎯 Start Practice", questionCount: "Questions:",
-            timeLimit: "Time Limit (seconds):", scoreLabel: "Score", completedLabel: "Completed",
-            timeLeft: "Time Left", timeUsed: "Time Used", accuracyLabel: "Accuracy", targetSum: "Target Sum:",
-            hintButton: "💡 Hint (10s)", refreshButton: "🔄 Refresh Numbers", endGameButton: "⏹️ End Game",
-            user: "User", logout: "Logout", loginTitle: "🔐 User Login", registerTitle: "📝 User Registration",
-            emailLabel: "Email:", emailPlaceholder: "Enter email address", passwordLabel: "Password:",
-            passwordPlaceholder: "Enter password", usernameLabel: "Username:",
-            usernamePlaceholder: "Enter username (optional)", loginButton: "Login", registerButton: "Register",
-            noAccount: "No account?", registerNow: "Register Now", hasAccount: "Already have an account?",
-            loginNow: "Login Now", historyTitle: "📝 History Records", statisticsTitle: "📊 Statistics Analysis",
-            achievementsTitle: "⭐ Achievement System", wrongbookTitle: "📖 Wrong Questions",
-            leaderboardTitle: "🏆 Leaderboard", profileTitle: "👤 Profile", tableNumber: "#",
-            tableTarget: "Target", tableNum1: "Num1", tableNum2: "Num2", tableResult: "Result",
-            tableTime: "Time(s)", clearHistory: "Clear Current History", viewAllHistory: "View All History",
-            standardBoard: "📚 Standard Mode", challengeBoard: "⚡ Challenge Mode", scoreBoard: "🏆 High Score",
-            accuracyBoard: "🎯 Accuracy", myHistory: "📊 My History", gameCount: "Games Played",
-            highScore: "High Score", avgAccuracy: "Avg Accuracy", joinDate: "Join Date",
-            syncWrongQuestions: "Sync Wrong Questions to Cloud", clearWrongQuestions: "Clear Local Wrong Questions",
-            backupData: "Backup Data to Cloud", restoreData: "Restore Data from Cloud", finalScore: "Final Score",
-            finalCompleted: "Completed", finalTime: "Time Used", finalAccuracy: "Accuracy",
-            playerNamePlaceholder: "Enter your name", saveScore: "Save Score", playAgain: "Play Again",
-            viewLeaderboard: "View Leaderboard", viewStatistics: "View Statistics",
-            loadingStats: "Loading statistics...", languageText: "中文",
-            gameComplete: "🎉 Congratulations! Completed 30 questions!", gameTimeout: "⏰ Time's up!",
-            gameGiveup: "🏁 Game Over", gameEnd: "🎉 Game Over!",
-            // Leaderboard translations
-            rank: "Rank", player: "Player", score: "Score", accuracy: "Accuracy", time: "Time", date: "Date",
-            easyMode: "Easy Mode", standardMode: "Standard Mode", challengeMode: "Challenge Mode",
-            noData: "No Data", myBest: "My Best", globalRank: "Global Rank",
+            gameTitle: "🧮 Math Addition Match", 
+            gameSubtitle: "Educational Edition | Cloud Sync | Real-time Leaderboard",
+            history: "📝 History", 
+            statistics: "📊 Statistics", 
+            achievements: "⭐ Achievements",
+            wrongBook: "📖 Wrong Questions", 
+            leaderboard: "🏆 Leaderboard", 
+            profile: "👤 Profile",
+            modeStandard: "📚 Challenge 30", 
+            modeStandardDesc: "Complete 30 questions, compete by time",
+            modeChallenge: "⚡ Passion 90s", 
+            modeChallengeDesc: "90 seconds, compete by question count",
+            modePractice: "🎯 Practice Mode",
+            modePracticeDesc: "No time limit, focus on learning", 
+            modeCustom: "⚙️ Custom Mode",
+            modeCustomDesc: "Set your own parameters", 
+            numberRange: "Number Range:",
+            rangeEasy: "0-9 (Easy)", 
+            rangeStandard: "0-14 (Standard)", 
+            rangeChallenge: "5-18 (Challenge)",
+            startGame: "🚀 Start Game", 
+            startPractice: "🎯 Start Practice", 
+            questionCount: "Questions:",
+            timeLimit: "Time Limit (seconds):", 
+            scoreLabel: "Score", 
+            completedLabel: "Completed",
+            timeLeft: "Time Left", 
+            timeUsed: "Time Used", 
+            accuracyLabel: "Accuracy", 
+            targetSum: "Target Sum:",
+            hintButton: "💡 Hint (10s)", 
+            refreshButton: "🔄 Refresh Numbers", 
+            endGameButton: "⏹️ End Game",
+            user: "User", 
+            logout: "Logout", 
+            loginTitle: "🔐 User Login", 
+            registerTitle: "📝 User Registration",
+            emailLabel: "Email:", 
+            emailPlaceholder: "Enter email address", 
+            passwordLabel: "Password:",
+            passwordPlaceholder: "Enter password", 
+            usernameLabel: "Username:",
+            usernamePlaceholder: "Enter username (optional)", 
+            loginButton: "Login", 
+            registerButton: "Register",
+            noAccount: "No account?", 
+            registerNow: "Register Now", 
+            hasAccount: "Already have an account?",
+            loginNow: "Login Now", 
+            historyTitle: "📝 History Records", 
+            statisticsTitle: "📊 Statistics Analysis",
+            achievementsTitle: "⭐ Achievement System", 
+            wrongbookTitle: "📖 Wrong Questions",
+            leaderboardTitle: "🏆 Leaderboard", 
+            profileTitle: "👤 Profile", 
+            tableNumber: "#",
+            tableTarget: "Target", 
+            tableNum1: "Num1", 
+            tableNum2: "Num2", 
+            tableResult: "Result",
+            tableTime: "Time(s)", 
+            clearHistory: "Clear Current History", 
+            viewAllHistory: "View All History",
+            
+            // ========== Cloud Sync Translations ==========
+            cloudSync: "☁️ Cloud Sync",
+            syncing: "🔄 Syncing...",
+            syncSuccess: "✅ Sync Successful",
+            syncFailed: "❌ Sync Failed",
+            lastSync: "Last Sync",
+            syncNow: "Sync Now",
+            autoSync: "Auto Sync",
+            cloudData: "Cloud Data",
+            localData: "Local Data",
+            mergeData: "Merge Data",
+            overwriteCloud: "Overwrite Cloud",
+            overwriteLocal: "Overwrite Local",
+            dataVersion: "Data Version",
+            dataSize: "Data Size",
+            syncHistory: "Sync History",
+            
+            // ========== Leaderboard New Design ==========
+            leaderboardEasy: "🟢 Easy Mode Leaderboard",
+            leaderboardStandard: "🟠 Challenge 30 Leaderboard",
+            leaderboardChallenge: "🔴 Passion 90s Leaderboard",
+            leaderboardEasyScore: "🏆 Easy Mode - High Score",
+            leaderboardStandardScore: "🏆 Challenge 30 - High Score",
+            leaderboardChallengeScore: "🏆 Passion 90s - High Score",
+            leaderboardEasyAccuracy: "🎯 Easy Mode - Accuracy",
+            leaderboardStandardAccuracy: "🎯 Challenge 30 - Accuracy",
+            leaderboardChallengeAccuracy: "🎯 Passion 90s - Accuracy",
+            leaderboardEasySpeed: "⚡ Easy Mode - Speed",
+            leaderboardStandardSpeed: "⚡ Challenge 30 - Speed",
+            leaderboardChallengeSpeed: "⚡ Passion 90s - Speed",
+            
+            rank: "Rank", 
+            player: "Player", 
+            score: "Score", 
+            accuracy: "Accuracy", 
+            time: "Time", 
+            date: "Date",
+            easyMode: "Easy Mode", 
+            standardMode: "Challenge 30", 
+            challengeMode: "Passion 90s",
+            noData: "No Data", 
+            myBest: "My Best", 
+            globalRank: "Global Rank",
+            
             // Statistics translations
-            totalGames: "Total Games", totalQuestions: "Total Questions", totalCorrect: "Total Correct",
-            avgTimePerQuestion: "Avg Time/Question", bestScore: "Best Score", bestAccuracy: "Best Accuracy",
-            modeStats: "Mode Statistics", recentGames: "Recent 10 Games",
-            // Achievement ladder translations
+            totalGames: "Total Games", 
+            totalQuestions: "Total Questions", 
+            totalCorrect: "Total Correct",
+            avgTimePerQuestion: "Avg Time/Question", 
+            bestScore: "Best Score", 
+            bestAccuracy: "Best Accuracy",
+            modeStats: "Mode Statistics", 
+            recentGames: "Recent 10 Games",
+            
+            // ========== Achievement Ladder - Neat Layout ==========
             achievementProgress: "Achievement Progress",
             level: "Level",
             completed: "Completed",
             notCompleted: "Not Completed",
-            // Achievement categories
-            categoryVictory: "🏆 Victor",
-            categoryScore: "💯 Scorer",
-            categoryAccuracy: "🎯 Sharpshooter",
-            categorySpeed: "⚡ Speedy",
-            categoryPersistence: "💪 Persistence",
-            categoryMaster: "👑 Math Master",
-            // Ladder achievement names
-            victoryBronze: "Novice",
-            victorySilver: "Apprentice",
-            victoryGold: "Champion",
-            victoryPlatinum: "God of War",
-            scoreBronze: "Small Harvest",
-            scoreSilver: "Wealth Accumulator",
-            scoreGold: "Centurion",
-            scorePlatinum: "Score Harvester",
-            accuracyBronze: "Steady",
-            accuracySilver: "Precise Strike",
-            accuracyGold: "Bullseye",
-            accuracyPlatinum: "Never Miss",
-            speedBronze: "Quick Reflex",
-            speedSilver: "Lightning Fast",
-            speedGold: "Light Speed",
-            speedPlatinum: "Timeless",
-            persistenceBronze: "Persistent",
-            persistenceSilver: "Relentless",
-            persistenceGold: "Tempered",
-            persistencePlatinum: "Eternal Legend",
-            masterBronze: "Math Rookie",
-            masterSilver: "Problem Solver",
-            masterGold: "Math Elite",
-            masterPlatinum: "God of Math"
+            
+            categoryVictory: "🏆 Victor Medal",
+            categoryScore: "💯 Scorer Crown", 
+            categoryAccuracy: "🎯 Sharpshooter Badge",
+            categorySpeed: "⚡ Speedy Mark",
+            categoryPersistence: "💪 Persistence Glory",
+            categoryMaster: "👑 Math Master Title",
+            
+            victoryBronze: "🥉 Novice",
+            victorySilver: "🥈 Apprentice",
+            victoryGold: "🥇 Champion",
+            victoryPlatinum: "🏆 God of War",
+            
+            scoreBronze: "🥉 Small Harvest",
+            scoreSilver: "🥈 Wealth Accumulator",
+            scoreGold: "🥇 Centurion",
+            scorePlatinum: "💯 Score Harvester",
+            
+            accuracyBronze: "🥉 Steady",
+            accuracySilver: "🥈 Precise Strike",
+            accuracyGold: "🥇 Bullseye",
+            accuracyPlatinum: "🎯 Never Miss",
+            
+            speedBronze: "🥉 Quick Reflex",
+            speedSilver: "🥈 Lightning Fast",
+            speedGold: "🥇 Light Speed",
+            speedPlatinum: "⚡ Timeless",
+            
+            persistenceBronze: "🥉 Persistent",
+            persistenceSilver: "🥈 Relentless",
+            persistenceGold: "🥇 Tempered",
+            persistencePlatinum: "💪 Eternal Legend",
+            
+            masterBronze: "🥉 Math Rookie",
+            masterSilver: "🥈 Problem Solver",
+            masterGold: "🥇 Math Elite",
+            masterPlatinum: "👑 God of Math",
+            
+            victoryBronzeDesc: "Complete 1 game",
+            victorySilverDesc: "Complete 10 games",
+            victoryGoldDesc: "Complete 50 games",
+            victoryPlatinumDesc: "Complete 100 games",
+            scoreBronzeDesc: "Score 30 points in one game",
+            scoreSilverDesc: "Score 50 points in one game",
+            scoreGoldDesc: "Score 100 points in one game",
+            scorePlatinumDesc: "Score 200 points in one game",
+            accuracyBronzeDesc: "Achieve 60% accuracy",
+            accuracySilverDesc: "Achieve 75% accuracy",
+            accuracyGoldDesc: "Achieve 90% accuracy",
+            accuracyPlatinumDesc: "Achieve 100% accuracy",
+            speedBronzeDesc: "Answer within 5 seconds",
+            speedSilverDesc: "Answer within 3 seconds",
+            speedGoldDesc: "Answer within 2 seconds",
+            speedPlatinumDesc: "Answer within 1 second",
+            persistenceBronzeDesc: "Complete 50 questions total",
+            persistenceSilverDesc: "Complete 200 questions total",
+            persistenceGoldDesc: "Complete 500 questions total",
+            persistencePlatinumDesc: "Complete 1000 questions total",
+            masterBronzeDesc: "Unlock 5 Bronze achievements",
+            masterSilverDesc: "Unlock 5 Silver achievements",
+            masterGoldDesc: "Unlock 3 Gold achievements",
+            masterPlatinumDesc: "Unlock 1 Platinum achievement"
         }
     };
     
@@ -200,8 +416,19 @@ const MathGame = (function() {
     let isAdminUser = false;
     let isSupabaseReady = false;
     
+    // ==================== 云端同步状态 ====================
+    let syncState = {
+        lastSyncTime: null,
+        isSyncing: false,
+        syncHistory: [],
+        dataVersion: '1.0.0',
+        pendingChanges: false
+    };
+    
+    // 自动同步定时器
+    let autoSyncTimer = null;
+    
     // ==================== 阶梯式成就系统 ====================
-    // 成就等级定义
     const ACHIEVEMENT_LEVELS = {
         BRONZE: 1,
         SILVER: 2,
@@ -209,7 +436,6 @@ const MathGame = (function() {
         PLATINUM: 4
     };
     
-    // 成就类别
     const ACHIEVEMENT_CATEGORIES = {
         VICTORY: 'victory',
         SCORE: 'score',
@@ -219,16 +445,22 @@ const MathGame = (function() {
         MASTER: 'master'
     };
     
+    // 成就分类顺序（用于整齐排列）
+    const CATEGORY_ORDER = ['victory', 'score', 'accuracy', 'speed', 'persistence', 'master'];
+    const CATEGORY_ICONS = { victory: '🏆', score: '💯', accuracy: '🎯', speed: '⚡', persistence: '💪', master: '👑' };
+    const LEVEL_ICONS = { 1: '🥉', 2: '🥈', 3: '🥇', 4: '🏆' };
+    const LEVEL_COLORS = { 1: '#CD7F32', 2: '#C0C0C0', 3: '#FFD700', 4: '#E5E4E2' };
+    
     // 完整阶梯式成就定义
     const LADDER_ACHIEVEMENTS = [
-        // ========== 胜利成就 - 完成游戏次数 ==========
+        // ========== 胜利成就 ==========
         {
             id: 'victory_bronze',
             category: 'victory',
             level: 1,
             icon: '🥉',
-            name: { zh: '初出茅庐', en: 'Novice' },
-            desc: { zh: '完成第1局游戏', en: 'Complete 1 game' },
+            nameKey: 'victoryBronze',
+            descKey: 'victoryBronzeDesc',
             requirement: { type: 'games_completed', value: 1 },
             reward: { score: 10 }
         },
@@ -237,8 +469,8 @@ const MathGame = (function() {
             category: 'victory',
             level: 2,
             icon: '🥈',
-            name: { zh: '小试牛刀', en: 'Apprentice' },
-            desc: { zh: '完成10局游戏', en: 'Complete 10 games' },
+            nameKey: 'victorySilver',
+            descKey: 'victorySilverDesc',
             requirement: { type: 'games_completed', value: 10 },
             reward: { score: 50 }
         },
@@ -247,8 +479,8 @@ const MathGame = (function() {
             category: 'victory',
             level: 3,
             icon: '🥇',
-            name: { zh: '常胜将军', en: 'Champion' },
-            desc: { zh: '完成50局游戏', en: 'Complete 50 games' },
+            nameKey: 'victoryGold',
+            descKey: 'victoryGoldDesc',
             requirement: { type: 'games_completed', value: 50 },
             reward: { score: 200 }
         },
@@ -257,20 +489,20 @@ const MathGame = (function() {
             category: 'victory',
             level: 4,
             icon: '🏆',
-            name: { zh: '战神降临', en: 'God of War' },
-            desc: { zh: '完成100局游戏', en: 'Complete 100 games' },
+            nameKey: 'victoryPlatinum',
+            descKey: 'victoryPlatinumDesc',
             requirement: { type: 'games_completed', value: 100 },
             reward: { score: 500 }
         },
         
-        // ========== 得分成就 - 单局最高得分 ==========
+        // ========== 得分成就 ==========
         {
             id: 'score_bronze',
             category: 'score',
             level: 1,
-            icon: '💵',
-            name: { zh: '小有收获', en: 'Small Harvest' },
-            desc: { zh: '单局得分达到30分', en: 'Score 30 points in one game' },
+            icon: '🥉',
+            nameKey: 'scoreBronze',
+            descKey: 'scoreBronzeDesc',
             requirement: { type: 'best_score', value: 30 },
             reward: { score: 20 }
         },
@@ -278,9 +510,9 @@ const MathGame = (function() {
             id: 'score_silver',
             category: 'score',
             level: 2,
-            icon: '💰',
-            name: { zh: '财富积累', en: 'Wealth Accumulator' },
-            desc: { zh: '单局得分达到50分', en: 'Score 50 points in one game' },
+            icon: '🥈',
+            nameKey: 'scoreSilver',
+            descKey: 'scoreSilverDesc',
             requirement: { type: 'best_score', value: 50 },
             reward: { score: 50 }
         },
@@ -288,9 +520,9 @@ const MathGame = (function() {
             id: 'score_gold',
             category: 'score',
             level: 3,
-            icon: '💎',
-            name: { zh: '百战百胜', en: 'Centurion' },
-            desc: { zh: '单局得分达到100分', en: 'Score 100 points in one game' },
+            icon: '🥇',
+            nameKey: 'scoreGold',
+            descKey: 'scoreGoldDesc',
             requirement: { type: 'best_score', value: 100 },
             reward: { score: 150 }
         },
@@ -299,20 +531,20 @@ const MathGame = (function() {
             category: 'score',
             level: 4,
             icon: '💯',
-            name: { zh: '分数收割机', en: 'Score Harvester' },
-            desc: { zh: '单局得分达到200分', en: 'Score 200 points in one game' },
+            nameKey: 'scorePlatinum',
+            descKey: 'scorePlatinumDesc',
             requirement: { type: 'best_score', value: 200 },
             reward: { score: 300 }
         },
         
-        // ========== 准确率成就 - 单局最高准确率 ==========
+        // ========== 准确率成就 ==========
         {
             id: 'accuracy_bronze',
             category: 'accuracy',
             level: 1,
-            icon: '🎯',
-            name: { zh: '稳扎稳打', en: 'Steady' },
-            desc: { zh: '单局准确率达到60%', en: 'Achieve 60% accuracy in one game' },
+            icon: '🥉',
+            nameKey: 'accuracyBronze',
+            descKey: 'accuracyBronzeDesc',
             requirement: { type: 'best_accuracy', value: 60 },
             reward: { score: 15 }
         },
@@ -320,9 +552,9 @@ const MathGame = (function() {
             id: 'accuracy_silver',
             category: 'accuracy',
             level: 2,
-            icon: '🎯',
-            name: { zh: '精准打击', en: 'Precise Strike' },
-            desc: { zh: '单局准确率达到75%', en: 'Achieve 75% accuracy in one game' },
+            icon: '🥈',
+            nameKey: 'accuracySilver',
+            descKey: 'accuracySilverDesc',
             requirement: { type: 'best_accuracy', value: 75 },
             reward: { score: 30 }
         },
@@ -330,9 +562,9 @@ const MathGame = (function() {
             id: 'accuracy_gold',
             category: 'accuracy',
             level: 3,
-            icon: '🎯',
-            name: { zh: '百步穿杨', en: 'Bullseye' },
-            desc: { zh: '单局准确率达到90%', en: 'Achieve 90% accuracy in one game' },
+            icon: '🥇',
+            nameKey: 'accuracyGold',
+            descKey: 'accuracyGoldDesc',
             requirement: { type: 'best_accuracy', value: 90 },
             reward: { score: 100 }
         },
@@ -341,20 +573,20 @@ const MathGame = (function() {
             category: 'accuracy',
             level: 4,
             icon: '🎯',
-            name: { zh: '弹无虚发', en: 'Never Miss' },
-            desc: { zh: '单局准确率达到100%', en: 'Achieve 100% accuracy in one game' },
+            nameKey: 'accuracyPlatinum',
+            descKey: 'accuracyPlatinumDesc',
             requirement: { type: 'best_accuracy', value: 100 },
             reward: { score: 200 }
         },
         
-        // ========== 速度成就 - 最快答题时间 ==========
+        // ========== 速度成就 ==========
         {
             id: 'speed_bronze',
             category: 'speed',
             level: 1,
-            icon: '⚡',
-            name: { zh: '反应敏捷', en: 'Quick Reflex' },
-            desc: { zh: '5秒内完成一题', en: 'Complete a question within 5 seconds' },
+            icon: '🥉',
+            nameKey: 'speedBronze',
+            descKey: 'speedBronzeDesc',
             requirement: { type: 'fastest_answer', value: 5 },
             reward: { score: 20 }
         },
@@ -362,9 +594,9 @@ const MathGame = (function() {
             id: 'speed_silver',
             category: 'speed',
             level: 2,
-            icon: '⚡',
-            name: { zh: '风驰电掣', en: 'Lightning Fast' },
-            desc: { zh: '3秒内完成一题', en: 'Complete a question within 3 seconds' },
+            icon: '🥈',
+            nameKey: 'speedSilver',
+            descKey: 'speedSilverDesc',
             requirement: { type: 'fastest_answer', value: 3 },
             reward: { score: 50 }
         },
@@ -372,9 +604,9 @@ const MathGame = (function() {
             id: 'speed_gold',
             category: 'speed',
             level: 3,
-            icon: '⚡',
-            name: { zh: '光速思维', en: 'Light Speed' },
-            desc: { zh: '2秒内完成一题', en: 'Complete a question within 2 seconds' },
+            icon: '🥇',
+            nameKey: 'speedGold',
+            descKey: 'speedGoldDesc',
             requirement: { type: 'fastest_answer', value: 2 },
             reward: { score: 150 }
         },
@@ -383,20 +615,20 @@ const MathGame = (function() {
             category: 'speed',
             level: 4,
             icon: '⚡',
-            name: { zh: '瞬间永恒', en: 'Timeless' },
-            desc: { zh: '1秒内完成一题', en: 'Complete a question within 1 second' },
+            nameKey: 'speedPlatinum',
+            descKey: 'speedPlatinumDesc',
             requirement: { type: 'fastest_answer', value: 1 },
             reward: { score: 300 }
         },
         
-        // ========== 毅力成就 - 总答题数量 ==========
+        // ========== 毅力成就 ==========
         {
             id: 'persistence_bronze',
             category: 'persistence',
             level: 1,
-            icon: '💪',
-            name: { zh: '持之以恒', en: 'Persistent' },
-            desc: { zh: '累计完成50题', en: 'Complete 50 questions in total' },
+            icon: '🥉',
+            nameKey: 'persistenceBronze',
+            descKey: 'persistenceBronzeDesc',
             requirement: { type: 'total_questions', value: 50 },
             reward: { score: 30 }
         },
@@ -404,9 +636,9 @@ const MathGame = (function() {
             id: 'persistence_silver',
             category: 'persistence',
             level: 2,
-            icon: '💪',
-            name: { zh: '坚持不懈', en: 'Relentless' },
-            desc: { zh: '累计完成200题', en: 'Complete 200 questions in total' },
+            icon: '🥈',
+            nameKey: 'persistenceSilver',
+            descKey: 'persistenceSilverDesc',
             requirement: { type: 'total_questions', value: 200 },
             reward: { score: 100 }
         },
@@ -414,9 +646,9 @@ const MathGame = (function() {
             id: 'persistence_gold',
             category: 'persistence',
             level: 3,
-            icon: '💪',
-            name: { zh: '百炼成钢', en: 'Tempered' },
-            desc: { zh: '累计完成500题', en: 'Complete 500 questions in total' },
+            icon: '🥇',
+            nameKey: 'persistenceGold',
+            descKey: 'persistenceGoldDesc',
             requirement: { type: 'total_questions', value: 500 },
             reward: { score: 300 }
         },
@@ -425,20 +657,20 @@ const MathGame = (function() {
             category: 'persistence',
             level: 4,
             icon: '💪',
-            name: { zh: '永恒传说', en: 'Eternal Legend' },
-            desc: { zh: '累计完成1000题', en: 'Complete 1000 questions in total' },
+            nameKey: 'persistencePlatinum',
+            descKey: 'persistencePlatinumDesc',
             requirement: { type: 'total_questions', value: 1000 },
             reward: { score: 600 }
         },
         
-        // ========== 大师成就 - 综合能力 ==========
+        // ========== 大师成就 ==========
         {
             id: 'master_bronze',
             category: 'master',
             level: 1,
-            icon: '👨‍🎓',
-            name: { zh: '数学新秀', en: 'Math Rookie' },
-            desc: { zh: '解锁5个青铜级成就', en: 'Unlock 5 Bronze achievements' },
+            icon: '🥉',
+            nameKey: 'masterBronze',
+            descKey: 'masterBronzeDesc',
             requirement: { type: 'bronze_count', value: 5 },
             reward: { score: 100 }
         },
@@ -446,9 +678,9 @@ const MathGame = (function() {
             id: 'master_silver',
             category: 'master',
             level: 2,
-            icon: '👨‍🏫',
-            name: { zh: '解题高手', en: 'Problem Solver' },
-            desc: { zh: '解锁5个白银级成就', en: 'Unlock 5 Silver achievements' },
+            icon: '🥈',
+            nameKey: 'masterSilver',
+            descKey: 'masterSilverDesc',
             requirement: { type: 'silver_count', value: 5 },
             reward: { score: 250 }
         },
@@ -456,9 +688,9 @@ const MathGame = (function() {
             id: 'master_gold',
             category: 'master',
             level: 3,
-            icon: '👨‍🔬',
-            name: { zh: '数学精英', en: 'Math Elite' },
-            desc: { zh: '解锁3个黄金级成就', en: 'Unlock 3 Gold achievements' },
+            icon: '🥇',
+            nameKey: 'masterGold',
+            descKey: 'masterGoldDesc',
             requirement: { type: 'gold_count', value: 3 },
             reward: { score: 500 }
         },
@@ -466,16 +698,16 @@ const MathGame = (function() {
             id: 'master_platinum',
             category: 'master',
             level: 4,
-            icon: '🧙',
-            name: { zh: '数学之神', en: 'God of Math' },
-            desc: { zh: '解锁1个铂金级成就', en: 'Unlock 1 Platinum achievement' },
+            icon: '👑',
+            nameKey: 'masterPlatinum',
+            descKey: 'masterPlatinumDesc',
             requirement: { type: 'platinum_count', value: 1 },
             reward: { score: 1000 }
         }
     ];
     
     // 成就状态存储
-    let achievementStates = new Map(); // 成就ID -> { unlocked: boolean, progress: number, unlockedAt: string }
+    let achievementStates = new Map();
     let playerStats = {
         gamesCompleted: 0,
         bestScore: 0,
@@ -484,7 +716,6 @@ const MathGame = (function() {
         totalQuestions: 0,
         totalCorrect: 0,
         totalAttempts: 0,
-        // 成就计数
         bronzeCount: 0,
         silverCount: 0,
         goldCount: 0,
@@ -495,18 +726,42 @@ const MathGame = (function() {
     let lastAnswerTime = null;
     let currentFastestAnswer = 999;
     
-    // 游戏配置
+    // 游戏配置 - 更新模式名称
     const MODE_CONFIG = {
-        standard: { questions: 30, time: null, hasTimeLimit: false, leaderboardType: 'standard' },
-        challenge: { questions: null, time: 90, hasTimeLimit: true, leaderboardType: 'challenge' },
-        practice: { questions: null, time: null, hasTimeLimit: false, leaderboardType: null },
-        custom: { questions: 20, time: 60, hasTimeLimit: true, leaderboardType: null }
+        standard: { 
+            questions: 30, 
+            time: null, 
+            hasTimeLimit: false, 
+            leaderboardType: 'standard',
+            displayName: '挑战30'
+        },
+        challenge: { 
+            questions: null, 
+            time: 90, 
+            hasTimeLimit: true, 
+            leaderboardType: 'challenge',
+            displayName: '激情90秒'
+        },
+        practice: { 
+            questions: null, 
+            time: null, 
+            hasTimeLimit: false, 
+            leaderboardType: null,
+            displayName: '练习模式'
+        },
+        custom: { 
+            questions: 20, 
+            time: 60, 
+            hasTimeLimit: true, 
+            leaderboardType: null,
+            displayName: '自定义'
+        }
     };
     
     const RANGE_CONFIG = {
-        '0-9': { min: 0, max: 9, targetMin: 5, targetMax: 10, leaderboardType: 'easy' },
-        '0-14': { min: 0, max: 14, targetMin: 6, targetMax: 14, leaderboardType: 'standard' },
-        '5-18': { min: 5, max: 18, targetMin: 8, targetMax: 18, leaderboardType: 'challenge' }
+        '0-9': { min: 0, max: 9, targetMin: 5, targetMax: 10, leaderboardType: 'easy', displayName: '简单模式' },
+        '0-14': { min: 0, max: 14, targetMin: 6, targetMax: 14, leaderboardType: 'standard', displayName: '挑战30' },
+        '5-18': { min: 5, max: 18, targetMin: 8, targetMax: 18, leaderboardType: 'challenge', displayName: '激情90秒' }
     };
     
     // ==================== 工具函数 ====================
@@ -582,44 +837,270 @@ const MathGame = (function() {
         return array;
     }
     
-    // ==================== 检查数字组合函数 ====================
-    function hasValidCombination(targetSum, cards) {
-        if (!cards || cards.length < 2) return false;
-        
-        const numbers = cards.map(card => parseInt(card.dataset.value));
-        
-        for (let i = 0; i < numbers.length; i++) {
-            for (let j = i + 1; j < numbers.length; j++) {
-                if (numbers[i] + numbers[j] === targetSum) {
-                    return true;
-                }
+    // ==================== 云端同步核心功能 ====================
+    
+    /**
+     * 初始化云端同步
+     */
+    function initCloudSync() {
+        try {
+            // 加载同步状态
+            const savedSyncState = localStorage.getItem('mathGameSyncState');
+            if (savedSyncState) {
+                syncState = JSON.parse(savedSyncState);
             }
+            
+            // 启动自动同步定时器
+            startAutoSync();
+            
+            console.log('云端同步初始化完成', syncState);
+        } catch (error) {
+            console.error('初始化云端同步失败:', error);
         }
-        return false;
     }
     
-    function checkAndAutoRefresh() {
-        if (!gameActive) return;
+    /**
+     * 启动自动同步
+     */
+    function startAutoSync() {
+        if (autoSyncTimer) {
+            clearInterval(autoSyncTimer);
+        }
         
-        const remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
-        if (!hasValidCombination(currentTarget, remainingCards)) {
-            showMessage(currentLanguage === 'zh' ? '没有匹配的组合，自动刷新数字！' : 'No matching combinations, refreshing numbers!', 'info');
-            setTimeout(() => {
-                refreshNumbers();
-            }, 500);
+        autoSyncTimer = setInterval(() => {
+            if (currentUser && isSupabaseReady && !syncState.isSyncing) {
+                console.log('自动同步触发');
+                performFullSync();
+            }
+        }, CONFIG.SYNC_INTERVAL);
+    }
+    
+    /**
+     * 停止自动同步
+     */
+    function stopAutoSync() {
+        if (autoSyncTimer) {
+            clearInterval(autoSyncTimer);
+            autoSyncTimer = null;
         }
     }
     
-    // ==================== 阶梯式成就系统核心函数 ====================
+    /**
+     * 保存同步状态
+     */
+    function saveSyncState() {
+        try {
+            syncState.lastSyncTime = new Date().toISOString();
+            localStorage.setItem('mathGameSyncState', JSON.stringify(syncState));
+        } catch (error) {
+            console.error('保存同步状态失败:', error);
+        }
+    }
+    
+    /**
+     * 记录同步历史
+     */
+    function addSyncHistory(type, status, details = '') {
+        syncState.syncHistory.unshift({
+            timestamp: new Date().toISOString(),
+            type: type,
+            status: status,
+            details: details
+        });
+        
+        // 只保留最近20条记录
+        if (syncState.syncHistory.length > 20) {
+            syncState.syncHistory = syncState.syncHistory.slice(0, 20);
+        }
+        
+        saveSyncState();
+    }
+    
+    /**
+     * 执行完整同步（所有数据类型）
+     */
+    async function performFullSync() {
+        if (!currentUser) {
+            showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
+            return false;
+        }
+        
+        if (!isSupabaseReady || !supabase) {
+            showMessage(currentLanguage === 'zh' ? '云端服务未就绪' : 'Cloud service not ready', 'error');
+            return false;
+        }
+        
+        if (syncState.isSyncing) {
+            showMessage(currentLanguage === 'zh' ? '正在同步中...' : 'Syncing...', 'info');
+            return false;
+        }
+        
+        try {
+            syncState.isSyncing = true;
+            showMessage(currentLanguage === 'zh' ? '🔄 开始云端同步...' : '🔄 Starting cloud sync...', 'info');
+            
+            // 同步成就数据
+            await syncAchievementsToCloud();
+            
+            // 同步错题数据
+            await syncAllWrongQuestionsToCloud();
+            
+            // 同步游戏成绩
+            await syncGameScoresToCloud();
+            
+            // 从云端加载最新数据
+            await loadAchievementsFromCloud();
+            await loadWrongQuestionsFromCloud();
+            await loadUserStats();
+            
+            syncState.isSyncing = false;
+            syncState.pendingChanges = false;
+            saveSyncState();
+            
+            addSyncHistory('full', 'success', '所有数据同步成功');
+            showMessage(currentLanguage === 'zh' ? '✅ 云端同步完成' : '✅ Cloud sync completed', 'success');
+            
+            return true;
+            
+        } catch (error) {
+            console.error('完整同步失败:', error);
+            syncState.isSyncing = false;
+            addSyncHistory('full', 'failed', error.message);
+            showMessage(currentLanguage === 'zh' ? '❌ 同步失败: ' + error.message : '❌ Sync failed: ' + error.message, 'error');
+            return false;
+        }
+    }
+    
+    /**
+     * 同步游戏成绩到云端
+     */
+    async function syncGameScoresToCloud() {
+        try {
+            if (!currentUser || !supabase) return false;
+            
+            // 获取本地未同步的成绩
+            const localScores = localStorage.getItem(`mathGameScores_${currentUser.id}_pending`);
+            if (localScores) {
+                const pendingScores = JSON.parse(localScores);
+                
+                for (const score of pendingScores) {
+                    await supabase
+                        .from('game_scores')
+                        .insert([score]);
+                }
+                
+                localStorage.removeItem(`mathGameScores_${currentUser.id}_pending`);
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('同步游戏成绩失败:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * 获取数据同步状态
+     */
+    function getSyncStatus() {
+        return {
+            isSyncing: syncState.isSyncing,
+            lastSyncTime: syncState.lastSyncTime,
+            pendingChanges: syncState.pendingChanges,
+            syncHistory: syncState.syncHistory
+        };
+    }
+    
+    /**
+     * 显示同步状态面板
+     */
+    function showSyncStatus() {
+        try {
+            const syncModal = document.getElementById('sync-modal');
+            if (!syncModal) return;
+            
+            const syncContent = document.getElementById('sync-content');
+            if (!syncContent) return;
+            
+            const lastSync = syncState.lastSyncTime 
+                ? new Date(syncState.lastSyncTime).toLocaleString() 
+                : (currentLanguage === 'zh' ? '从未同步' : 'Never synced');
+            
+            let historyHtml = '';
+            syncState.syncHistory.forEach(record => {
+                const date = new Date(record.timestamp).toLocaleString();
+                const statusIcon = record.status === 'success' ? '✅' : '❌';
+                historyHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #f0f0f0;">
+                        <span>${statusIcon} ${record.type}</span>
+                        <span style="color: ${record.status === 'success' ? '#4CAF50' : '#ff4444'};">${record.status}</span>
+                        <span style="color: #999; font-size: 0.85em;">${date}</span>
+                    </div>
+                `;
+            });
+            
+            syncContent.innerHTML = `
+                <div style="padding: 20px;">
+                    <h3 style="color: #4CAF50; margin-bottom: 20px;">☁️ ${translations[currentLanguage].cloudSync}</h3>
+                    
+                    <div style="background: #f8f9fa; border-radius: 15px; padding: 20px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span style="color: #666;">${translations[currentLanguage].lastSync}</span>
+                            <span style="font-weight: bold;">${lastSync}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span style="color: #666;">${translations[currentLanguage].dataVersion}</span>
+                            <span style="font-weight: bold;">${syncState.dataVersion}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #666;">${translations[currentLanguage].pendingChanges}</span>
+                            <span style="font-weight: bold; color: ${syncState.pendingChanges ? '#FF9800' : '#4CAF50'};">
+                                ${syncState.pendingChanges ? (currentLanguage === 'zh' ? '有' : 'Yes') : (currentLanguage === 'zh' ? '无' : 'No')}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button id="sync-now-btn" style="flex: 1; background: #4CAF50; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer;">
+                            🔄 ${translations[currentLanguage].syncNow}
+                        </button>
+                        <button id="close-sync-modal" style="flex: 1; background: #6c757d; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer;">
+                            ✕ ${currentLanguage === 'zh' ? '关闭' : 'Close'}
+                        </button>
+                    </div>
+                    
+                    <h4 style="margin-bottom: 15px;">📋 ${translations[currentLanguage].syncHistory}</h4>
+                    <div style="max-height: 300px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 10px; padding: 10px;">
+                        ${historyHtml || `<div style="text-align: center; padding: 20px; color: #999;">${currentLanguage === 'zh' ? '暂无同步历史' : 'No sync history'}</div>`}
+                    </div>
+                </div>
+            `;
+            
+            syncModal.style.display = 'flex';
+            
+            // 绑定事件
+            document.getElementById('sync-now-btn')?.addEventListener('click', async () => {
+                await performFullSync();
+                showSyncStatus(); // 刷新状态
+            });
+            
+            document.getElementById('close-sync-modal')?.addEventListener('click', () => {
+                syncModal.style.display = 'none';
+            });
+            
+        } catch (error) {
+            console.error('显示同步状态失败:', error);
+        }
+    }
+    
+    // ==================== 成就系统核心函数 ====================
     function loadAchievements() {
         try {
-            // 加载成就状态
             const savedStates = localStorage.getItem('mathGameAchievementStates');
             if (savedStates) {
                 const parsed = JSON.parse(savedStates);
                 achievementStates = new Map(Object.entries(parsed));
             } else {
-                // 初始化成就状态
                 LADDER_ACHIEVEMENTS.forEach(ach => {
                     achievementStates.set(ach.id, {
                         unlocked: false,
@@ -629,13 +1110,11 @@ const MathGame = (function() {
                 });
             }
             
-            // 加载玩家统计
             const savedStats = localStorage.getItem('mathGamePlayerStats');
             if (savedStats) {
                 playerStats = JSON.parse(savedStats);
             }
             
-            // 加载云端数据（如果已登录）
             if (currentUser && isSupabaseReady) {
                 setTimeout(() => {
                     loadAchievementsFromCloud();
@@ -644,7 +1123,6 @@ const MathGame = (function() {
             
         } catch (error) {
             console.error('加载成就失败:', error);
-            // 初始化默认状态
             LADDER_ACHIEVEMENTS.forEach(ach => {
                 achievementStates.set(ach.id, {
                     unlocked: false,
@@ -657,7 +1135,6 @@ const MathGame = (function() {
     
     function saveAchievements() {
         try {
-            // 转换Map为对象
             const statesObject = {};
             achievementStates.forEach((value, key) => {
                 statesObject[key] = value;
@@ -666,7 +1143,9 @@ const MathGame = (function() {
             localStorage.setItem('mathGameAchievementStates', JSON.stringify(statesObject));
             localStorage.setItem('mathGamePlayerStats', JSON.stringify(playerStats));
             
-            // 同步到云端
+            syncState.pendingChanges = true;
+            saveSyncState();
+            
             if (currentUser && isSupabaseReady) {
                 setTimeout(() => {
                     syncAchievementsToCloud();
@@ -680,7 +1159,7 @@ const MathGame = (function() {
     
     async function syncAchievementsToCloud() {
         try {
-            if (!currentUser || !isSupabaseReady || !supabase) return;
+            if (!currentUser || !isSupabaseReady || !supabase) return false;
             
             const statesObject = {};
             achievementStates.forEach((value, key) => {
@@ -692,10 +1171,10 @@ const MathGame = (function() {
                 email: currentUser.email,
                 achievement_states: statesObject,
                 player_stats: playerStats,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                version: syncState.dataVersion
             };
             
-            // 检查是否存在记录
             const { data: existingData } = await supabase
                 .from('player_achievements')
                 .select('id')
@@ -703,26 +1182,29 @@ const MathGame = (function() {
                 .limit(1);
             
             if (existingData && existingData.length > 0) {
-                // 更新
                 await supabase
                     .from('player_achievements')
                     .update(achievementData)
                     .eq('user_id', currentUser.id);
             } else {
-                // 插入
                 await supabase
                     .from('player_achievements')
                     .insert([achievementData]);
             }
             
+            addSyncHistory('achievements', 'success', '成就数据同步成功');
+            return true;
+            
         } catch (error) {
             console.error('同步成就到云端失败:', error);
+            addSyncHistory('achievements', 'failed', error.message);
+            return false;
         }
     }
     
     async function loadAchievementsFromCloud() {
         try {
-            if (!currentUser || !isSupabaseReady || !supabase) return;
+            if (!currentUser || !isSupabaseReady || !supabase) return false;
             
             const { data, error } = await supabase
                 .from('player_achievements')
@@ -732,23 +1214,20 @@ const MathGame = (function() {
             
             if (error) {
                 console.error('从云端加载成就失败:', error);
-                return;
+                return false;
             }
             
             if (data && data.length > 0) {
                 const cloudData = data[0];
                 
-                // 合并成就状态
                 if (cloudData.achievement_states) {
                     Object.entries(cloudData.achievement_states).forEach(([key, value]) => {
                         if (achievementStates.has(key)) {
                             const local = achievementStates.get(key);
-                            // 如果云端已解锁且本地未解锁，则同步云端状态
+                            // 智能合并：如果云端已解锁且本地未解锁，或者云端进度更大，则采用云端数据
                             if (value.unlocked && !local.unlocked) {
                                 achievementStates.set(key, value);
-                            }
-                            // 合并进度，取最大值
-                            if (value.progress > local.progress) {
+                            } else if (value.progress > local.progress) {
                                 local.progress = value.progress;
                                 achievementStates.set(key, local);
                             }
@@ -756,7 +1235,6 @@ const MathGame = (function() {
                     });
                 }
                 
-                // 合并玩家统计，取最大值
                 if (cloudData.player_stats) {
                     playerStats.gamesCompleted = Math.max(playerStats.gamesCompleted, cloudData.player_stats.gamesCompleted || 0);
                     playerStats.bestScore = Math.max(playerStats.bestScore, cloudData.player_stats.bestScore || 0);
@@ -767,44 +1245,44 @@ const MathGame = (function() {
                     playerStats.totalAttempts = Math.max(playerStats.totalAttempts, cloudData.player_stats.totalAttempts || 0);
                 }
                 
-                // 重新计算成就计数
                 updateAchievementCounts();
                 saveAchievements();
+                
+                addSyncHistory('achievements', 'success', '从云端加载成就成功');
+                return true;
             }
+            
+            return false;
             
         } catch (error) {
             console.error('从云端加载成就异常:', error);
+            addSyncHistory('achievements', 'failed', error.message);
+            return false;
         }
     }
     
     function updatePlayerStats() {
-        // 更新游戏次数
         playerStats.gamesCompleted++;
         
-        // 更新最佳得分
         if (score > playerStats.bestScore) {
             playerStats.bestScore = score;
         }
         
-        // 更新最佳准确率
         const currentAccuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
         if (currentAccuracy > playerStats.bestAccuracy) {
             playerStats.bestAccuracy = currentAccuracy;
         }
         
-        // 更新最快答题速度
         if (currentFastestAnswer < playerStats.fastestAnswer) {
             playerStats.fastestAnswer = currentFastestAnswer;
         }
         
-        // 更新总答题数和正确数
         playerStats.totalQuestions += completedQuestions;
         playerStats.totalCorrect += correctCount;
         playerStats.totalAttempts += totalAttempts;
     }
     
     function updateAchievementCounts() {
-        // 重新计算各等级成就数量
         playerStats.bronzeCount = 0;
         playerStats.silverCount = 0;
         playerStats.goldCount = 0;
@@ -823,7 +1301,7 @@ const MathGame = (function() {
         });
     }
     
-    function checkAchievementRequirement(achievement, progress) {
+    function checkAchievementRequirement(achievement) {
         switch(achievement.requirement.type) {
             case 'games_completed':
                 return playerStats.gamesCompleted >= achievement.requirement.value;
@@ -857,7 +1335,6 @@ const MathGame = (function() {
             case 'best_accuracy':
                 return Math.min(playerStats.bestAccuracy, achievement.requirement.value);
             case 'fastest_answer':
-                // 最快时间，数值越小越好
                 return playerStats.fastestAnswer <= achievement.requirement.value 
                     ? achievement.requirement.value 
                     : Math.max(0, achievement.requirement.value - (playerStats.fastestAnswer - achievement.requirement.value));
@@ -884,18 +1361,15 @@ const MathGame = (function() {
             if (!state || !state.unlocked) {
                 const isUnlocked = checkAchievementRequirement(ach);
                 if (isUnlocked) {
-                    // 解锁成就
                     achievementStates.set(ach.id, {
                         unlocked: true,
                         progress: 100,
                         unlockedAt: new Date().toISOString()
                     });
                     
-                    // 显示成就解锁动画
                     showAchievementUnlock(ach);
                     unlockedCount++;
                 } else {
-                    // 更新进度
                     const progress = getAchievementProgress(ach);
                     const total = ach.requirement.value;
                     const progressPercent = Math.round((progress / total) * 100);
@@ -909,11 +1383,9 @@ const MathGame = (function() {
         });
         
         if (unlockedCount > 0) {
-            // 重新计算成就计数
             updateAchievementCounts();
             saveAchievements();
             
-            // 检查大师成就（可能需要递归解锁）
             setTimeout(() => {
                 checkAndUnlockAchievements();
             }, 100);
@@ -936,27 +1408,22 @@ const MathGame = (function() {
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             animation: achievementPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-align: center;
-            min-width: 300px;
+            min-width: 320px;
         `;
-        
-        const levelIcon = achievement.level === 1 ? '🥉' : 
-                         achievement.level === 2 ? '🥈' : 
-                         achievement.level === 3 ? '🥇' : '🏆';
         
         unlockDiv.innerHTML = `
             <div style="font-size: 4em; margin-bottom: 15px;">${achievement.icon}</div>
             <div style="font-size: 1.8em; font-weight: bold; margin-bottom: 10px;">🎉 成就解锁!</div>
-            <div style="font-size: 1.4em; font-weight: bold; margin-bottom: 5px;">${achievement.name[currentLanguage]}</div>
-            <div style="font-size: 1em; opacity: 0.9; margin-bottom: 15px;">${achievement.desc[currentLanguage]}</div>
+            <div style="font-size: 1.4em; font-weight: bold; margin-bottom: 5px;">${translations[currentLanguage][achievement.nameKey]}</div>
+            <div style="font-size: 1em; opacity: 0.9; margin-bottom: 15px;">${translations[currentLanguage][achievement.descKey]}</div>
             <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px;">${levelIcon} ${currentLanguage === 'zh' ? '等级' : 'Level'} ${achievement.level}</span>
+                <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px;">${LEVEL_ICONS[achievement.level]} ${translations[currentLanguage].level} ${achievement.level}</span>
                 <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px;">+${achievement.reward.score} ${currentLanguage === 'zh' ? '分' : 'pts'}</span>
             </div>
         `;
         
         document.body.appendChild(unlockDiv);
         
-        // 添加动画样式
         const style = document.createElement('style');
         style.textContent = `
             @keyframes achievementPop {
@@ -982,14 +1449,13 @@ const MathGame = (function() {
         }, 3000);
     }
     
-    // ==================== 成就展示界面 ====================
+    // ==================== 成就展示界面（整齐排列）====================
     function showAchievements() {
         try {
             loadAchievements();
             
             const container = document.getElementById('achievements-grid');
             const achievementsModal = document.getElementById('achievements-modal');
-            const statsContainer = document.getElementById('achievement-stats');
             
             if (!container || !achievementsModal) return;
             
@@ -1004,121 +1470,121 @@ const MathGame = (function() {
                 categorizedAchievements[ach.category].push(ach);
             });
             
-            // 排序成就（按等级）
-            Object.keys(categorizedAchievements).forEach(category => {
-                categorizedAchievements[category].sort((a, b) => a.level - b.level);
+            // 每个类别内按等级排序
+            CATEGORY_ORDER.forEach(category => {
+                if (categorizedAchievements[category]) {
+                    categorizedAchievements[category].sort((a, b) => a.level - b.level);
+                }
             });
             
-            // 添加玩家统计概览
+            // 计算成就进度
             const totalAchievements = LADDER_ACHIEVEMENTS.length;
             let unlockedCount = 0;
             achievementStates.forEach(state => {
                 if (state.unlocked) unlockedCount++;
             });
             
+            // 顶部进度条
             const statsHtml = `
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 20px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span style="font-size: 1.3em; font-weight: bold;">${translations[currentLanguage].achievementProgress}</span>
-                        <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px;">${unlockedCount}/${totalAchievements}</span>
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 25px; margin-bottom: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span style="font-size: 1.5em; font-weight: bold;">⭐ ${translations[currentLanguage].achievementProgress}</span>
+                        <span style="background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 25px; font-size: 1.1em;">
+                            ${unlockedCount}/${totalAchievements}
+                        </span>
                     </div>
-                    <div style="background: rgba(255,255,255,0.2); border-radius: 10px; height: 10px; overflow: hidden; margin-top: 5px;">
-                        <div style="width: ${(unlockedCount/totalAchievements)*100}%; background: #FFD700; height: 100%; border-radius: 10px; transition: width 0.3s ease;"></div>
+                    <div style="background: rgba(255,255,255,0.3); border-radius: 15px; height: 12px; overflow: hidden; margin-bottom: 20px;">
+                        <div style="width: ${(unlockedCount/totalAchievements)*100}%; background: #FFD700; height: 100%; border-radius: 15px; transition: width 0.3s ease;"></div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 15px; gap: 10px;">
-                        <div style="text-align: center; flex:1;">
-                            <div style="font-size: 1.5em;">🥉</div>
-                            <div style="font-size: 0.9em;">${playerStats.bronzeCount}</div>
+                    <div style="display: flex; justify-content: space-around; gap: 15px;">
+                        <div style="text-align: center; flex:1; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px;">
+                            <div style="font-size: 1.8em;">🥉</div>
+                            <div style="font-size: 1.2em; font-weight: bold;">${playerStats.bronzeCount}</div>
+                            <div style="font-size: 0.85em; opacity: 0.9;">青铜</div>
                         </div>
-                        <div style="text-align: center; flex:1;">
-                            <div style="font-size: 1.5em;">🥈</div>
-                            <div style="font-size: 0.9em;">${playerStats.silverCount}</div>
+                        <div style="text-align: center; flex:1; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px;">
+                            <div style="font-size: 1.8em;">🥈</div>
+                            <div style="font-size: 1.2em; font-weight: bold;">${playerStats.silverCount}</div>
+                            <div style="font-size: 0.85em; opacity: 0.9;">白银</div>
                         </div>
-                        <div style="text-align: center; flex:1;">
-                            <div style="font-size: 1.5em;">🥇</div>
-                            <div style="font-size: 0.9em;">${playerStats.goldCount}</div>
+                        <div style="text-align: center; flex:1; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px;">
+                            <div style="font-size: 1.8em;">🥇</div>
+                            <div style="font-size: 1.2em; font-weight: bold;">${playerStats.goldCount}</div>
+                            <div style="font-size: 0.85em; opacity: 0.9;">黄金</div>
                         </div>
-                        <div style="text-align: center; flex:1;">
-                            <div style="font-size: 1.5em;">🏆</div>
-                            <div style="font-size: 0.9em;">${playerStats.platinumCount}</div>
+                        <div style="text-align: center; flex:1; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px;">
+                            <div style="font-size: 1.8em;">🏆</div>
+                            <div style="font-size: 1.2em; font-weight: bold;">${playerStats.platinumCount}</div>
+                            <div style="font-size: 0.85em; opacity: 0.9;">铂金</div>
                         </div>
                     </div>
                 </div>
             `;
             
-            // 生成成就卡片
-            let achievementsHtml = '';
+            // 生成成就卡片 - 使用网格布局，每行4个，完全对齐
+            let achievementsHtml = '<div style="display: flex; flex-direction: column; gap: 30px;">';
             
-            // 成就类别顺序
-            const categoryOrder = [
-                'victory', 'score', 'accuracy', 'speed', 'persistence', 'master'
-            ];
-            
-            categoryOrder.forEach(category => {
+            CATEGORY_ORDER.forEach(category => {
                 const achievements = categorizedAchievements[category];
                 if (!achievements || achievements.length === 0) return;
                 
-                // 类别标题
-                let categoryTitle = '';
-                let categoryIcon = '';
-                switch(category) {
-                    case 'victory': categoryTitle = translations[currentLanguage].categoryVictory; categoryIcon = '🏆'; break;
-                    case 'score': categoryTitle = translations[currentLanguage].categoryScore; categoryIcon = '💯'; break;
-                    case 'accuracy': categoryTitle = translations[currentLanguage].categoryAccuracy; categoryIcon = '🎯'; break;
-                    case 'speed': categoryTitle = translations[currentLanguage].categorySpeed; categoryIcon = '⚡'; break;
-                    case 'persistence': categoryTitle = translations[currentLanguage].categoryPersistence; categoryIcon = '💪'; break;
-                    case 'master': categoryTitle = translations[currentLanguage].categoryMaster; categoryIcon = '👑'; break;
-                }
-                
+                // 类别标题 - 带背景色
                 achievementsHtml += `
-                    <div style="margin-bottom: 25px;">
-                        <h4 style="display: flex; align-items: center; color: #333; margin-bottom: 15px;">
-                            <span style="font-size: 1.8em; margin-right: 10px;">${categoryIcon}</span>
-                            ${categoryTitle}
+                    <div style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <h4 style="display: flex; align-items: center; margin-top: 0; margin-bottom: 20px; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
+                            <span style="font-size: 2em; margin-right: 12px;">${CATEGORY_ICONS[category]}</span>
+                            <span style="font-size: 1.3em; font-weight: bold;">${translations[currentLanguage]['category' + category.charAt(0).toUpperCase() + category.slice(1)]}</span>
                         </h4>
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
                 `;
                 
                 achievements.forEach(ach => {
                     const state = achievementStates.get(ach.id);
                     const isUnlocked = state && state.unlocked;
                     const progress = state ? state.progress : 0;
-                    
-                    const levelColor = ach.level === 1 ? '#CD7F32' : 
-                                      ach.level === 2 ? '#C0C0C0' : 
-                                      ach.level === 3 ? '#FFD700' : '#E5E4E2';
+                    const levelColor = LEVEL_COLORS[ach.level];
                     
                     achievementsHtml += `
-                        <div style="background: ${isUnlocked ? 'linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%)' : 'white'}; 
-                                    border: 2px solid ${isUnlocked ? levelColor : '#e0e0e0'};
-                                    border-radius: 15px; padding: 15px; text-align: center;
-                                    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-                                    opacity: ${isUnlocked ? 1 : 0.7};
+                        <div style="background: ${isUnlocked ? 'linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%)' : '#ffffff'}; 
+                                    border: 2px solid ${isUnlocked ? levelColor : '#e9ecef'};
+                                    border-radius: 16px; 
+                                    padding: 20px 15px; 
+                                    text-align: center;
+                                    box-shadow: ${isUnlocked ? '0 8px 20px rgba(0,0,0,0.08)' : '0 4px 10px rgba(0,0,0,0.03)'};
+                                    opacity: ${isUnlocked ? 1 : 0.8};
                                     transition: all 0.3s ease;
                                     position: relative;
-                                    cursor: pointer;"
-                             onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)';"
-                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.05)';">
-                            <div style="font-size: 2.5em; margin-bottom: 5px;">${ach.icon}</div>
-                            <div style="font-weight: bold; color: ${levelColor}; font-size: 0.9em; margin-bottom: 5px;">
-                                ${ach.level === 1 ? '🥉' : ach.level === 2 ? '🥈' : ach.level === 3 ? '🥇' : '🏆'} 
-                                ${translations[currentLanguage].level} ${ach.level}
+                                    display: flex;
+                                    flex-direction: column;
+                                    height: 100%;"
+                             onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 25px rgba(0,0,0,0.12)';"
+                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='${isUnlocked ? '0 8px 20px rgba(0,0,0,0.08)' : '0 4px 10px rgba(0,0,0,0.03)'}';">
+                            
+                            <div style="font-size: 2.8em; margin-bottom: 10px;">${ach.icon}</div>
+                            
+                            <div style="font-weight: bold; color: ${levelColor}; font-size: 0.9em; margin-bottom: 8px; background: ${levelColor}20; padding: 4px 10px; border-radius: 20px; display: inline-block; align-self: center;">
+                                ${LEVEL_ICONS[ach.level]} ${translations[currentLanguage].level} ${ach.level}
                             </div>
-                            <div style="font-weight: bold; color: #333; margin-bottom: 5px; font-size: 1em;">
-                                ${ach.name[currentLanguage]}
+                            
+                            <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px; font-size: 1.1em;">
+                                ${translations[currentLanguage][ach.nameKey]}
                             </div>
-                            <div style="color: #666; font-size: 0.8em; margin-bottom: 10px;">
-                                ${ach.desc[currentLanguage]}
+                            
+                            <div style="color: #6c757d; font-size: 0.85em; margin-bottom: 15px; line-height: 1.4; flex-grow: 1;">
+                                ${translations[currentLanguage][ach.descKey]}
                             </div>
-                            <div style="background: #f0f0f0; border-radius: 10px; height: 6px; overflow: hidden; margin-bottom: 5px;">
-                                <div style="width: ${progress}%; background: ${levelColor}; height: 100%; border-radius: 10px;"></div>
+                            
+                            <div style="background: #f1f3f5; border-radius: 12px; height: 8px; overflow: hidden; margin-bottom: 8px;">
+                                <div style="width: ${progress}%; background: ${levelColor}; height: 100%; border-radius: 12px; transition: width 0.3s ease;"></div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; color: #666; font-size: 0.75em;">
-                                <span>${isUnlocked ? '✓' : progress + '%'}</span>
-                                <span>+${ach.reward.score}</span>
+                            
+                            <div style="display: flex; justify-content: space-between; color: #6c757d; font-size: 0.8em; margin-top: 5px;">
+                                <span>${isUnlocked ? '✓ ' + (currentLanguage === 'zh' ? '已解锁' : 'Unlocked') : progress + '%'}</span>
+                                <span style="color: ${levelColor};">+${ach.reward.score}</span>
                             </div>
+                            
                             ${isUnlocked ? `
-                                <div style="position: absolute; top: -8px; right: -8px; background: #4CAF50; color: white; width: 24px; height: 24px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                <div style="position: absolute; top: -8px; right: -8px; background: #4CAF50; color: white; width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 0.9em; box-shadow: 0 4px 8px rgba(76,175,80,0.3);">
                                     ✓
                                 </div>
                             ` : ''}
@@ -1126,12 +1592,21 @@ const MathGame = (function() {
                     `;
                 });
                 
+                // 补齐空位（如果该类别不足4个成就）
+                const remaining = 4 - (achievements.length % 4);
+                if (remaining < 4) {
+                    for (let i = 0; i < remaining; i++) {
+                        achievementsHtml += `<div style="visibility: hidden;"></div>`;
+                    }
+                }
+                
                 achievementsHtml += `
                         </div>
                     </div>
                 `;
             });
             
+            achievementsHtml += '</div>';
             container.innerHTML = statsHtml + achievementsHtml;
             achievementsModal.style.display = 'flex';
             
@@ -1187,11 +1662,23 @@ const MathGame = (function() {
                 updateUserInfo();
                 
                 // 加载云端数据
-                setTimeout(() => {
-                    loadAchievementsFromCloud();
-                    loadWrongQuestionsFromCloud();
-                    loadUserStats();
-                    loadUserScores();
+                setTimeout(async () => {
+                    await loadAchievementsFromCloud();
+                    await loadWrongQuestionsFromCloud();
+                    await loadUserStats();
+                    await loadUserScores();
+                    
+                    // 执行一次完整同步
+                    if (syncState.lastSyncTime) {
+                        const lastSync = new Date(syncState.lastSyncTime);
+                        const now = new Date();
+                        // 如果上次同步超过30分钟，自动同步
+                        if (now - lastSync > 30 * 60 * 1000) {
+                            performFullSync();
+                        }
+                    } else {
+                        performFullSync();
+                    }
                 }, 1000);
                 
                 return true;
@@ -1318,6 +1805,11 @@ const MathGame = (function() {
         try {
             if (!isSupabaseReady || !supabase) return;
             
+            // 退出前同步一次
+            if (currentUser && syncState.pendingChanges) {
+                await performFullSync();
+            }
+            
             const { error } = await supabase.auth.signOut();
             
             if (error) {
@@ -1352,6 +1844,7 @@ const MathGame = (function() {
             const userName = document.getElementById('user-name');
             const teacherToolsBtn = document.getElementById('teacher-tools-btn');
             const adminToolsBtn = document.getElementById('admin-tools-btn');
+            const syncStatusBtn = document.getElementById('sync-status-btn');
             
             if (!userInfo || !userAvatar || !userName) return;
             
@@ -1362,6 +1855,18 @@ const MathGame = (function() {
             
             const username = currentUser.user_metadata?.username || email.split('@')[0];
             userName.textContent = username;
+            
+            // 显示同步状态按钮
+            if (syncStatusBtn) {
+                syncStatusBtn.style.display = 'flex';
+                if (syncState.pendingChanges) {
+                    syncStatusBtn.innerHTML = '☁️ ⚠️';
+                    syncStatusBtn.title = currentLanguage === 'zh' ? '有待同步的数据' : 'Pending changes';
+                } else {
+                    syncStatusBtn.innerHTML = '☁️ ✓';
+                    syncStatusBtn.title = currentLanguage === 'zh' ? '已同步' : 'Synced';
+                }
+            }
             
             if (teacherToolsBtn) {
                 const userRole = currentUser.user_metadata?.role;
@@ -1688,7 +2193,6 @@ const MathGame = (function() {
         const sum = num1 + num2;
         const isCorrect = sum === currentTarget;
         
-        // 记录答题时间
         if (lastAnswerTime) {
             const answerTime = (new Date() - lastAnswerTime) / 1000;
             if (answerTime < currentFastestAnswer) {
@@ -1761,8 +2265,7 @@ const MathGame = (function() {
             }
         }
         
-        // 检查成就
-        checkAndTriggerAchievements();
+        checkAndUnlockAchievements();
     }
     
     function showFeedback(text, type) {
@@ -1838,6 +2341,33 @@ const MathGame = (function() {
         setTimeout(checkAndAutoRefresh, 300);
     }
     
+    function hasValidCombination(targetSum, cards) {
+        if (!cards || cards.length < 2) return false;
+        
+        const numbers = cards.map(card => parseInt(card.dataset.value));
+        
+        for (let i = 0; i < numbers.length; i++) {
+            for (let j = i + 1; j < numbers.length; j++) {
+                if (numbers[i] + numbers[j] === targetSum) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    function checkAndAutoRefresh() {
+        if (!gameActive) return;
+        
+        const remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
+        if (!hasValidCombination(currentTarget, remainingCards)) {
+            showMessage(currentLanguage === 'zh' ? '没有匹配的组合，自动刷新数字！' : 'No matching combinations, refreshing numbers!', 'info');
+            setTimeout(() => {
+                refreshNumbers();
+            }, 500);
+        }
+    }
+    
     // ==================== 游戏结束与成就更新 ====================
     async function endGame(reason) {
         if (!gameActive) return;
@@ -1884,42 +2414,58 @@ const MathGame = (function() {
         const gameOverElement = document.getElementById('game-over');
         if (gameOverElement) gameOverElement.style.display = 'flex';
         
-        // 更新玩家统计
         updatePlayerStats();
-        
-        // 检查成就解锁
         checkAndUnlockAchievements();
-        
-        // 保存成就
         saveAchievements();
         
-        // 保存成绩到云端
         if (currentUser && isSupabaseReady) {
             await saveGameScoreToCloud(score, completedQuestions, accuracy, elapsedTime);
         }
         
-        // 更新用户统计
         if (currentUser) {
             await updateUserStats();
         }
         
-        // 同步错题
         if (currentUser && wrongQuestions.length > 0) {
             setTimeout(() => {
                 syncAllWrongQuestionsToCloud();
             }, 2000);
         }
-    }
-    
-    function checkAndTriggerAchievements() {
-        // 这个方法现在由 checkAndUnlockAchievements 替代
-        // 保留作为兼容
+        
+        // 标记有待同步的数据
+        syncState.pendingChanges = true;
+        saveSyncState();
+        updateUserInfo();
     }
     
     // ==================== 成绩云端存储 ====================
     async function saveGameScoreToCloud(gameScore, questionsCompleted, gameAccuracy, timeUsed) {
         try {
             if (!currentUser || !isSupabaseReady || !supabase) {
+                // 保存到待同步队列
+                const pendingScore = {
+                    user_id: currentUser?.id,
+                    email: currentUser?.email,
+                    username: currentUser?.user_metadata?.username || currentUser?.email?.split('@')[0] || '匿名玩家',
+                    mode: currentMode,
+                    range: document.getElementById('number-range')?.value || '0-14',
+                    leaderboard_type: RANGE_CONFIG[document.getElementById('number-range')?.value || '0-14']?.leaderboardType,
+                    score: gameScore,
+                    questions_completed: questionsCompleted,
+                    total_attempts: totalAttempts,
+                    correct_count: correctCount,
+                    accuracy: gameAccuracy,
+                    time_used: timeUsed,
+                    created_at: new Date().toISOString()
+                };
+                
+                const pendingScores = JSON.parse(localStorage.getItem(`mathGameScores_${currentUser.id}_pending`) || '[]');
+                pendingScores.push(pendingScore);
+                localStorage.setItem(`mathGameScores_${currentUser.id}_pending`, JSON.stringify(pendingScores));
+                
+                syncState.pendingChanges = true;
+                saveSyncState();
+                
                 return false;
             }
             
@@ -1959,6 +2505,8 @@ const MathGame = (function() {
             }
             
             console.log('成绩保存到云端成功');
+            syncState.pendingChanges = true;
+            saveSyncState();
             return true;
             
         } catch (error) {
@@ -1974,11 +2522,12 @@ const MathGame = (function() {
                 return null;
             }
             
+            // 尝试从缓存加载
             const localStats = localStorage.getItem(`mathGameStats_${currentUser.id}`);
             if (localStats) {
                 try {
                     const stats = JSON.parse(localStats);
-                    if (stats.timestamp && (Date.now() - stats.timestamp) < 3600000) {
+                    if (stats.timestamp && (Date.now() - stats.timestamp) < CONFIG.CACHE_EXPIRY) {
                         return stats;
                     }
                 } catch (e) {}
@@ -2057,6 +2606,8 @@ const MathGame = (function() {
     function saveWrongQuestions() {
         try {
             localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
+            syncState.pendingChanges = true;
+            saveSyncState();
         } catch (error) {
             console.error('保存错题失败:', error);
         }
@@ -2097,7 +2648,6 @@ const MathGame = (function() {
         }
     }
     
-    // ==================== 云端错题同步功能 ====================
     async function syncWrongQuestionToCloud(num1, num2, wrongSum, correctSum) {
         try {
             if (!currentUser || !isSupabaseReady || !supabase) {
@@ -2111,45 +2661,31 @@ const MathGame = (function() {
                 num2: num2,
                 wrong_sum: wrongSum,
                 correct_sum: correctSum,
-                timestamp: new Date().toISOString()
+                count: 1,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
             };
             
-            const { data: existingData, error: checkError } = await supabase
+            const { data: existingData } = await supabase
                 .from('wrong_questions')
-                .select('*')
+                .select('id, count')
                 .eq('user_id', currentUser.id)
                 .eq('num1', num1)
                 .eq('num2', num2)
                 .limit(1);
             
-            if (checkError) {
-                console.error('检查错题存在失败:', checkError);
-                return false;
-            }
-            
             if (existingData && existingData.length > 0) {
-                const { error } = await supabase
+                await supabase
                     .from('wrong_questions')
                     .update({
                         count: (existingData[0].count || 1) + 1,
-                        timestamp: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', existingData[0].id);
-                
-                if (error) {
-                    console.error('更新云端错题失败:', error);
-                    return false;
-                }
             } else {
-                const { error } = await supabase
+                await supabase
                     .from('wrong_questions')
                     .insert([wrongQuestionData]);
-                
-                if (error) {
-                    console.error('插入云端错题失败:', error);
-                    return false;
-                }
             }
             
             return true;
@@ -2175,7 +2711,6 @@ const MathGame = (function() {
             loadWrongQuestions();
             
             if (wrongQuestions.length === 0) {
-                showMessage(currentLanguage === 'zh' ? '没有错题需要同步' : 'No wrong questions to sync', 'info');
                 return false;
             }
             
@@ -2211,32 +2746,12 @@ const MathGame = (function() {
                 }
             }
             
-            if (failCount === 0) {
-                showMessage(
-                    currentLanguage === 'zh' 
-                        ? `✅ 成功同步 ${successCount} 条错题到云端` 
-                        : `✅ Successfully synced ${successCount} wrong questions to cloud`,
-                    'success'
-                );
-            } else {
-                showMessage(
-                    currentLanguage === 'zh' 
-                        ? `⚠️ 同步完成：${successCount} 条成功，${failCount} 条失败` 
-                        : `⚠️ Sync completed: ${successCount} succeeded, ${failCount} failed`,
-                    'warning'
-                );
-            }
-            
             localStorage.setItem('mathGameWrongQuestionsLastSync', new Date().toISOString());
             
             return successCount > 0;
             
         } catch (error) {
             console.error('批量同步错题失败:', error);
-            showMessage(
-                currentLanguage === 'zh' ? '同步失败' : 'Sync failed',
-                'error'
-            );
             return false;
         } finally {
             const syncBtn = document.getElementById('sync-wrong-questions-btn');
@@ -2257,7 +2772,7 @@ const MathGame = (function() {
                 .from('wrong_questions')
                 .select('*')
                 .eq('user_id', currentUser.id)
-                .order('timestamp', { ascending: false });
+                .order('created_at', { ascending: false });
             
             if (error) {
                 console.error('从云端加载错题失败:', error);
@@ -2274,7 +2789,7 @@ const MathGame = (function() {
                 wrongSum: item.wrong_sum,
                 correctSum: item.correct_sum,
                 count: item.count || 1,
-                timestamp: item.timestamp || item.created_at
+                timestamp: item.created_at
             }));
             
             loadWrongQuestions();
@@ -2772,8 +3287,8 @@ const MathGame = (function() {
         };
     }
     
-    // ==================== 排行榜功能 ====================
-    async function loadLeaderboardData(type = 'standard', limit = 20) {
+    // ==================== 排行榜功能 - 3个模式 × 3个榜单 ====================
+    async function loadLeaderboardData(type = 'easy', sortBy = 'score', limit = 10) {
         try {
             if (!isSupabaseReady || !supabase) {
                 return [];
@@ -2782,9 +3297,17 @@ const MathGame = (function() {
             let query = supabase
                 .from('game_scores')
                 .select('*')
-                .eq('leaderboard_type', type)
-                .order('score', { ascending: false })
-                .limit(limit);
+                .eq('leaderboard_type', type);
+            
+            if (sortBy === 'score') {
+                query = query.order('score', { ascending: false });
+            } else if (sortBy === 'accuracy') {
+                query = query.order('accuracy', { ascending: false });
+            } else if (sortBy === 'time') {
+                query = query.order('time_used', { ascending: true });
+            }
+            
+            query = query.order('created_at', { ascending: false }).limit(limit);
             
             const { data, error } = await query;
             
@@ -2801,13 +3324,13 @@ const MathGame = (function() {
         }
     }
     
-    async function loadUserBestScore(type) {
+    async function loadUserBestInMode(type) {
         try {
             if (!currentUser || !isSupabaseReady || !supabase) {
                 return null;
             }
             
-            const { data, error } = await supabase
+            const { data: bestScore } = await supabase
                 .from('game_scores')
                 .select('*')
                 .eq('user_id', currentUser.id)
@@ -2815,15 +3338,30 @@ const MathGame = (function() {
                 .order('score', { ascending: false })
                 .limit(1);
             
-            if (error) {
-                console.error('加载用户最佳成绩失败:', error);
-                return null;
-            }
+            const { data: bestAccuracy } = await supabase
+                .from('game_scores')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('leaderboard_type', type)
+                .order('accuracy', { ascending: false })
+                .limit(1);
             
-            return data && data.length > 0 ? data[0] : null;
+            const { data: bestTime } = await supabase
+                .from('game_scores')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('leaderboard_type', type)
+                .order('time_used', { ascending: true })
+                .limit(1);
+            
+            return {
+                bestScore: bestScore && bestScore.length > 0 ? bestScore[0] : null,
+                bestAccuracy: bestAccuracy && bestAccuracy.length > 0 ? bestAccuracy[0] : null,
+                bestTime: bestTime && bestTime.length > 0 ? bestTime[0] : null
+            };
             
         } catch (error) {
-            console.error('加载用户最佳成绩异常:', error);
+            console.error('加载用户最佳成绩失败:', error);
             return null;
         }
     }
@@ -2868,117 +3406,103 @@ const MathGame = (function() {
             leaderboardContent.innerHTML = `<div style="text-align:center;padding:30px;">${translations[currentLanguage].loadingStats}</div>`;
             leaderboardModal.style.display = 'flex';
             
-            const [easyScores, standardScores, challengeScores] = await Promise.all([
-                loadLeaderboardData('easy', 10),
-                loadLeaderboardData('standard', 10),
-                loadLeaderboardData('challenge', 10)
+            const [easyScore, easyAccuracy, easySpeed,
+                   standardScore, standardAccuracy, standardSpeed,
+                   challengeScore, challengeAccuracy, challengeSpeed] = await Promise.all([
+                loadLeaderboardData('easy', 'score', 10),
+                loadLeaderboardData('easy', 'accuracy', 10),
+                loadLeaderboardData('easy', 'time', 10),
+                loadLeaderboardData('standard', 'score', 10),
+                loadLeaderboardData('standard', 'accuracy', 10),
+                loadLeaderboardData('standard', 'time', 10),
+                loadLeaderboardData('challenge', 'score', 10),
+                loadLeaderboardData('challenge', 'accuracy', 10),
+                loadLeaderboardData('challenge', 'time', 10)
             ]);
             
-            let userEasyBest = null;
-            let userStandardBest = null;
-            let userChallengeBest = null;
+            let userEasy = null;
+            let userStandard = null;
+            let userChallenge = null;
             
             if (currentUser) {
-                [userEasyBest, userStandardBest, userChallengeBest] = await Promise.all([
-                    loadUserBestScore('easy'),
-                    loadUserBestScore('standard'),
-                    loadUserBestScore('challenge')
+                [userEasy, userStandard, userChallenge] = await Promise.all([
+                    loadUserBestInMode('easy'),
+                    loadUserBestInMode('standard'),
+                    loadUserBestInMode('challenge')
                 ]);
             }
             
             let html = `
                 <div style="padding: 20px;">
-                    <h3 style="color: #4CAF50; margin-bottom: 20px;">${translations[currentLanguage].leaderboardTitle}</h3>
-                    
-                    <div style="display: flex; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px;">
-                        <button class="leaderboard-tab active" data-type="easy" style="flex:1; padding: 12px; background: none; border: none; border-bottom: 3px solid #8BC34A; font-weight: bold; color: #333; cursor: pointer; transition: all 0.3s;">
-                            🟢 ${translations[currentLanguage].easyMode}
-                        </button>
-                        <button class="leaderboard-tab" data-type="standard" style="flex:1; padding: 12px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; transition: all 0.3s;">
-                            🟠 ${translations[currentLanguage].standardMode}
-                        </button>
-                        <button class="leaderboard-tab" data-type="challenge" style="flex:1; padding: 12px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; transition: all 0.3s;">
-                            🔴 ${translations[currentLanguage].challengeMode}
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h3 style="color: #4CAF50; margin: 0; display: flex; align-items: center;">
+                            <span style="font-size: 2em; margin-right: 10px;">🏆</span>
+                            ${translations[currentLanguage].leaderboardTitle}
+                        </h3>
+                        <button id="sync-leaderboard-btn" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                            🔄 ${currentLanguage === 'zh' ? '刷新' : 'Refresh'}
                         </button>
                     </div>
                     
-                    <div id="leaderboard-content-inner">
-            `;
-            
-            html += generateLeaderboardTable('easy', easyScores, userEasyBest, currentUser);
-            
-            html += `
-                    </div>
-                    
-                    ${currentUser ? `
-                    <div style="margin-top: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                        <h4 style="margin: 0 0 15px 0; color: white; display: flex; align-items: center;">
-                            <span style="background: rgba(255,255,255,0.2); width: 40px; height: 40px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">👤</span>
-                            ${translations[currentLanguage].myBest}
+                    <!-- 简单模式 3个榜单 -->
+                    <div style="margin-bottom: 40px;">
+                        <h4 style="display: flex; align-items: center; color: #8BC34A; border-bottom: 3px solid #8BC34A; padding-bottom: 12px; margin-bottom: 20px;">
+                            <span style="background: #8BC34A; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px;">🟢</span>
+                            ${translations[currentLanguage].leaderboardEasy}
+                            <span style="margin-left: 15px; font-size: 0.8em; background: #8BC34A20; color: #8BC34A; padding: 4px 12px; border-radius: 20px;">
+                                ${currentLanguage === 'zh' ? '数字范围: 0-9' : 'Range: 0-9'}
+                            </span>
                         </h4>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-                            <div style="text-align: center; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px;">
-                                <div style="font-size: 0.9em; opacity: 0.9;">${translations[currentLanguage].easyMode}</div>
-                                <div style="font-size: 1.8em; font-weight: bold;">${userEasyBest ? userEasyBest.score : 0}</div>
-                                <div style="font-size: 0.8em; opacity: 0.8;">${userEasyBest ? userEasyBest.accuracy + '%' : '-'}</div>
-                            </div>
-                            <div style="text-align: center; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px;">
-                                <div style="font-size: 0.9em; opacity: 0.9;">${translations[currentLanguage].standardMode}</div>
-                                <div style="font-size: 1.8em; font-weight: bold;">${userStandardBest ? userStandardBest.score : 0}</div>
-                                <div style="font-size: 0.8em; opacity: 0.8;">${userStandardBest ? userStandardBest.accuracy + '%' : '-'}</div>
-                            </div>
-                            <div style="text-align: center; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px;">
-                                <div style="font-size: 0.9em; opacity: 0.9;">${translations[currentLanguage].challengeMode}</div>
-                                <div style="font-size: 1.8em; font-weight: bold;">${userChallengeBest ? userChallengeBest.score : 0}</div>
-                                <div style="font-size: 0.8em; opacity: 0.8;">${userChallengeBest ? userChallengeBest.accuracy + '%' : '-'}</div>
-                            </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                            ${generateLeaderboardCard('easy', 'score', easyScore, translations[currentLanguage].leaderboardEasyScore, '#8BC34A')}
+                            ${generateLeaderboardCard('easy', 'accuracy', easyAccuracy, translations[currentLanguage].leaderboardEasyAccuracy, '#8BC34A')}
+                            ${generateLeaderboardCard('easy', 'time', easySpeed, translations[currentLanguage].leaderboardEasySpeed, '#8BC34A')}
                         </div>
                     </div>
-                    ` : `
-                    <div style="margin-top: 30px; background: #f8f9fa; border-radius: 15px; padding: 20px; text-align: center;">
-                        <p style="color: #666;">${currentLanguage === 'zh' ? '登录后查看个人最佳成绩' : 'Login to see your best scores'}</p>
-                        <button onclick="MathGame.showAuthModal()" style="background: #4CAF50; color: white; border: none; padding: 10px 25px; border-radius: 25px; font-size: 1em; cursor: pointer; margin-top: 10px;">
-                            🔐 ${currentLanguage === 'zh' ? '立即登录' : 'Login Now'}
-                        </button>
+                    
+                    <!-- 挑战30模式 3个榜单 -->
+                    <div style="margin-bottom: 40px;">
+                        <h4 style="display: flex; align-items: center; color: #FF9800; border-bottom: 3px solid #FF9800; padding-bottom: 12px; margin-bottom: 20px;">
+                            <span style="background: #FF9800; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px;">🟠</span>
+                            ${translations[currentLanguage].leaderboardStandard}
+                            <span style="margin-left: 15px; font-size: 0.8em; background: #FF980020; color: #FF9800; padding: 4px 12px; border-radius: 20px;">
+                                ${currentLanguage === 'zh' ? '完成30题' : 'Complete 30'}
+                            </span>
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                            ${generateLeaderboardCard('standard', 'score', standardScore, translations[currentLanguage].leaderboardStandardScore, '#FF9800')}
+                            ${generateLeaderboardCard('standard', 'accuracy', standardAccuracy, translations[currentLanguage].leaderboardStandardAccuracy, '#FF9800')}
+                            ${generateLeaderboardCard('standard', 'time', standardSpeed, translations[currentLanguage].leaderboardStandardSpeed, '#FF9800')}
+                        </div>
                     </div>
-                    `}
+                    
+                    <!-- 激情90秒模式 3个榜单 -->
+                    <div style="margin-bottom: 40px;">
+                        <h4 style="display: flex; align-items: center; color: #f44336; border-bottom: 3px solid #f44336; padding-bottom: 12px; margin-bottom: 20px;">
+                            <span style="background: #f44336; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px;">🔴</span>
+                            ${translations[currentLanguage].leaderboardChallenge}
+                            <span style="margin-left: 15px; font-size: 0.8em; background: #f4433620; color: #f44336; padding: 4px 12px; border-radius: 20px;">
+                                ${currentLanguage === 'zh' ? '90秒限时' : '90s Time Limit'}
+                            </span>
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                            ${generateLeaderboardCard('challenge', 'score', challengeScore, translations[currentLanguage].leaderboardChallengeScore, '#f44336')}
+                            ${generateLeaderboardCard('challenge', 'accuracy', challengeAccuracy, translations[currentLanguage].leaderboardChallengeAccuracy, '#f44336')}
+                            ${generateLeaderboardCard('challenge', 'time', challengeSpeed, translations[currentLanguage].leaderboardChallengeSpeed, '#f44336')}
+                        </div>
+                    </div>
+                    
+                    ${currentUser ? generateUserBestSection(userEasy, userStandard, userChallenge) : generateLoginPrompt()}
+                    
                 </div>
             `;
             
             leaderboardContent.innerHTML = html;
             
-            setTimeout(() => {
-                const tabs = document.querySelectorAll('.leaderboard-tab');
-                tabs.forEach(tab => {
-                    tab.addEventListener('click', function() {
-                        tabs.forEach(t => {
-                            t.classList.remove('active');
-                            t.style.borderBottomColor = 'transparent';
-                            t.style.color = '#666';
-                        });
-                        
-                        this.classList.add('active');
-                        this.style.borderBottomColor = this.dataset.type === 'easy' ? '#8BC34A' : 
-                                                         this.dataset.type === 'standard' ? '#FF9800' : '#f44336';
-                        this.style.color = '#333';
-                        
-                        const type = this.dataset.type;
-                        let tableHtml = '';
-                        if (type === 'easy') {
-                            tableHtml = generateLeaderboardTable('easy', easyScores, userEasyBest, currentUser);
-                        } else if (type === 'standard') {
-                            tableHtml = generateLeaderboardTable('standard', standardScores, userStandardBest, currentUser);
-                        } else {
-                            tableHtml = generateLeaderboardTable('challenge', challengeScores, userChallengeBest, currentUser);
-                        }
-                        
-                        const contentInner = document.getElementById('leaderboard-content-inner');
-                        if (contentInner) {
-                            contentInner.innerHTML = tableHtml;
-                        }
-                    });
-                });
-            }, 100);
+            document.getElementById('sync-leaderboard-btn')?.addEventListener('click', async () => {
+                showLeaderboard();
+                showMessage(currentLanguage === 'zh' ? '排行榜已刷新' : 'Leaderboard refreshed', 'success');
+            });
             
         } catch (error) {
             console.error('显示排行榜失败:', error);
@@ -2986,98 +3510,177 @@ const MathGame = (function() {
         }
     }
     
-    function generateLeaderboardTable(type, scores, userBest, currentUser) {
-        const typeName = type === 'easy' ? translations[currentLanguage].easyMode :
-                         type === 'standard' ? translations[currentLanguage].standardMode :
-                         translations[currentLanguage].challengeMode;
+    function generateLeaderboardCard(mode, type, scores, title, color) {
+        const getValue = (score) => {
+            if (type === 'score') return score.score;
+            if (type === 'accuracy') return score.accuracy + '%';
+            if (type === 'time') return score.time_used + 's';
+            return '';
+        };
         
-        const typeColor = type === 'easy' ? '#8BC34A' :
-                          type === 'standard' ? '#FF9800' : '#f44336';
+        const getMedal = (index) => {
+            if (index === 0) return '🥇';
+            if (index === 1) return '🥈';
+            if (index === 2) return '🥉';
+            return `${index + 1}.`;
+        };
         
-        let html = `
-            <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                <h4 style="margin-top: 0; color: ${typeColor}; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; display: flex; align-items: center;">
-                    <span style="background: ${typeColor}; color: white; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 0.9em;">🏆</span>
-                    ${typeName} ${translations[currentLanguage].rank}
-                </h4>
+        let cardHtml = `
+            <div style="background: white; border-radius: 16px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 5px solid ${color};">
+                <h5 style="display: flex; align-items: center; justify-content: space-between; margin-top: 0; margin-bottom: 15px; color: #333;">
+                    <span style="font-weight: bold; font-size: 1.1em;">${title}</span>
+                    <span style="background: ${color}20; color: ${color}; padding: 4px 12px; border-radius: 20px; font-size: 0.8em;">
+                        ${type === 'score' ? '🏆' : type === 'accuracy' ? '🎯' : '⚡'}
+                    </span>
+                </h5>
         `;
         
         if (scores.length === 0) {
-            html += `
-                <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 10px;">
-                    <div style="font-size: 3em; margin-bottom: 15px;">🏆</div>
-                    <p style="color: #666; margin: 0;">${translations[currentLanguage].noData}</p>
-                    <p style="color: #999; font-size: 0.9em; margin-top: 10px;">${currentLanguage === 'zh' ? '完成游戏并保存成绩，即可上榜' : 'Complete games and save scores to join the leaderboard'}</p>
+            cardHtml += `
+                <div style="text-align: center; padding: 25px 10px; background: #f8f9fa; border-radius: 12px;">
+                    <div style="font-size: 2.5em; margin-bottom: 10px; opacity: 0.5;">🏆</div>
+                    <p style="color: #999; margin: 0; font-size: 0.9em;">${translations[currentLanguage].noData}</p>
                 </div>
             `;
         } else {
-            html += `
-                <div style="margin-top: 15px;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid #f0f0f0;">
-                                <th style="padding: 10px; text-align: left; color: #666;">${translations[currentLanguage].rank}</th>
-                                <th style="padding: 10px; text-align: left; color: #666;">${translations[currentLanguage].player}</th>
-                                <th style="padding: 10px; text-align: right; color: #666;">${translations[currentLanguage].score}</th>
-                                <th style="padding: 10px; text-align: right; color: #666;">${translations[currentLanguage].accuracy}</th>
-                                <th style="padding: 10px; text-align: right; color: #666;">${translations[currentLanguage].time}</th>
-                                <th style="padding: 10px; text-align: right; color: #666;">${translations[currentLanguage].date}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+            cardHtml += `<div style="display: flex; flex-direction: column; gap: 10px;">`;
             
-            scores.forEach((score, index) => {
+            scores.slice(0, 5).forEach((score, index) => {
                 const isCurrentUser = currentUser && score.user_id === currentUser.id;
-                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
-                const rowStyle = isCurrentUser ? 'background: #FFF9C4; font-weight: bold;' : 
-                                 index % 2 === 0 ? 'background: #fafafa;' : '';
-                const date = new Date(score.created_at || score.timestamp).toLocaleDateString(
-                    currentLanguage === 'zh' ? 'zh-CN' : 'en-US',
-                    { month: 'short', day: 'numeric' }
-                );
+                const medalColor = index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : 'transparent';
                 
-                html += `
-                    <tr style="border-bottom: 1px solid #f0f0f0; ${rowStyle}">
-                        <td style="padding: 12px 10px; text-align: left;">
-                            <span style="display: inline-block; width: 30px; height: 30px; line-height: 30px; text-align: center; border-radius: 15px; background: ${index < 3 ? '#FFF3E0' : 'transparent'};">
-                                ${medal}
+                cardHtml += `
+                    <div style="display: flex; align-items: center; justify-content: space-between; 
+                                padding: 8px 12px; 
+                                background: ${isCurrentUser ? '#FFF9C4' : index % 2 === 0 ? '#fafafa' : 'white'};
+                                border-radius: 10px;
+                                border-left: 4px solid ${medalColor};">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-weight: bold; color: ${index < 3 ? '#333' : '#999'}; min-width: 30px;">
+                                ${getMedal(index)}
                             </span>
-                        </td>
-                        <td style="padding: 12px 10px; text-align: left;">
-                            <div style="display: flex; align-items: center;">
-                                <span style="font-weight: ${isCurrentUser ? 'bold' : 'normal'}; color: ${isCurrentUser ? '#4CAF50' : '#333'}">
-                                    ${score.username || score.email?.split('@')[0] || '匿名玩家'}
-                                </span>
-                                ${isCurrentUser ? '<span style="background: #4CAF50; color: white; font-size: 0.7em; padding: 2px 8px; border-radius: 12px; margin-left: 8px;">你</span>' : ''}
-                            </div>
-                        </td>
-                        <td style="padding: 12px 10px; text-align: right; font-weight: bold; color: ${index < 3 ? '#4CAF50' : '#333'}">
-                            ${score.score}
-                        </td>
-                        <td style="padding: 12px 10px; text-align: right; color: #666;">
-                            ${score.accuracy}%
-                        </td>
-                        <td style="padding: 12px 10px; text-align: right; color: #666;">
-                            ${score.time_used}s
-                        </td>
-                        <td style="padding: 12px 10px; text-align: right; color: #999; font-size: 0.85em;">
-                            ${date}
-                        </td>
-                    </tr>
+                            <span style="font-weight: ${isCurrentUser ? 'bold' : 'normal'}; color: ${isCurrentUser ? '#4CAF50' : '#333'};">
+                                ${score.username || score.email?.split('@')[0] || '匿名'}
+                                ${isCurrentUser ? '<span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7em; margin-left: 8px;">你</span>' : ''}
+                            </span>
+                        </div>
+                        <span style="font-weight: bold; color: ${color}; background: ${color}10; padding: 4px 12px; border-radius: 20px;">
+                            ${getValue(score)}
+                        </span>
+                    </div>
                 `;
             });
             
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            cardHtml += `</div>`;
         }
         
-        html += `</div>`;
-        
-        return html;
+        cardHtml += `</div>`;
+        return cardHtml;
+    }
+    
+    function generateUserBestSection(userEasy, userStandard, userChallenge) {
+        return `
+            <div style="margin-top: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h4 style="margin: 0; color: white; display: flex; align-items: center; font-size: 1.3em;">
+                        <span style="background: rgba(255,255,255,0.2); width: 45px; height: 45px; border-radius: 23px; display: inline-flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 1.3em;">👤</span>
+                        ${translations[currentLanguage].myBest}
+                    </h4>
+                    <span style="background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-size: 0.9em;">
+                        ${currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || '玩家'}
+                    </span>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <!-- 简单模式 -->
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 18px; backdrop-filter: blur(5px);">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <span style="background: #8BC34A; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🟢</span>
+                            <span style="font-weight: bold;">${translations[currentLanguage].easyMode}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+                            <div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🏆 高分</div>
+                                <div style="font-size: 1.4em; font-weight: bold;">${userEasy?.bestScore?.score || 0}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🎯 准确</div>
+                                <div style="font-size: 1.4em; font-weight: bold;">${userEasy?.bestAccuracy?.accuracy || 0}%</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">⚡ 最快</div>
+                                <div style="font-size: 1.4em; font-weight: bold;">${userEasy?.bestTime?.time_used || 0}s</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 挑战30模式 -->
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 18px; backdrop-filter: blur(5px);">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <span style="background: #FF9800; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🟠</span>
+                            <span style="font-weight: bold;">${translations[currentLanguage].standardMode}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+                            <div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🏆 高分</div>
+                                <div style="font-size: 1.4em; font-weight: bold;">${userStandard?.bestScore?.score || 0}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🎯 准确</div>
+                                <div style="font-size: 1.4em; font-weight: bold;">${userStandard?.bestAccuracy?.accuracy || 0}%</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">⚡ 最快</div>
+                                <div style="font-size: 1.4em; font-weight: bold;">${userStandard?.bestTime?.time_used || 0}s</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 激情90秒模式 -->
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 18px; backdrop-filter: blur(5px);">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <span style="background: #f44336; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🔴</span>
+                            <span style="font-weight: bold;">${translations[currentLanguage].challengeMode}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+                            <div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🏆 高分</div>
+                                <div style="font-size: 1.4em; font-weight: bold;">${userChallenge?.bestScore?.score || 0}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🎯 准确</div>
+                                <div style="font-size: 1.4em; font-weight: bold;">${userChallenge?.bestAccuracy?.accuracy || 0}%</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">⚡ 最快</div>
+                                <div style="font-size: 1.4em; font-weight: bold;">${userChallenge?.bestTime?.time_used || 0}s</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                    <span style="background: rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 20px; font-size: 0.85em;">
+                        ${syncState.lastSyncTime ? 
+                            `☁️ ${translations[currentLanguage].lastSync}: ${new Date(syncState.lastSyncTime).toLocaleTimeString()}` : 
+                            `☁️ ${translations[currentLanguage].lastSync}: -`}
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+    
+    function generateLoginPrompt() {
+        return `
+            <div style="margin-top: 40px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); border-radius: 20px; padding: 30px; text-align: center; color: white;">
+                <div style="font-size: 3.5em; margin-bottom: 15px;">🔐</div>
+                <h4 style="margin: 0 0 10px 0; color: white; font-size: 1.3em;">${currentLanguage === 'zh' ? '登录后查看个人最佳成绩' : 'Login to see your best scores'}</h4>
+                <p style="opacity: 0.9; margin-bottom: 20px;">${currentLanguage === 'zh' ? '立即登录，与其他玩家一较高下！' : 'Login now and compete with other players!'}</p>
+                <button onclick="MathGame.showAuthModal()" style="background: white; color: #495057; border: none; padding: 12px 35px; border-radius: 30px; font-size: 1.1em; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease;">
+                    🔐 ${currentLanguage === 'zh' ? '立即登录' : 'Login Now'}
+                </button>
+            </div>
+        `;
     }
     
     // ==================== 历史记录显示 ====================
@@ -3199,6 +3802,16 @@ const MathGame = (function() {
             
             const joinDate = new Date(currentUser.created_at);
             document.getElementById('profile-join-date').textContent = joinDate.toLocaleDateString(currentLanguage === 'zh' ? 'zh-CN' : 'en-US');
+            
+            // 显示同步状态
+            const syncStatusElement = document.getElementById('profile-sync-status');
+            if (syncStatusElement) {
+                const lastSync = syncState.lastSyncTime 
+                    ? new Date(syncState.lastSyncTime).toLocaleString() 
+                    : (currentLanguage === 'zh' ? '从未同步' : 'Never');
+                syncStatusElement.innerHTML = `☁️ ${translations[currentLanguage].lastSync}: ${lastSync}`;
+            }
+            
         } catch (error) {
             console.error('显示个人资料失败:', error);
         }
@@ -3353,7 +3966,7 @@ const MathGame = (function() {
             if (success) {
                 showMessage(currentLanguage === 'zh' ? '✅ 成绩保存成功！' : '✅ Score saved successfully!', 'success');
             } else {
-                showMessage(currentLanguage === 'zh' ? '⚠️ 成绩保存失败，请稍后重试' : '⚠️ Failed to save score, please try again later', 'warning');
+                showMessage(currentLanguage === 'zh' ? '⚠️ 成绩保存失败，已存入待同步队列' : '⚠️ Failed to save score, saved to sync queue', 'warning');
             }
             
             const gameOverElement = document.getElementById('game-over');
@@ -3363,35 +3976,6 @@ const MathGame = (function() {
         } catch (error) {
             console.error('保存成绩失败:', error);
             showMessage(currentLanguage === 'zh' ? '保存成绩失败' : 'Save score failed', 'error');
-        }
-    }
-    
-    // ==================== 数据备份和恢复 ====================
-    async function backupToCloud() {
-        try {
-            if (!currentUser) {
-                showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
-                return;
-            }
-            
-            showMessage(currentLanguage === 'zh' ? '数据备份到云端成功' : 'Data backed up to cloud successfully', 'success');
-        } catch (error) {
-            console.error('备份数据失败:', error);
-            showMessage(currentLanguage === 'zh' ? '备份数据失败' : 'Backup data failed', 'error');
-        }
-    }
-    
-    async function restoreFromCloud() {
-        try {
-            if (!currentUser) {
-                showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
-                return;
-            }
-            
-            showMessage(currentLanguage === 'zh' ? '数据恢复成功' : 'Data restored successfully', 'success');
-        } catch (error) {
-            console.error('恢复数据失败:', error);
-            showMessage(currentLanguage === 'zh' ? '恢复数据失败' : 'Restore data failed', 'error');
         }
     }
     
@@ -3414,6 +3998,7 @@ const MathGame = (function() {
             
             loadAchievements();
             loadWrongQuestions();
+            initCloudSync();
             
             bindEventListeners();
             
@@ -3455,7 +4040,8 @@ const MathGame = (function() {
                 { id: 'profile-btn', handler: showProfile },
                 { id: 'teacher-tools-btn', handler: showTeacherTools },
                 { id: 'admin-tools-btn', handler: showAdminTools },
-                { id: 'logout-btn', handler: logout }
+                { id: 'logout-btn', handler: logout },
+                { id: 'sync-status-btn', handler: showSyncStatus }
             ];
             
             sideBarButtons.forEach(({ id, handler }) => {
@@ -3498,7 +4084,8 @@ const MathGame = (function() {
                 { id: 'close-profile-modal', modal: 'profile-modal' },
                 { id: 'close-teacher-tools', modal: 'teacher-tools-modal' },
                 { id: 'close-admin-tools', modal: 'admin-tools-modal' },
-                { id: 'close-game-over', modal: 'game-over', handler: restartGame }
+                { id: 'close-game-over', modal: 'game-over', handler: restartGame },
+                { id: 'close-sync-modal', modal: 'sync-modal' }
             ];
             
             modalCloseButtons.forEach(({ id, modal, handler }) => {
@@ -3583,6 +4170,9 @@ const MathGame = (function() {
                 });
             });
             
+            // 全局同步按钮
+            document.getElementById('full-sync-btn')?.addEventListener('click', performFullSync);
+            
         } catch (error) {
             console.error('绑定事件监听器失败:', error);
         }
@@ -3605,12 +4195,15 @@ const MathGame = (function() {
         showProfile,
         showTeacherTools,
         showAdminTools,
+        showSyncStatus,
+        performFullSync,
         logout,
         closeAuthModal,
         handleAuth,
         toggleAuthMode,
         saveScore,
-        showAuthModal
+        showAuthModal,
+        getSyncStatus
     };
 })();
 
