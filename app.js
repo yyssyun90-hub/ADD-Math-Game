@@ -212,6 +212,658 @@ const MathGame = (function() {
         return array;
     }
     
+    // ==================== 检查数字组合函数 ====================
+    function hasValidCombination(targetSum, cards) {
+        if (!cards || cards.length < 2) return false;
+        
+        const numbers = cards.map(card => parseInt(card.dataset.value));
+        
+        // 使用双重循环检查是否有任意两个数字的和等于目标值
+        for (let i = 0; i < numbers.length; i++) {
+            for (let j = i + 1; j < numbers.length; j++) {
+                if (numbers[i] + numbers[j] === targetSum) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    function checkAndAutoRefresh() {
+        if (!gameActive) return;
+        
+        const remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
+        if (!hasValidCombination(currentTarget, remainingCards)) {
+            showMessage(currentLanguage === 'zh' ? '没有匹配的组合，自动刷新数字！' : 'No matching combinations, refreshing numbers!', 'info');
+            setTimeout(() => {
+                refreshNumbers();
+            }, 500);
+        }
+    }
+    
+    // ==================== 错题管理系统 ====================
+    function loadWrongQuestions() {
+        try {
+            const saved = localStorage.getItem('mathGameWrongQuestions');
+            if (saved) {
+                wrongQuestions = JSON.parse(saved);
+            } else {
+                wrongQuestions = [];
+            }
+        } catch (error) {
+            console.error('加载错题失败:', error);
+            wrongQuestions = [];
+        }
+    }
+    
+    function saveWrongQuestions() {
+        try {
+            localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
+        } catch (error) {
+            console.error('保存错题失败:', error);
+        }
+    }
+    
+    function recordWrongQuestion(num1, num2, wrongSum, correctSum) {
+        try {
+            // 加载本地错题
+            loadWrongQuestions();
+            
+            // 查找是否已有相同错题
+            const existingQuestionIndex = wrongQuestions.findIndex(q => 
+                q.num1 === num1 && q.num2 === num2 && q.correctSum === correctSum
+            );
+            
+            if (existingQuestionIndex >= 0) {
+                // 更新已有错题的计数
+                wrongQuestions[existingQuestionIndex].count++;
+                wrongQuestions[existingQuestionIndex].timestamp = new Date().toISOString();
+            } else {
+                // 添加新错题
+                wrongQuestions.push({
+                    num1: num1,
+                    num2: num2,
+                    wrongSum: wrongSum,
+                    correctSum: correctSum,
+                    count: 1,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // 保存到本地存储
+            saveWrongQuestions();
+            
+            // 如果有用户登录，尝试同步到云端
+            if (currentUser && isSupabaseReady) {
+                setTimeout(() => {
+                    syncWrongQuestionToCloud(num1, num2, wrongSum, correctSum);
+                }, 100);
+            }
+            
+        } catch (error) {
+            console.error('记录错题失败:', error);
+        }
+    }
+    
+    // ==================== 云端错题同步功能 ====================
+    async function syncWrongQuestionToCloud(num1, num2, wrongSum, correctSum) {
+        try {
+            if (!currentUser || !isSupabaseReady || !supabase) {
+                return false;
+            }
+            
+            // 构建错题数据
+            const wrongQuestionData = {
+                user_id: currentUser.id,
+                email: currentUser.email,
+                num1: num1,
+                num2: num2,
+                wrong_sum: wrongSum,
+                correct_sum: correctSum,
+                timestamp: new Date().toISOString()
+            };
+            
+            // 检查是否已有相同错题
+            const { data: existingData, error: checkError } = await supabase
+                .from('wrong_questions')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('num1', num1)
+                .eq('num2', num2)
+                .limit(1);
+            
+            if (checkError) {
+                console.error('检查错题存在失败:', checkError);
+                return false;
+            }
+            
+            if (existingData && existingData.length > 0) {
+                // 更新已有记录
+                const { error } = await supabase
+                    .from('wrong_questions')
+                    .update({
+                        count: (existingData[0].count || 1) + 1,
+                        timestamp: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', existingData[0].id);
+                
+                if (error) {
+                    console.error('更新云端错题失败:', error);
+                    return false;
+                }
+            } else {
+                // 插入新记录
+                const { error } = await supabase
+                    .from('wrong_questions')
+                    .insert([wrongQuestionData]);
+                
+                if (error) {
+                    console.error('插入云端错题失败:', error);
+                    return false;
+                }
+            }
+            
+            return true;
+            
+        } catch (error) {
+            console.error('同步错题到云端异常:', error);
+            return false;
+        }
+    }
+    
+    async function syncAllWrongQuestionsToCloud() {
+        try {
+            if (!currentUser) {
+                showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'error');
+                return false;
+            }
+            
+            if (!isSupabaseReady || !supabase) {
+                showMessage(currentLanguage === 'zh' ? '云端服务未就绪' : 'Cloud service not ready', 'error');
+                return false;
+            }
+            
+            // 加载本地错题
+            loadWrongQuestions();
+            
+            if (wrongQuestions.length === 0) {
+                showMessage(currentLanguage === 'zh' ? '没有错题需要同步' : 'No wrong questions to sync', 'info');
+                return false;
+            }
+            
+            // 显示加载中
+            const syncBtn = document.getElementById('sync-wrong-questions-btn');
+            if (syncBtn) {
+                const originalText = syncBtn.innerHTML;
+                syncBtn.innerHTML = `<span>🔄 ${currentLanguage === 'zh' ? '同步中...' : 'Syncing...'}</span>`;
+                syncBtn.disabled = true;
+            }
+            
+            // 批量上传错题到云端
+            let successCount = 0;
+            let failCount = 0;
+            
+            for (const question of wrongQuestions) {
+                try {
+                    const success = await syncWrongQuestionToCloud(
+                        question.num1,
+                        question.num2,
+                        question.wrongSum,
+                        question.correctSum
+                    );
+                    
+                    if (success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                    
+                    // 避免请求太快
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    
+                } catch (error) {
+                    console.error('同步单个错题失败:', error);
+                    failCount++;
+                }
+            }
+            
+            // 显示结果
+            if (failCount === 0) {
+                showMessage(
+                    currentLanguage === 'zh' 
+                        ? `✅ 成功同步 ${successCount} 条错题到云端` 
+                        : `✅ Successfully synced ${successCount} wrong questions to cloud`,
+                    'success'
+                );
+            } else {
+                showMessage(
+                    currentLanguage === 'zh' 
+                        ? `⚠️ 同步完成：${successCount} 条成功，${failCount} 条失败` 
+                        : `⚠️ Sync completed: ${successCount} succeeded, ${failCount} failed`,
+                    'warning'
+                );
+            }
+            
+            // 标记最后同步时间
+            localStorage.setItem('mathGameWrongQuestionsLastSync', new Date().toISOString());
+            
+            return successCount > 0;
+            
+        } catch (error) {
+            console.error('批量同步错题失败:', error);
+            showMessage(
+                currentLanguage === 'zh' ? '同步失败' : 'Sync failed',
+                'error'
+            );
+            return false;
+        } finally {
+            // 恢复按钮状态
+            const syncBtn = document.getElementById('sync-wrong-questions-btn');
+            if (syncBtn) {
+                syncBtn.innerHTML = `<span>${currentLanguage === 'zh' ? '同步错题到云端' : 'Sync Wrong Questions to Cloud'}</span>`;
+                syncBtn.disabled = false;
+            }
+        }
+    }
+    
+    async function loadWrongQuestionsFromCloud() {
+        try {
+            if (!currentUser) {
+                return false;
+            }
+            
+            if (!isSupabaseReady || !supabase) {
+                return false;
+            }
+            
+            // 从Supabase获取错题
+            const { data, error } = await supabase
+                .from('wrong_questions')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('timestamp', { ascending: false });
+            
+            if (error) {
+                console.error('从云端加载错题失败:', error);
+                return false;
+            }
+            
+            if (!data || data.length === 0) {
+                return false;
+            }
+            
+            // 转换数据格式
+            const cloudQuestions = data.map(item => ({
+                num1: item.num1,
+                num2: item.num2,
+                wrongSum: item.wrong_sum,
+                correctSum: item.correct_sum,
+                count: item.count || 1,
+                timestamp: item.timestamp || item.created_at
+            }));
+            
+            // 加载本地错题
+            loadWrongQuestions();
+            
+            // 合并云端和本地错题
+            for (const cloudQuestion of cloudQuestions) {
+                const existingIndex = wrongQuestions.findIndex(q => 
+                    q.num1 === cloudQuestion.num1 && 
+                    q.num2 === cloudQuestion.num2 && 
+                    q.correctSum === cloudQuestion.correctSum
+                );
+                
+                if (existingIndex >= 0) {
+                    // 合并计数，取较大值
+                    wrongQuestions[existingIndex].count = Math.max(
+                        wrongQuestions[existingIndex].count,
+                        cloudQuestion.count
+                    );
+                    // 使用最新的时间戳
+                    if (new Date(cloudQuestion.timestamp) > new Date(wrongQuestions[existingIndex].timestamp)) {
+                        wrongQuestions[existingIndex].timestamp = cloudQuestion.timestamp;
+                    }
+                } else {
+                    // 添加云端错题
+                    wrongQuestions.push(cloudQuestion);
+                }
+            }
+            
+            // 保存到本地
+            saveWrongQuestions();
+            
+            // 标记最后同步时间
+            localStorage.setItem('mathGameWrongQuestionsLastSync', new Date().toISOString());
+            
+            return true;
+            
+        } catch (error) {
+            console.error('从云端加载错题异常:', error);
+            return false;
+        }
+    }
+    
+    // ==================== 教师工具 - 批量注册功能 ====================
+    async function downloadTemplate() {
+        try {
+            // 创建CSV模板内容
+            const csvContent = "email,姓名,班级,备注\n" +
+                "student1@example.com,张三,三年一班,数学课代表\n" +
+                "student2@example.com,李四,三年一班,副班长\n" +
+                "student3@example.com,王五,三年二班,学习委员";
+            
+            // 创建Blob对象
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            
+            // 创建下载链接
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', '学生批量注册模板.csv');
+            link.style.visibility = 'hidden';
+            
+            // 添加到页面并触发点击
+            document.body.appendChild(link);
+            link.click();
+            
+            // 清理
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showMessage(currentLanguage === 'zh' ? '模板下载成功' : 'Template downloaded successfully', 'success');
+        } catch (error) {
+            console.error('下载模板失败:', error);
+            showMessage(currentLanguage === 'zh' ? '下载模板失败' : 'Failed to download template', 'error');
+        }
+    }
+    
+    async function uploadExcelFile() {
+        try {
+            const fileInput = document.getElementById('excel-file');
+            const defaultPasswordInput = document.getElementById('default-password');
+            const classNameInput = document.getElementById('class-name');
+            
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                showMessage(currentLanguage === 'zh' ? '请选择要上传的文件' : 'Please select a file to upload', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const defaultPassword = defaultPasswordInput ? defaultPasswordInput.value.trim() : 'stu123456';
+            const className = classNameInput ? classNameInput.value.trim() : '未命名班级';
+            
+            if (!defaultPassword || defaultPassword.length < 6) {
+                showMessage(currentLanguage === 'zh' ? '默认密码至少需要6位' : 'Default password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            // 显示上传进度
+            const uploadProgress = document.getElementById('upload-progress');
+            const uploadProgressBar = document.getElementById('upload-progress-bar');
+            const uploadStatus = document.getElementById('upload-status');
+            const uploadResult = document.getElementById('upload-result');
+            const accountCards = document.getElementById('account-cards');
+            const accountCardsContainer = document.getElementById('account-cards-container');
+            
+            if (uploadProgress) uploadProgress.style.display = 'block';
+            if (uploadProgressBar) uploadProgressBar.style.width = '0%';
+            if (uploadStatus) uploadStatus.textContent = currentLanguage === 'zh' ? '正在读取文件...' : 'Reading file...';
+            if (uploadResult) uploadResult.style.display = 'none';
+            if (accountCards) accountCards.style.display = 'none';
+            if (accountCardsContainer) accountCardsContainer.innerHTML = '';
+            
+            // 读取CSV文件
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const csvContent = e.target.result;
+                    const rows = csvContent.split('\n');
+                    
+                    if (rows.length < 2) {
+                        showMessage(currentLanguage === 'zh' ? 'CSV文件格式不正确' : 'Invalid CSV file format', 'error');
+                        return;
+                    }
+                    
+                    // 解析CSV数据
+                    const students = [];
+                    const errors = [];
+                    
+                    for (let i = 1; i < rows.length; i++) {
+                        if (!rows[i].trim()) continue;
+                        
+                        const columns = rows[i].split(',');
+                        if (columns.length >= 2) {
+                            const email = columns[0].trim();
+                            const name = columns[1].trim();
+                            const studentClass = columns.length > 2 ? columns[2].trim() : className;
+                            const note = columns.length > 3 ? columns[3].trim() : '';
+                            
+                            if (email && email.includes('@')) {
+                                students.push({
+                                    email: email,
+                                    name: name || email.split('@')[0],
+                                    class: studentClass,
+                                    note: note,
+                                    password: defaultPassword
+                                });
+                            } else {
+                                errors.push(`第${i+1}行: 邮箱格式不正确 - ${email}`);
+                            }
+                        }
+                        
+                        // 更新进度
+                        if (uploadProgressBar) {
+                            uploadProgressBar.style.width = `${(i / rows.length) * 50}%`;
+                        }
+                    }
+                    
+                    if (students.length === 0) {
+                        showMessage(currentLanguage === 'zh' ? '没有找到有效的学生数据' : 'No valid student data found', 'error');
+                        return;
+                    }
+                    
+                    if (uploadStatus) {
+                        uploadStatus.textContent = currentLanguage === 'zh' 
+                            ? `找到 ${students.length} 名学生，正在注册...` 
+                            : `Found ${students.length} students, registering...`;
+                    }
+                    
+                    // 批量注册学生账号
+                    const results = [];
+                    let successCount = 0;
+                    let failCount = 0;
+                    
+                    for (let i = 0; i < students.length; i++) {
+                        const student = students[i];
+                        
+                        try {
+                            // 调用Supabase注册函数
+                            const { data, error } = await supabase.auth.admin.createUser({
+                                email: student.email,
+                                password: student.password,
+                                email_confirm: true, // 自动确认邮箱
+                                user_metadata: {
+                                    username: student.name,
+                                    role: 'student',
+                                    class: student.class,
+                                    note: student.note,
+                                    teacher_id: currentUser.id,
+                                    teacher_email: currentUser.email
+                                }
+                            });
+                            
+                            if (error) {
+                                results.push({
+                                    email: student.email,
+                                    status: '失败',
+                                    message: error.message,
+                                    class: student.class
+                                });
+                                failCount++;
+                            } else {
+                                results.push({
+                                    email: student.email,
+                                    status: '成功',
+                                    message: currentLanguage === 'zh' ? '账号创建成功' : 'Account created successfully',
+                                    class: student.class,
+                                    name: student.name,
+                                    password: student.password
+                                });
+                                successCount++;
+                            }
+                            
+                        } catch (error) {
+                            results.push({
+                                email: student.email,
+                                status: '失败',
+                                message: error.message || currentLanguage === 'zh' ? '未知错误' : 'Unknown error',
+                                class: student.class
+                            });
+                            failCount++;
+                        }
+                        
+                        // 更新进度
+                        if (uploadProgressBar) {
+                            uploadProgressBar.style.width = `${50 + (i / students.length) * 50}%`;
+                        }
+                        if (uploadStatus) {
+                            uploadStatus.textContent = currentLanguage === 'zh' 
+                                ? `正在注册 ${i+1}/${students.length}...` 
+                                : `Registering ${i+1}/${students.length}...`;
+                        }
+                        
+                        // 避免请求太快
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                    
+                    // 显示结果
+                    if (uploadResult) {
+                        uploadResult.style.display = 'block';
+                        uploadResult.innerHTML = `
+                            <h4>${currentLanguage === 'zh' ? '批量注册结果' : 'Batch Registration Results'}</h4>
+                            <p>${currentLanguage === 'zh' ? `总计: ${students.length} 名学生` : `Total: ${students.length} students`}</p>
+                            <p style="color: #4CAF50;">${currentLanguage === 'zh' ? `成功: ${successCount}` : `Success: ${successCount}`}</p>
+                            <p style="color: #ff4444;">${currentLanguage === 'zh' ? `失败: ${failCount}` : `Failed: ${failCount}`}</p>
+                            ${errors.length > 0 ? `<p style="color: #FF9800;">${currentLanguage === 'zh' ? `解析错误: ${errors.length}` : `Parse errors: ${errors.length}`}</p>` : ''}
+                        `;
+                    }
+                    
+                    if (uploadStatus) {
+                        uploadStatus.textContent = currentLanguage === 'zh' 
+                            ? `完成！成功: ${successCount}, 失败: ${failCount}` 
+                            : `Complete! Success: ${successCount}, Failed: ${failCount}`;
+                    }
+                    
+                    // 显示成功注册的账号卡片
+                    const successfulStudents = results.filter(r => r.status === '成功');
+                    if (successfulStudents.length > 0 && accountCards && accountCardsContainer) {
+                        accountCardsContainer.innerHTML = '';
+                        
+                        successfulStudents.forEach((student, index) => {
+                            const card = document.createElement('div');
+                            card.className = 'account-card';
+                            card.style.cssText = `
+                                background: white;
+                                border: 1px solid #ddd;
+                                border-radius: 10px;
+                                padding: 15px;
+                                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                            `;
+                            card.innerHTML = `
+                                <div style="font-weight: bold; color: #333; margin-bottom: 5px;">${student.name || student.email.split('@')[0]}</div>
+                                <div style="color: #666; font-size: 0.9em; margin-bottom: 3px;">邮箱: ${student.email}</div>
+                                <div style="color: #666; font-size: 0.9em; margin-bottom: 3px;">班级: ${student.class}</div>
+                                <div style="color: #666; font-size: 0.9em; margin-bottom: 3px;">密码: ${student.password}</div>
+                                <div style="color: #4CAF50; font-size: 0.9em; margin-top: 5px;">✓ ${currentLanguage === 'zh' ? '注册成功' : 'Registered'}</div>
+                            `;
+                            accountCardsContainer.appendChild(card);
+                        });
+                        
+                        accountCards.style.display = 'block';
+                    }
+                    
+                    // 显示最终消息
+                    if (successCount > 0) {
+                        showMessage(
+                            currentLanguage === 'zh' 
+                                ? `成功注册 ${successCount} 名学生账号` 
+                                : `Successfully registered ${successCount} student accounts`,
+                            'success'
+                        );
+                    } else {
+                        showMessage(
+                            currentLanguage === 'zh' 
+                                ? '没有成功注册任何账号' 
+                                : 'No accounts were successfully registered',
+                            'warning'
+                        );
+                    }
+                    
+                } catch (error) {
+                    console.error('处理CSV文件失败:', error);
+                    showMessage(
+                        currentLanguage === 'zh' 
+                            ? '处理文件失败: ' + error.message 
+                            : 'Failed to process file: ' + error.message,
+                        'error'
+                    );
+                }
+            };
+            
+            reader.onerror = function() {
+                showMessage(currentLanguage === 'zh' ? '读取文件失败' : 'Failed to read file', 'error');
+            };
+            
+            reader.readAsText(file);
+            
+        } catch (error) {
+            console.error('上传文件失败:', error);
+            showMessage(currentLanguage === 'zh' ? '上传文件失败' : 'Failed to upload file', 'error');
+        }
+    }
+    
+    function printAccountCards() {
+        try {
+            const printContent = document.getElementById('account-cards-container').innerHTML;
+            const originalContent = document.body.innerHTML;
+            
+            document.body.innerHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${currentLanguage === 'zh' ? '学生账号卡片' : 'Student Account Cards'}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .account-card { 
+                            border: 1px solid #000; 
+                            padding: 15px; 
+                            margin-bottom: 15px; 
+                            page-break-inside: avoid;
+                        }
+                        @media print {
+                            .account-card { 
+                                border: 1px solid #000 !important; 
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h2>${currentLanguage === 'zh' ? '学生账号卡片' : 'Student Account Cards'}</h2>
+                    <div>${printContent}</div>
+                </body>
+                </html>
+            `;
+            
+            window.print();
+            document.body.innerHTML = originalContent;
+            location.reload();
+        } catch (error) {
+            console.error('打印失败:', error);
+            showMessage(currentLanguage === 'zh' ? '打印失败' : 'Print failed', 'error');
+        }
+    }
+    
     // ==================== 成就系统 ====================
     function loadAchievements() {
         try {
@@ -358,6 +1010,17 @@ const MathGame = (function() {
                 
                 // 更新UI
                 updateUserInfo();
+                
+                // 登录时自动从云端加载错题
+                if (currentUser) {
+                    setTimeout(() => {
+                        loadWrongQuestionsFromCloud().then(success => {
+                            if (success) {
+                                console.log('登录时自动加载云端错题成功');
+                            }
+                        });
+                    }, 1000);
+                }
                 
                 return true;
             }
@@ -538,11 +1201,12 @@ const MathGame = (function() {
             const username = currentUser.user_metadata?.username || email.split('@')[0];
             userName.textContent = username;
             
-            // 检查教师权限
+            // 检查教师权限 - 修改：允许管理员也能看到教师工具
             if (teacherToolsBtn) {
                 const userRole = currentUser.user_metadata?.role;
                 const isApprovedTeacher = userRole === 'teacher' && currentUser.user_metadata?.approved === true;
-                teacherToolsBtn.style.display = isApprovedTeacher ? 'flex' : 'none';
+                // ✅ 允许管理员访问教师工具
+                teacherToolsBtn.style.display = (isApprovedTeacher || isAdminUser) ? 'flex' : 'none';
             }
             
             // 显示/隐藏管理员按钮
@@ -751,6 +1415,9 @@ const MathGame = (function() {
         generateNewTarget();
         generateNumberGrid();
         
+        // 检查初始数字是否有匹配
+        setTimeout(checkAndAutoRefresh, 1000);
+        
         startTime = new Date();
         
         if (modeConfig.hasTimeLimit) {
@@ -795,6 +1462,9 @@ const MathGame = (function() {
         
         const gameGrid = document.getElementById('game-grid');
         if (gameGrid) gameGrid.innerHTML = '';
+        
+        // ✅ 确保加载错题数据
+        loadWrongQuestions();
     }
     
     function generateNumberGrid() {
@@ -823,6 +1493,9 @@ const MathGame = (function() {
             card.addEventListener('click', () => selectCard(card));
             gameGrid.appendChild(card);
         });
+        
+        // 生成后检查是否有匹配组合
+        setTimeout(checkAndAutoRefresh, 300);
     }
     
     function selectCard(card) {
@@ -881,6 +1554,14 @@ const MathGame = (function() {
                 const remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
                 if (remainingCards.length < 2) {
                     generateNumberGrid();
+                } else {
+                    // ✅ 检查是否有匹配的数字组合
+                    if (!hasValidCombination(currentTarget, remainingCards)) {
+                        showMessage(currentLanguage === 'zh' ? '没有匹配的组合，自动刷新数字！' : 'No matching combinations, refreshing numbers!', 'info');
+                        setTimeout(() => {
+                            refreshNumbers();
+                        }, 500);
+                    }
                 }
             }, 500);
             
@@ -897,9 +1578,21 @@ const MathGame = (function() {
             }, 800);
             
         } else {
+            // ✅ 记录错题
+            recordWrongQuestion(num1, num2, sum, currentTarget);
+            
             showFeedback(currentLanguage === 'zh' ? '✗ 错误' : '✗ Wrong', 'error');
             selectedCards.forEach(card => card.classList.remove('selected'));
             selectedCards = [];
+            
+            // ✅ 检查是否有匹配的数字组合
+            const remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
+            if (!hasValidCombination(currentTarget, remainingCards)) {
+                showMessage(currentLanguage === 'zh' ? '没有匹配的组合，自动刷新数字！' : 'No matching combinations, refreshing numbers!', 'info');
+                setTimeout(() => {
+                    refreshNumbers();
+                }, 500);
+            }
         }
         
         // 检查成就
@@ -975,6 +1668,9 @@ const MathGame = (function() {
         
         const targetSumElement = document.getElementById('target-sum');
         if (targetSumElement) targetSumElement.textContent = currentTarget;
+        
+        // 生成新目标后检查是否有匹配
+        setTimeout(checkAndAutoRefresh, 300);
     }
     
     function endGame(reason) {
@@ -1021,6 +1717,17 @@ const MathGame = (function() {
         
         const gameOverElement = document.getElementById('game-over');
         if (gameOverElement) gameOverElement.style.display = 'flex';
+        
+        // ✅ 游戏结束时自动同步错题到云端
+        if (currentUser && wrongQuestions.length > 0) {
+            setTimeout(() => {
+                syncAllWrongQuestionsToCloud().then(success => {
+                    if (success) {
+                        console.log('游戏结束时自动同步错题成功');
+                    }
+                });
+            }, 2000);
+        }
     }
     
     function restartGame() {
@@ -1216,28 +1923,6 @@ const MathGame = (function() {
         }
     }
     
-    function loadWrongQuestions() {
-        try {
-            const saved = localStorage.getItem('mathGameWrongQuestions');
-            if (saved) {
-                wrongQuestions = JSON.parse(saved);
-            } else {
-                wrongQuestions = [];
-            }
-        } catch (error) {
-            console.error('加载错题失败:', error);
-            wrongQuestions = [];
-        }
-    }
-    
-    function saveWrongQuestions() {
-        try {
-            localStorage.setItem('mathGameWrongQuestions', JSON.stringify(wrongQuestions));
-        } catch (error) {
-            console.error('保存错题失败:', error);
-        }
-    }
-    
     function showWrongBook() {
         try {
             loadWrongQuestions();
@@ -1333,19 +2018,26 @@ const MathGame = (function() {
         }
     }
     
+    // ==================== 修改：管理员可以使用教师工具 ====================
     function showTeacherTools() {
         try {
             if (!currentUser) {
                 showAuthModal();
-                showMessage('请先登录教师账号', 'info');
+                showMessage(currentLanguage === 'zh' ? '请先登录' : 'Please login first', 'info');
                 return;
             }
             
             const userRole = currentUser.user_metadata?.role;
             const isApprovedTeacher = userRole === 'teacher' && currentUser.user_metadata?.approved === true;
             
-            if (!isApprovedTeacher) {
-                showMessage('只有已批准的教师可以使用此功能', 'error');
+            // ✅ 修改：允许管理员也能访问教师工具
+            if (!isApprovedTeacher && !isAdminUser) {
+                showMessage(
+                    currentLanguage === 'zh' 
+                        ? '只有已批准的教师或管理员可以使用此功能' 
+                        : 'Only approved teachers or administrators can use this feature',
+                    'error'
+                );
                 return;
             }
             
@@ -1360,12 +2052,17 @@ const MathGame = (function() {
         try {
             if (!currentUser) {
                 showAuthModal();
-                showMessage('请先登录管理员账号', 'info');
+                showMessage(currentLanguage === 'zh' ? '请先登录管理员账号' : 'Please login as administrator', 'info');
                 return;
             }
             
             if (!isAdminUser) {
-                showMessage('只有管理员可以访问此功能', 'error');
+                showMessage(
+                    currentLanguage === 'zh' 
+                        ? '只有管理员可以访问此功能' 
+                        : 'Only administrators can access this feature',
+                    'error'
+                );
                 return;
             }
             
@@ -1454,7 +2151,7 @@ const MathGame = (function() {
             
             // 加载数据
             loadAchievements();
-            loadWrongQuestions();
+            loadWrongQuestions(); // ✅ 确保加载错题数据
             
             // 绑定事件监听器
             bindEventListeners();
@@ -1575,13 +2272,11 @@ const MathGame = (function() {
                 }
             });
             
-            // 错题本相关
-            document.getElementById('sync-wrong-questions-btn')?.addEventListener('click', () => {
-                showMessage(currentLanguage === 'zh' ? '云端同步功能开发中' : 'Cloud sync feature in development', 'info');
-            });
+            // ✅ 错题本相关 - 启用云端同步功能
+            document.getElementById('sync-wrong-questions-btn')?.addEventListener('click', syncAllWrongQuestionsToCloud);
             
             document.getElementById('clear-wrong-questions-btn')?.addEventListener('click', () => {
-                if (confirm(currentLanguage === 'zh' ? '确定要清空本地错题吗？' : 'Are you sure you want to clear local wrong questions?')) {
+                if (confirm(currentLanguage === 'zh' ? '确定要清空本地错题吗？（云端错题不受影响）' : 'Are you sure you want to clear local wrong questions? (Cloud data will not be affected)')) {
                     wrongQuestions = [];
                     saveWrongQuestions();
                     showWrongBook();
@@ -1589,22 +2284,69 @@ const MathGame = (function() {
                 }
             });
             
-            // 数据备份恢复
-            document.getElementById('backup-data-btn')?.addEventListener('click', backupToCloud);
-            document.getElementById('restore-data-btn')?.addEventListener('click', restoreFromCloud);
+            // ==================== 教师工具相关 - 修复：实现完整功能 ====================
+            // ✅ 下载模板按钮
+            document.getElementById('download-template-btn')?.addEventListener('click', downloadTemplate);
             
-            // 教师工具相关
-            document.getElementById('download-template-btn')?.addEventListener('click', () => {
-                showMessage(currentLanguage === 'zh' ? '模板下载功能开发中' : 'Template download feature in development', 'info');
+            // ✅ 上传Excel按钮
+            document.getElementById('upload-excel-btn')?.addEventListener('click', uploadExcelFile);
+            
+            // ✅ 打印卡片按钮
+            document.getElementById('print-cards-btn')?.addEventListener('click', printAccountCards);
+            
+            // ✅ 教师工具标签切换
+            const teacherTabButtons = document.querySelectorAll('#teacher-tools-modal .tab-btn');
+            teacherTabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除所有标签的active类
+                    teacherTabButtons.forEach(btn => btn.classList.remove('active'));
+                    // 隐藏所有标签内容
+                    document.querySelectorAll('#teacher-tools-modal .tab-content').forEach(content => {
+                        content.classList.remove('active');
+                        content.style.display = 'none';
+                    });
+                    
+                    // 激活当前标签
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    const tabContent = document.getElementById(tabId);
+                    if (tabContent) {
+                        tabContent.classList.add('active');
+                        tabContent.style.display = 'block';
+                    }
+                });
             });
             
-            // 管理员工具相关
+            // ==================== 管理员工具相关 ====================
             document.getElementById('refresh-teachers-btn')?.addEventListener('click', () => {
                 showMessage(currentLanguage === 'zh' ? '刷新功能开发中' : 'Refresh feature in development', 'info');
             });
             
             document.getElementById('refresh-stats-btn')?.addEventListener('click', () => {
                 showMessage(currentLanguage === 'zh' ? '刷新功能开发中' : 'Refresh feature in development', 'info');
+            });
+            
+            // ✅ 管理员工具标签切换
+            const adminTabButtons = document.querySelectorAll('#admin-tools-modal .tab-btn');
+            adminTabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除所有标签的active类
+                    adminTabButtons.forEach(btn => btn.classList.remove('active'));
+                    // 隐藏所有标签内容
+                    document.querySelectorAll('#admin-tools-modal .tab-content').forEach(content => {
+                        content.classList.remove('active');
+                        content.style.display = 'none';
+                    });
+                    
+                    // 激活当前标签
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    const tabContent = document.getElementById(tabId);
+                    if (tabContent) {
+                        tabContent.classList.add('active');
+                        tabContent.style.display = 'block';
+                    }
+                });
             });
             
         } catch (error) {
