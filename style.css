@@ -2517,3 +2517,449 @@ td, th {
 }
 
 /* ========== 成就系统扩展修复完成！ ========== */
+
+/* ========== 侧边栏字体匹配修复 ========== */
+
+/* 1. 侧边栏容器 - 优化内边距 */
+.sidebar {
+    padding: 28px 12px !important; /* 减小左右内边距，让按钮更宽 */
+    gap: 16px !important;
+}
+
+/* 2. 侧边栏按钮 - 字体与框框完美匹配 */
+.sidebar-btn {
+    padding: 16px 12px !important; /* 调整内边距 */
+    font-size: 1.1em !important; /* 稍微减小字体 */
+    font-weight: 800 !important;
+    letter-spacing: 1px !important;
+    line-height: 1.2 !important; /* 控制行高 */
+    white-space: nowrap !important; /* 防止文字换行 */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important; /* 满宽 */
+    min-height: 58px !important; /* 固定最小高度 */
+    border-radius: 50px !important;
+    box-shadow: 0 10px 0 #c15a2b, 0 8px 18px rgba(255, 100, 50, 0.4) !important;
+}
+
+/* 3. 侧边栏按钮悬停 - 保持比例 */
+.sidebar-btn:hover {
+    transform: translateY(-6px) scale(1.02) !important;
+    box-shadow: 0 14px 0 #b34a2a, 0 14px 25px rgba(255, 150, 0, 0.6) !important;
+}
+
+/* 4. 侧边栏按钮点击 - 下沉效果 */
+.sidebar-btn:active {
+    transform: translateY(6px) !important;
+    box-shadow: 0 4px 0 #b34a2a !important;
+}
+
+/* 5. 小动物足迹装饰 - 调整大小和位置 */
+.sidebar-btn::after {
+    content: "🐾" !important;
+    font-size: 16px !important;
+    opacity: 0.7 !important;
+    margin-left: 6px !important;
+    display: inline-block !important;
+    transform: scale(1) !important;
+}
+
+/* 6. 图标和文字垂直居中 */
+.sidebar-btn i,
+.sidebar-btn svg,
+.sidebar-btn img,
+.sidebar-btn [class*="icon"] {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin-right: 4px !important;
+    font-size: 1.2em !important;
+}
+
+/* 7. 特定按钮字体微调 */
+.sidebar-btn.secondary { font-size: 1.05em !important; }
+.sidebar-btn.achievement { font-size: 1.05em !important; }
+.sidebar-btn.wrong { font-size: 1.05em !important; }
+.sidebar-btn.profile { font-size: 1.05em !important; }
+.sidebar-btn.teacher { font-size: 1.05em !important; }
+.sidebar-btn.admin { font-size: 1.05em !important; }
+
+/* 8. 长文字按钮 - 特别处理 */
+.sidebar-btn:contains("成就"), 
+.sidebar-btn:contains("Achievement"),
+.sidebar-btn:contains("错题"),
+.sidebar-btn:contains("Wrong") {
+    font-size: 1em !important;
+    padding: 16px 8px !important;
+}
+
+/* 9. 响应式侧边栏 - 移动端横排适配 */
+@media (max-width: 1024px) {
+    .sidebar {
+        padding: 18px 15px !important;
+        gap: 12px !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+    
+    .sidebar-btn {
+        min-width: 140px !important;
+        width: auto !important;
+        flex: 0 1 auto !important;
+        padding: 14px 16px !important;
+        font-size: 1em !important;
+        white-space: nowrap !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar-btn {
+        min-width: 130px !important;
+        padding: 12px 14px !important;
+        font-size: 0.95em !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        padding: 15px 10px !important;
+    }
+    
+    .sidebar-btn {
+        min-width: 115px !important;
+        padding: 10px 12px !important;
+        font-size: 0.9em !important;
+        box-shadow: 0 8px 0 #c15a2b !important;
+    }
+    
+    .sidebar-btn::after {
+        font-size: 14px !important;
+        margin-left: 4px !important;
+    }
+}
+
+/* ========== 成就系统第三层均分布局修复 ========== */
+
+/* 1. 成就第三层容器 - 强制网格均分 */
+.achievements-grid,
+.achievements-container,
+.achievement-list,
+.modal-content .achievements-grid,
+.tab-pane .achievements-grid,
+[class*="achievement"]:not(.achievement-card) {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important; /* 强制三列等宽 */
+    gap: 25px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 20px 0 30px 0 !important;
+    padding: 10px 5px !important;
+}
+
+/* 2. 成就卡片 - 完全等宽等高 */
+.achievement-card {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-width: 0 !important; /* 防止溢出 */
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 240px !important;
+    margin: 0 !important;
+    padding: 24px 16px !important;
+    background: linear-gradient(145deg, #fff9e6, #ffe6f0) !important;
+    border: 8px solid #ffd966 !important;
+    border-radius: 40px !important;
+    box-shadow: 0 12px 0 #daa54e, 0 10px 20px rgba(0,0,0,0.08) !important;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+}
+
+/* 3. 成就图标 - 统一大小 */
+.achievement-icon {
+    font-size: 2.8em !important;
+    margin-bottom: 12px !important;
+    display: block !important;
+    text-align: center !important;
+    line-height: 1 !important;
+}
+
+/* 4. 成就名称 - 固定高度区域 */
+.achievement-name {
+    font-size: 1.25em !important;
+    font-weight: 900 !important;
+    color: #3b2a1a !important;
+    margin-bottom: 8px !important;
+    text-align: center !important;
+    letter-spacing: 0.5px !important;
+    text-shadow: 1px 1px 0 rgba(255, 255, 200, 0.5) !important;
+    word-break: break-word !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    min-height: 3em !important;
+    line-height: 1.3 !important;
+}
+
+/* 5. 成就描述 - 固定高度区域 */
+.achievement-desc {
+    font-size: 0.9em !important;
+    color: #5e4b3a !important;
+    margin-bottom: 12px !important;
+    text-align: center !important;
+    line-height: 1.4 !important;
+    padding: 0 5px !important;
+    word-break: break-word !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    min-height: 2.8em !important;
+    flex: 0 1 auto !important;
+}
+
+/* 6. 成就进度区域 - 底部对齐 */
+.achievement-progress-container {
+    margin-top: auto !important; /* 自动顶部边距，推到最底部 */
+    width: 100% !important;
+}
+
+/* 7. 成就进度条 - 统一样式 */
+.achievement-progress {
+    width: 100% !important;
+    height: 12px !important;
+    background: #ffeec2 !important;
+    border-radius: 30px !important;
+    border: 3px solid #ffb27f !important;
+    margin: 10px 0 5px 0 !important;
+    overflow: hidden !important;
+}
+
+.achievement-progress-fill {
+    height: 100% !important;
+    background: linear-gradient(90deg, #ffb347, #ff8c42) !important;
+    border-radius: 30px !important;
+    box-shadow: 0 0 8px #ffa55a !important;
+    transition: width 0.3s ease !important;
+}
+
+/* 8. 成就进度文本 - 统一位置 */
+.achievement-progress-text {
+    font-size: 0.85em !important;
+    font-weight: 800 !important;
+    color: #8b5a2b !important;
+    text-align: center !important;
+    display: block !important;
+    margin-top: 5px !important;
+}
+
+/* 9. 已解锁成就 - 增强视觉效果 */
+.achievement-card.unlocked {
+    background: linear-gradient(145deg, #fff9b0, #ffe0b0) !important;
+    border-color: #ffae5e !important;
+    box-shadow: 0 12px 0 #d48a3a, 0 0 0 4px #fff5c0, 0 10px 20px rgba(255, 200, 0, 0.2) !important;
+}
+
+/* 10. 锁定的成就 - 统一透明度 */
+.achievement-card.locked {
+    opacity: 0.7 !important;
+    background: rgba(233, 226, 208, 0.7) !important;
+    border-color: #c0b09a !important;
+    box-shadow: 0 8px 0 #9e8b78 !important;
+}
+
+/* 11. 成就第三层特定修复 - 针对第三个tab/区域 */
+.tab-content:nth-child(3) .achievements-grid,
+[role="tabpanel"]:nth-child(3) .achievements-grid,
+.achievements-section:nth-child(3) .achievements-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 25px !important;
+}
+
+/* 12. 成就徽章/点数 - 底部固定位置 */
+.achievement-points,
+.achievement-badge {
+    display: inline-block !important;
+    background: linear-gradient(145deg, #ffd966, #ffb347) !important;
+    color: #2d1f1b !important;
+    font-weight: 900 !important;
+    font-size: 0.95em !important;
+    padding: 5px 14px !important;
+    border-radius: 30px !important;
+    border: 3px solid white !important;
+    box-shadow: 0 4px 0 #b47d3a !important;
+    margin-top: 10px !important;
+    align-self: center !important;
+}
+
+/* 13. 响应式布局 - 平板两列 */
+@media (max-width: 1024px) {
+    .achievements-grid,
+    .achievements-container,
+    [class*="achievement"]:not(.achievement-card) {
+        grid-template-columns: repeat(2, 1fr) !important; /* 平板两列等宽 */
+        gap: 20px !important;
+    }
+}
+
+/* 14. 响应式布局 - 手机一列 */
+@media (max-width: 768px) {
+    .achievements-grid,
+    .achievements-container,
+    [class*="achievement"]:not(.achievement-card) {
+        grid-template-columns: 1fr !important; /* 手机一列 */
+        gap: 20px !important;
+    }
+    
+    .achievement-card {
+        min-height: 220px !important;
+        padding: 22px 16px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .achievement-card {
+        min-height: 200px !important;
+        padding: 20px 16px !important;
+    }
+    
+    .achievement-icon {
+        font-size: 2.5em !important;
+    }
+    
+    .achievement-name {
+        font-size: 1.2em !important;
+        min-height: 2.8em !important;
+    }
+    
+    .achievement-desc {
+        font-size: 0.85em !important;
+    }
+}
+
+/* 15. 成就分类标题 - 跨列居中 */
+.achievement-category-title {
+    grid-column: 1 / -1 !important; /* 跨所有列 */
+    text-align: center !important;
+    margin: 20px 0 10px 0 !important;
+    font-size: 1.8em !important;
+}
+
+/* 16. 成就统计卡片 - 跨列显示 */
+.achievement-stats {
+    grid-column: 1 / -1 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    background: rgba(255, 251, 240, 0.8) !important;
+    backdrop-filter: blur(14px) !important;
+    border: 6px solid #fff8e0 !important;
+    border-radius: 50px !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 15px 0 #ffc09a !important;
+}
+
+/* 17. 强制移除任何可能影响网格均分的浮动或定位 */
+.achievement-card::before,
+.achievement-card::after {
+    display: none !important;
+}
+
+/* 18. 成就容器父元素修复 - 确保宽度正确 */
+.modal-content,
+.tab-content,
+[role="tabpanel"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+}
+
+/* 19. 成就动画效果 - 不影响布局 */
+.achievement-card:hover {
+    transform: translateY(-6px) scale(1.02) !important;
+    box-shadow: 0 16px 0 #c48b3e, 0 15px 30px rgba(255, 180, 0, 0.3) !important;
+    z-index: 100 !important;
+}
+
+/* 20. 成就流光效果 - 不占空间 */
+.achievement-card::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    left: -60% !important;
+    width: 200% !important;
+    height: 200% !important;
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
+    ) !important;
+    transform: rotate(45deg) !important;
+    animation: shine 8s infinite !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+}
+
+/* 21. 成就第三层特殊处理 - 最关键的修复！ */
+.achievements-section:nth-of-type(3) .achievements-grid,
+.achievements-container:nth-of-type(3) .achievements-grid,
+.tab-content:nth-of-type(3) .achievements-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 25px !important;
+    align-items: stretch !important; /* 拉伸对齐 */
+}
+
+/* 22. 成就卡片内容弹性布局 - 确保底部对齐 */
+.achievement-card {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+}
+
+.achievement-card > *:last-child {
+    margin-top: auto !important; /* 最后一个元素推到最底部 */
+}
+
+/* 23. 成就数量不等时的处理 - 空卡片占位（如果有） */
+.achievement-grid-placeholder {
+    display: none !important; /* 隐藏占位符，保持网格干净 */
+}
+
+/* 24. 成就提示气泡 - 不影响布局 */
+.achievement-tooltip {
+    position: absolute !important;
+    bottom: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: #2d1f1b !important;
+    color: white !important;
+    padding: 6px 12px !important;
+    border-radius: 30px !important;
+    font-size: 0.8em !important;
+    white-space: nowrap !important;
+    box-shadow: 0 4px 0 #1a1a1a !important;
+    border: 2px solid #ffe0b0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: all 0.2s ease !important;
+    z-index: 200 !important;
+}
+
+.achievement-card:hover .achievement-tooltip {
+    opacity: 1 !important;
+    bottom: calc(100% + 5px) !important;
+}
+
+/* ========== 修复完成！侧边栏字体匹配 + 成就第三层均分布局 ========== */
