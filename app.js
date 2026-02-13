@@ -736,6 +736,9 @@ const MathGame = (function() {
     let authMode = 'login';
     let currentLanguage = 'zh';
     let isAdminUser = false;
+    let isSuperAdmin = false;  // 新增：超级管理员标志
+    let isSchoolAdmin = false; // 新增：学校管理员标志
+    let isTeacher = false;     // 新增：教师标志
     let isSupabaseReady = false;
     
     // ==================== 云端同步状态 ====================
@@ -1094,7 +1097,7 @@ const MathGame = (function() {
                 currentUser = user;
                 console.log('用户已登录:', user.email);
                 
-                await checkIfAdmin();
+                await checkUserRole(); // 新增：检查用户角色
                 updateUserInfo();
                 
                 setTimeout(async () => {
@@ -1124,31 +1127,66 @@ const MathGame = (function() {
         }
     }
     
-    async function checkIfAdmin() {
+    // ==================== 新增：完整的角色检查函数 ====================
+    async function checkUserRole() {
         if (!currentUser) {
             isAdminUser = false;
+            isSuperAdmin = false;
+            isSchoolAdmin = false;
+            isTeacher = false;
             return false;
         }
         
         try {
-            const userRole = currentUser.user_metadata?.role;
-            if (userRole === 'admin' || userRole === 'superadmin') {
-                isAdminUser = true;
-                return true;
-            }
+            const userEmail = currentUser.email?.toLowerCase() || '';
+            const userMeta = currentUser.user_metadata || {};
+            const userRole = userMeta.role || 'student';
             
-            const email = currentUser.email?.toLowerCase() || '';
-            const isInAdminList = CONFIG.ADMIN_EMAILS.some(adminEmail => 
-                adminEmail.toLowerCase() === email
+            console.log('检查用户角色:', { email: userEmail, role: userRole, metadata: userMeta });
+            
+            // 1. 超级管理员检查（多种方式）
+            isSuperAdmin = (
+                userRole === 'super_admin' ||
+                userRole === 'admin' ||  // 兼容旧数据
+                CONFIG.ADMIN_EMAILS.some(adminEmail => adminEmail.toLowerCase() === userEmail) ||
+                userMeta.is_super_admin === true
             );
             
-            isAdminUser = isInAdminList;
-            return isInAdminList;
+            // 2. 学校管理员检查
+            isSchoolAdmin = (
+                userRole === 'school_admin' ||
+                (userRole === 'admin' && userMeta.school_id) ||  // 有学校ID的admin视为学校管理员
+                isSuperAdmin  // 超级管理员自动拥有学校管理员权限
+            );
+            
+            // 3. 教师检查
+            isTeacher = (
+                userRole === 'teacher' ||
+                (userRole === 'admin' && userMeta.approved === true) ||
+                isSchoolAdmin  // 学校管理员自动拥有教师权限
+            );
+            
+            // 4. 兼容旧代码的 isAdminUser
+            isAdminUser = isSuperAdmin || isSchoolAdmin;
+            
+            console.log('角色检查结果:', {
+                isSuperAdmin,
+                isSchoolAdmin,
+                isTeacher,
+                isAdminUser
+            });
+            
+            return true;
         } catch (error) {
-            console.error('管理员检查失败:', error);
-            isAdminUser = false;
+            console.error('检查用户角色失败:', error);
             return false;
         }
+    }
+    
+    async function checkIfAdmin() {
+        // 兼容旧函数，调用新函数
+        await checkUserRole();
+        return isAdminUser;
     }
     
     async function login(email, password) {
@@ -1172,7 +1210,7 @@ const MathGame = (function() {
             if (data && data.user) {
                 currentUser = data.user;
                 
-                await checkIfAdmin();
+                await checkUserRole(); // 使用新函数
                 updateUserInfo();
                 closeAuthModal();
                 
@@ -1218,7 +1256,7 @@ const MathGame = (function() {
             if (data && data.user) {
                 currentUser = data.user;
                 
-                await checkIfAdmin();
+                await checkUserRole(); // 使用新函数
                 updateUserInfo();
                 closeAuthModal();
                 
@@ -1240,6 +1278,9 @@ const MathGame = (function() {
             if (!isSupabaseReady || !supabase || offlineMode) {
                 currentUser = null;
                 isAdminUser = false;
+                isSuperAdmin = false;
+                isSchoolAdmin = false;
+                isTeacher = false;
                 updateUserInfo();
                 showMessage(currentLanguage === 'zh' ? '已退出登录' : 'Logged out', 'info');
                 return;
@@ -1258,6 +1299,9 @@ const MathGame = (function() {
             
             currentUser = null;
             isAdminUser = false;
+            isSuperAdmin = false;
+            isSchoolAdmin = false;
+            isTeacher = false;
             
             const userInfo = document.getElementById('user-info');
             const teacherToolsBtn = document.getElementById('teacher-tools-btn');
@@ -1316,6 +1360,8 @@ const MathGame = (function() {
             }
             
             const userRole = currentUser.user_metadata?.role;
+            
+            // 教师申请按钮：只有学生角色显示
             if (teacherApplicationBtn) {
                 if (userRole === 'student' || !userRole) {
                     teacherApplicationBtn.style.display = 'flex';
@@ -1326,22 +1372,36 @@ const MathGame = (function() {
                 }
             }
             
+            // 教师工具按钮：超级管理员、学校管理员、已批准的教师可见
             if (teacherToolsBtn) {
-                const isApprovedTeacher = userRole === 'teacher' && currentUser.user_metadata?.approved === true;
-                teacherToolsBtn.style.display = (isApprovedTeacher || isAdminUser) ? 'flex' : 'none';
-                if (teacherToolsBtn.style.display === 'flex') {
+                const showTeacherTools = isSuperAdmin || isSchoolAdmin || 
+                    (userRole === 'teacher' && currentUser.user_metadata?.approved === true);
+                
+                teacherToolsBtn.style.display = showTeacherTools ? 'flex' : 'none';
+                if (showTeacherTools) {
                     const span = teacherToolsBtn.querySelector('span');
                     if (span) span.textContent = translations[currentLanguage].teacherTools || '教师工具';
                 }
             }
             
+            // 管理员工具按钮：只有超级管理员可见
             if (adminToolsBtn) {
-                adminToolsBtn.style.display = isAdminUser ? 'flex' : 'none';
-                if (adminToolsBtn.style.display === 'flex') {
+                adminToolsBtn.style.display = isSuperAdmin ? 'flex' : 'none';
+                if (isSuperAdmin) {
                     const span = adminToolsBtn.querySelector('span');
                     if (span) span.textContent = translations[currentLanguage].adminTools || '管理工具';
                 }
             }
+            
+            // 调试信息
+            console.log('UI更新 - 权限状态:', {
+                isSuperAdmin,
+                isSchoolAdmin,
+                isTeacher,
+                showTeacherTools: teacherToolsBtn?.style.display,
+                showAdminTools: adminToolsBtn?.style.display
+            });
+            
         } catch (error) {
             console.error('更新用户信息失败:', error);
         }
@@ -1718,14 +1778,15 @@ const MathGame = (function() {
                 return;
             }
             
-            const userRole = currentUser.user_metadata?.role;
-            const isApprovedTeacher = userRole === 'teacher' && currentUser.user_metadata?.approved === true;
+            // 使用新的角色检查
+            const canUseTeacherTools = isSuperAdmin || isSchoolAdmin || 
+                (isTeacher && currentUser.user_metadata?.approved === true);
             
-            if (!isApprovedTeacher && !isAdminUser) {
+            if (!canUseTeacherTools) {
                 showMessage(
                     currentLanguage === 'zh' 
-                        ? '只有已批准的教师或管理员可以使用此功能' 
-                        : 'Only approved teachers or administrators can use this feature',
+                        ? '只有已批准的教师、学校管理员或超级管理员可以使用此功能' 
+                        : 'Only approved teachers, school administrators or super administrators can use this feature',
                     'error'
                 );
                 return;
@@ -1737,11 +1798,21 @@ const MathGame = (function() {
             // 加载待审核教师申请列表
             let pendingApplications = [];
             try {
-                const { data, error } = await supabase
+                let query = supabase
                     .from('teacher_applications')
                     .select('*')
                     .eq('status', 'pending')
                     .order('created_at', { ascending: false });
+                
+                // 学校管理员只能看到本校申请
+                if (isSchoolAdmin && !isSuperAdmin) {
+                    const schoolId = currentUser.user_metadata?.school_id;
+                    if (schoolId) {
+                        query = query.eq('school_id', schoolId);
+                    }
+                }
+                
+                const { data, error } = await query;
                 
                 if (!error) {
                     pendingApplications = data || [];
@@ -1753,11 +1824,21 @@ const MathGame = (function() {
             // 加载已批准教师列表
             let approvedTeachers = [];
             try {
-                const { data, error } = await supabase
+                let query = supabase
                     .from('teacher_applications')
                     .select('*')
                     .eq('status', 'approved')
                     .order('created_at', { ascending: false });
+                
+                // 学校管理员只能看到本校教师
+                if (isSchoolAdmin && !isSuperAdmin) {
+                    const schoolId = currentUser.user_metadata?.school_id;
+                    if (schoolId) {
+                        query = query.eq('school_id', schoolId);
+                    }
+                }
+                
+                const { data, error } = await query;
                 
                 if (!error) {
                     approvedTeachers = data || [];
@@ -2024,11 +2105,12 @@ const MathGame = (function() {
                 return;
             }
             
-            if (!isAdminUser) {
+            // 使用新的超级管理员检查
+            if (!isSuperAdmin) {
                 showMessage(
                     currentLanguage === 'zh' 
-                        ? '只有管理员可以访问此功能' 
-                        : 'Only administrators can access this feature',
+                        ? '只有超级管理员可以访问此功能' 
+                        : 'Only super administrators can access this feature',
                     'error'
                 );
                 return;
@@ -2236,9 +2318,10 @@ const MathGame = (function() {
     // ==================== 修复版批准教师申请 ====================
     async function approveTeacherApplication(userId, email) {
         try {
-            if (!isAdminUser) {
+            // 使用新的角色检查
+            if (!isSuperAdmin && !isSchoolAdmin) {
                 showMessage(
-                    currentLanguage === 'zh' ? '只有管理员可以批准教师申请' : 'Only administrators can approve teacher applications',
+                    currentLanguage === 'zh' ? '只有超级管理员或学校管理员可以批准教师申请' : 'Only super administrators or school administrators can approve teacher applications',
                     'error'
                 );
                 return;
@@ -2302,9 +2385,9 @@ const MathGame = (function() {
     // ==================== 修复版拒绝教师申请 ====================
     async function rejectTeacherApplication(userId, email) {
         try {
-            if (!isAdminUser) {
+            if (!isSuperAdmin && !isSchoolAdmin) {
                 showMessage(
-                    currentLanguage === 'zh' ? '只有管理员可以拒绝教师申请' : 'Only administrators can reject teacher applications',
+                    currentLanguage === 'zh' ? '只有超级管理员或学校管理员可以拒绝教师申请' : 'Only super administrators or school administrators can reject teacher applications',
                     'error'
                 );
                 return;
@@ -4333,113 +4416,223 @@ const MathGame = (function() {
             leaderboardContent.innerHTML = `<div style="text-align:center;padding:30px;">${translations[currentLanguage].loadingStats}</div>`;
             leaderboardModal.style.display = 'flex';
             
-            let easyScore = [], easyAccuracy = [], easySpeed = [];
-            let standardScore = [], standardAccuracy = [], standardSpeed = [];
-            let challengeScore = [], challengeAccuracy = [], challengeSpeed = [];
-            
-            if (!offlineMode) {
-                [easyScore, easyAccuracy, easySpeed,
-                 standardScore, standardAccuracy, standardSpeed,
-                 challengeScore, challengeAccuracy, challengeSpeed] = await Promise.all([
-                    loadLeaderboardData('easy', 'score', 10),
-                    loadLeaderboardData('easy', 'accuracy', 10),
-                    loadLeaderboardData('easy', 'time', 10),
-                    loadLeaderboardData('standard', 'score', 10),
-                    loadLeaderboardData('standard', 'accuracy', 10),
-                    loadLeaderboardData('standard', 'time', 10),
-                    loadLeaderboardData('challenge', 'score', 10),
-                    loadLeaderboardData('challenge', 'accuracy', 10),
-                    loadLeaderboardData('challenge', 'time', 10)
-                ]);
+            // ✅ 使用新的超级管理员检查
+            if (isSuperAdmin) {
+                // 超级管理员看到全国排行榜
+                await showNationalLeaderboard(leaderboardContent);
+            } else {
+                // 普通用户看到原有排行榜
+                await showSchoolLeaderboard(leaderboardContent);
             }
             
-            let userEasy = null;
-            let userStandard = null;
-            let userChallenge = null;
-            
-            if (currentUser && !offlineMode) {
-                [userEasy, userStandard, userChallenge] = await Promise.all([
-                    loadUserBestInMode('easy'),
-                    loadUserBestInMode('standard'),
-                    loadUserBestInMode('challenge')
-                ]);
-            }
-            
-            let html = `
-                <div style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
-                        <h3 style="color: #4CAF50; margin: 0; display: flex; align-items: center;">
-                            <span style="font-size: 2em; margin-right: 10px;">🏆</span>
-                            ${translations[currentLanguage].leaderboardTitle}
-                        </h3>
-                        <button id="sync-leaderboard-btn" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                            🔄 ${translations[currentLanguage].refresh}
-                        </button>
-                    </div>
-                    
-                    <!-- 简单模式 3个榜单 -->
-                    <div style="margin-bottom: 40px;">
-                        <h4 style="display: flex; align-items: center; color: #8BC34A; border-bottom: 3px solid #8BC34A; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                            <span style="background: #8BC34A; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🟢</span>
-                            <span style="font-size: clamp(1.1em, 4vw, 1.3em);">${translations[currentLanguage].leaderboardEasy}</span>
-                            <span style="font-size: 0.8em; background: #8BC34A20; color: #8BC34A; padding: 4px 12px; border-radius: 20px;">
-                                ${currentLanguage === 'zh' ? '0-9' : '0-9'}
-                            </span>
-                        </h4>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" class="leaderboard-grid">
-                            ${generateLeaderboardCard('easy', 'score', easyScore, translations[currentLanguage].leaderboardEasyScore, '#8BC34A')}
-                            ${generateLeaderboardCard('easy', 'accuracy', easyAccuracy, translations[currentLanguage].leaderboardEasyAccuracy, '#8BC34A')}
-                            ${generateLeaderboardCard('easy', 'time', easySpeed, translations[currentLanguage].leaderboardEasySpeed, '#8BC34A')}
-                        </div>
-                    </div>
-                    
-                    <!-- 挑战30模式 3个榜单 -->
-                    <div style="margin-bottom: 40px;">
-                        <h4 style="display: flex; align-items: center; color: #FF9800; border-bottom: 3px solid #FF9800; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                            <span style="background: #FF9800; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🟠</span>
-                            <span style="font-size: clamp(1.1em, 4vw, 1.3em);">${translations[currentLanguage].leaderboardStandard}</span>
-                            <span style="font-size: 0.8em; background: #FF980020; color: #FF9800; padding: 4px 12px; border-radius: 20px;">
-                                ${currentLanguage === 'zh' ? '30题' : '30 Qs'}
-                            </span>
-                        </h4>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" class="leaderboard-grid">
-                            ${generateLeaderboardCard('standard', 'score', standardScore, translations[currentLanguage].leaderboardStandardScore, '#FF9800')}
-                            ${generateLeaderboardCard('standard', 'accuracy', standardAccuracy, translations[currentLanguage].leaderboardStandardAccuracy, '#FF9800')}
-                            ${generateLeaderboardCard('standard', 'time', standardSpeed, translations[currentLanguage].leaderboardStandardSpeed, '#FF9800')}
-                        </div>
-                    </div>
-                    
-                    <!-- 激情90秒模式 3个榜单 -->
-                    <div style="margin-bottom: 40px;">
-                        <h4 style="display: flex; align-items: center; color: #f44336; border-bottom: 3px solid #f44336; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                            <span style="background: #f44336; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🔴</span>
-                            <span style="font-size: clamp(1.1em, 4vw, 1.3em);">${translations[currentLanguage].leaderboardChallenge}</span>
-                            <span style="font-size: 0.8em; background: #f4433620; color: #f44336; padding: 4px 12px; border-radius: 20px;">
-                                ${currentLanguage === 'zh' ? '90秒' : '90s'}
-                            </span>
-                        </h4>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" class="leaderboard-grid">
-                            ${generateLeaderboardCard('challenge', 'score', challengeScore, translations[currentLanguage].leaderboardChallengeScore, '#f44336')}
-                            ${generateLeaderboardCard('challenge', 'accuracy', challengeAccuracy, translations[currentLanguage].leaderboardChallengeAccuracy, '#f44336')}
-                            ${generateLeaderboardCard('challenge', 'time', challengeSpeed, translations[currentLanguage].leaderboardChallengeSpeed, '#f44336')}
-                        </div>
-                    </div>
-                    
-                    ${currentUser ? generateUserBestSection(userEasy, userStandard, userChallenge) : generateLoginPrompt()}
-                    ${offlineMode ? '<div style="margin-top: 20px; text-align: center; color: #666; padding: 15px; background: #f8f9fa; border-radius: 12px;">📴 ' + (currentLanguage === 'zh' ? '离线模式：排行榜数据不可用' : 'Offline mode: Leaderboard data unavailable') + '</div>' : ''}
-                </div>
-            `;
-            
-            leaderboardContent.innerHTML = html;
-            
-            document.getElementById('sync-leaderboard-btn')?.addEventListener('click', async () => {
-                showLeaderboard();
-                showMessage(translations[currentLanguage].syncSuccess, 'success');
-            });
         } catch (error) {
             console.error('显示排行榜失败:', error);
             showMessage(translations[currentLanguage].loadingStats, 'error');
         }
+    }
+    
+    // ✅ 新增：全国排行榜（超级管理员专用）
+    async function showNationalLeaderboard(container) {
+        try {
+            // 获取全国统计数据
+            const { data: stats } = await supabase
+                .from('admin_dashboard_stats')
+                .select('*')
+                .single();
+            
+            // 获取全国排行榜数据
+            const { data: nationalData } = await supabase
+                .rpc('get_leaderboard', {
+                    p_leaderboard_type: 'national',
+                    p_mode: 'challenge',
+                    p_limit: 50
+                });
+            
+            const html = `
+                <div style="padding: 20px;">
+                    <!-- 管理员统计卡片 -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px;">
+                            <div style="font-size: 2em;">🏫</div>
+                            <div style="font-size: 1.5em; font-weight: bold;">${stats?.total_schools || 0}</div>
+                            <div style="opacity: 0.9;">合作学校</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #ff8c5a 0%, #ff6b4a 100%); color: white; padding: 20px; border-radius: 15px;">
+                            <div style="font-size: 2em;">👥</div>
+                            <div style="font-size: 1.5em; font-weight: bold;">${stats?.total_players || 0}</div>
+                            <div style="opacity: 0.9;">总玩家数</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 20px; border-radius: 15px;">
+                            <div style="font-size: 2em;">🎮</div>
+                            <div style="font-size: 1.5em; font-weight: bold;">${stats?.total_games || 0}</div>
+                            <div style="opacity: 0.9;">总游戏局数</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; padding: 20px; border-radius: 15px;">
+                            <div style="font-size: 2em;">🎯</div>
+                            <div style="font-size: 1.5em; font-weight: bold;">${stats?.avg_accuracy || 0}%</div>
+                            <div style="opacity: 0.9;">平均正确率</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 全国排行榜 -->
+                    <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <h4 style="display: flex; align-items: center; margin-top: 0; margin-bottom: 20px;">
+                            <span style="background: #4CAF50; color: white; width: 32px; height: 32px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🏆</span>
+                            全国总排行榜（所有学校）
+                        </h4>
+                        
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
+                                        <th style="padding: 12px; text-align: left;">排名</th>
+                                        <th style="padding: 12px; text-align: left;">玩家</th>
+                                        <th style="padding: 12px; text-align: left;">学校</th>
+                                        <th style="padding: 12px; text-align: left;">班级</th>
+                                        <th style="padding: 12px; text-align: left;">得分</th>
+                                        <th style="padding: 12px; text-align: left;">正确率</th>
+                                        <th style="padding: 12px; text-align: left;">用时</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${nationalData?.leaderboard?.map((item, index) => `
+                                        <tr style="border-bottom: 1px solid #f0f0f0;">
+                                            <td style="padding: 12px;">
+                                                <span style="font-weight: bold; color: ${index < 3 ? ['#FFD700', '#C0C0C0', '#CD7F32'][index] : '#666'};">
+                                                    ${index < 3 ? ['🥇', '🥈', '🥉'][index] : `${index+1}.`}
+                                                </span>
+                                            </td>
+                                            <td style="padding: 12px; font-weight: bold;">${item.username}</td>
+                                            <td style="padding: 12px;">${item.school_name}</td>
+                                            <td style="padding: 12px;">${item.class_name || '-'}</td>
+                                            <td style="padding: 12px; color: #4CAF50; font-weight: bold;">${item.score}</td>
+                                            <td style="padding: 12px;">${item.accuracy}%</td>
+                                            <td style="padding: 12px;">${item.time_used}s</td>
+                                        </tr>
+                                    `).join('') || '<tr><td colspan="7" style="text-align:center;padding:30px;">暂无数据</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; text-align: right; color: #666; font-size: 0.85em;">
+                        更新时间: ${new Date().toLocaleString()}
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('加载全国排行榜失败:', error);
+            container.innerHTML = `<div style="text-align:center;padding:30px;color:#ff4444;">加载失败: ${error.message}</div>`;
+        }
+    }
+    
+    // ✅ 原有学校排行榜（保持不变）
+    async function showSchoolLeaderboard(container) {
+        let easyScore = [], easyAccuracy = [], easySpeed = [];
+        let standardScore = [], standardAccuracy = [], standardSpeed = [];
+        let challengeScore = [], challengeAccuracy = [], challengeSpeed = [];
+        
+        if (!offlineMode) {
+            [easyScore, easyAccuracy, easySpeed,
+             standardScore, standardAccuracy, standardSpeed,
+             challengeScore, challengeAccuracy, challengeSpeed] = await Promise.all([
+                loadLeaderboardData('easy', 'score', 10),
+                loadLeaderboardData('easy', 'accuracy', 10),
+                loadLeaderboardData('easy', 'time', 10),
+                loadLeaderboardData('standard', 'score', 10),
+                loadLeaderboardData('standard', 'accuracy', 10),
+                loadLeaderboardData('standard', 'time', 10),
+                loadLeaderboardData('challenge', 'score', 10),
+                loadLeaderboardData('challenge', 'accuracy', 10),
+                loadLeaderboardData('challenge', 'time', 10)
+            ]);
+        }
+        
+        let userEasy = null;
+        let userStandard = null;
+        let userChallenge = null;
+        
+        if (currentUser && !offlineMode) {
+            [userEasy, userStandard, userChallenge] = await Promise.all([
+                loadUserBestInMode('easy'),
+                loadUserBestInMode('standard'),
+                loadUserBestInMode('challenge')
+            ]);
+        }
+        
+        let html = `
+            <div style="padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <h3 style="color: #4CAF50; margin: 0; display: flex; align-items: center;">
+                        <span style="font-size: 2em; margin-right: 10px;">🏆</span>
+                        ${translations[currentLanguage].leaderboardTitle}
+                    </h3>
+                    <button id="sync-leaderboard-btn" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        🔄 ${translations[currentLanguage].refresh}
+                    </button>
+                </div>
+                
+                <!-- 简单模式 3个榜单 -->
+                <div style="margin-bottom: 40px;">
+                    <h4 style="display: flex; align-items: center; color: #8BC34A; border-bottom: 3px solid #8BC34A; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                        <span style="background: #8BC34A; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🟢</span>
+                        <span style="font-size: clamp(1.1em, 4vw, 1.3em);">${translations[currentLanguage].leaderboardEasy}</span>
+                        <span style="font-size: 0.8em; background: #8BC34A20; color: #8BC34A; padding: 4px 12px; border-radius: 20px;">
+                            ${currentLanguage === 'zh' ? '0-9' : '0-9'}
+                        </span>
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" class="leaderboard-grid">
+                        ${generateLeaderboardCard('easy', 'score', easyScore, translations[currentLanguage].leaderboardEasyScore, '#8BC34A')}
+                        ${generateLeaderboardCard('easy', 'accuracy', easyAccuracy, translations[currentLanguage].leaderboardEasyAccuracy, '#8BC34A')}
+                        ${generateLeaderboardCard('easy', 'time', easySpeed, translations[currentLanguage].leaderboardEasySpeed, '#8BC34A')}
+                    </div>
+                </div>
+                
+                <!-- 挑战30模式 3个榜单 -->
+                <div style="margin-bottom: 40px;">
+                    <h4 style="display: flex; align-items: center; color: #FF9800; border-bottom: 3px solid #FF9800; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                        <span style="background: #FF9800; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🟠</span>
+                        <span style="font-size: clamp(1.1em, 4vw, 1.3em);">${translations[currentLanguage].leaderboardStandard}</span>
+                        <span style="font-size: 0.8em; background: #FF980020; color: #FF9800; padding: 4px 12px; border-radius: 20px;">
+                            ${currentLanguage === 'zh' ? '30题' : '30 Qs'}
+                        </span>
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" class="leaderboard-grid">
+                        ${generateLeaderboardCard('standard', 'score', standardScore, translations[currentLanguage].leaderboardStandardScore, '#FF9800')}
+                        ${generateLeaderboardCard('standard', 'accuracy', standardAccuracy, translations[currentLanguage].leaderboardStandardAccuracy, '#FF9800')}
+                        ${generateLeaderboardCard('standard', 'time', standardSpeed, translations[currentLanguage].leaderboardStandardSpeed, '#FF9800')}
+                    </div>
+                </div>
+                
+                <!-- 激情90秒模式 3个榜单 -->
+                <div style="margin-bottom: 40px;">
+                    <h4 style="display: flex; align-items: center; color: #f44336; border-bottom: 3px solid #f44336; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                        <span style="background: #f44336; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🔴</span>
+                        <span style="font-size: clamp(1.1em, 4vw, 1.3em);">${translations[currentLanguage].leaderboardChallenge}</span>
+                        <span style="font-size: 0.8em; background: #f4433620; color: #f44336; padding: 4px 12px; border-radius: 20px;">
+                            ${currentLanguage === 'zh' ? '90秒' : '90s'}
+                        </span>
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" class="leaderboard-grid">
+                        ${generateLeaderboardCard('challenge', 'score', challengeScore, translations[currentLanguage].leaderboardChallengeScore, '#f44336')}
+                        ${generateLeaderboardCard('challenge', 'accuracy', challengeAccuracy, translations[currentLanguage].leaderboardChallengeAccuracy, '#f44336')}
+                        ${generateLeaderboardCard('challenge', 'time', challengeSpeed, translations[currentLanguage].leaderboardChallengeSpeed, '#f44336')}
+                    </div>
+                </div>
+                
+                ${currentUser ? generateUserBestSection(userEasy, userStandard, userChallenge) : generateLoginPrompt()}
+                ${offlineMode ? '<div style="margin-top: 20px; text-align: center; color: #666; padding: 15px; background: #f8f9fa; border-radius: 12px;">📴 ' + (currentLanguage === 'zh' ? '离线模式：排行榜数据不可用' : 'Offline mode: Leaderboard data unavailable') + '</div>' : ''}
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        
+        document.getElementById('sync-leaderboard-btn')?.addEventListener('click', async () => {
+            showLeaderboard();
+            showMessage(translations[currentLanguage].syncSuccess, 'success');
+        });
     }
     
     function generateLeaderboardCard(mode, type, scores, title, color) {
@@ -4744,9 +4937,16 @@ const MathGame = (function() {
             document.getElementById('profile-email').textContent = email;
             
             const userRole = currentUser.user_metadata?.role || 'student';
-            const roleText = userRole === 'teacher' ? 
-                (currentLanguage === 'zh' ? '👨‍🏫 教师' : '👨‍🏫 Teacher') : 
-                (currentLanguage === 'zh' ? '👨‍🎓 学生' : '👨‍🎓 Student');
+            let roleText = '';
+            if (isSuperAdmin) {
+                roleText = '👑 ' + (currentLanguage === 'zh' ? '超级管理员' : 'Super Admin');
+            } else if (isSchoolAdmin) {
+                roleText = '🏫 ' + (currentLanguage === 'zh' ? '学校管理员' : 'School Admin');
+            } else if (isTeacher) {
+                roleText = '👨‍🏫 ' + (currentLanguage === 'zh' ? '教师' : 'Teacher');
+            } else {
+                roleText = '👨‍🎓 ' + (currentLanguage === 'zh' ? '学生' : 'Student');
+            }
             document.getElementById('profile-role').textContent = roleText;
             
             loadUserStats().then(stats => {
@@ -5433,6 +5633,7 @@ const MathGame = (function() {
             }, 1500);
             
             console.log('🎮 数学加法消消乐 - 初始化完成！', offlineMode ? '(离线模式)' : '(在线模式)');
+            console.log('👤 当前用户角色:', { isSuperAdmin, isSchoolAdmin, isTeacher, isAdminUser });
             
             if (offlineMode) {
                 showMessage(
@@ -5627,7 +5828,14 @@ const MathGame = (function() {
         showAuthModal,
         performFullSync,
         getSyncStatus: () => syncState,
-        isOfflineMode: () => offlineMode
+        isOfflineMode: () => offlineMode,
+        // 新增：获取角色状态
+        getRoles: () => ({
+            isSuperAdmin,
+            isSchoolAdmin,
+            isTeacher,
+            isAdminUser
+        })
     };
 })();
 
