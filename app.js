@@ -53,10 +53,9 @@ const MathGame = (function() {
         USE_MOCK_DATA: false
     };
     
-    // ==================== 多语言支持（完整修复版）====================
+    // ==================== 多语言支持 ====================
     const translations = {
         zh: {
-            // ========== 游戏主界面 ==========
             gameTitle: "🧮 数学加法消消乐",
             gameSubtitle: "教学优化版 | 云端同步 | 实时排行榜",
             history: "📝 历史记录",
@@ -66,7 +65,6 @@ const MathGame = (function() {
             leaderboard: "🏆 排行榜",
             profile: "👤 个人资料",
             
-            // ========== 游戏模式 ==========
             modeStandard: "📚 挑战30",
             modeStandardDesc: "完成30题，比拼用时",
             modeChallenge: "⚡ 激情90秒",
@@ -76,7 +74,6 @@ const MathGame = (function() {
             modeCustom: "⚙️ 自定义",
             modeCustomDesc: "自设参数，灵活练习",
             
-            // ========== 游戏设置 ==========
             numberRange: "数字范围:",
             rangeEasy: "0-9 (简单)",
             rangeStandard: "0-14 (标准)",
@@ -86,7 +83,6 @@ const MathGame = (function() {
             questionCount: "题目数量:",
             timeLimit: "时间限制(秒):",
             
-            // ========== 游戏进行中 ==========
             scoreLabel: "得分",
             completedLabel: "完成题数",
             timeLeft: "剩余时间",
@@ -97,7 +93,6 @@ const MathGame = (function() {
             refreshButton: "🔄 刷新",
             endGameButton: "⏹️ 结束",
             
-            // ========== 用户认证 ==========
             user: "用户",
             logout: "退出",
             loginTitle: "🔐 用户登录",
@@ -115,7 +110,6 @@ const MathGame = (function() {
             hasAccount: "已有账号？",
             loginNow: "立即登录",
             
-            // ========== 弹窗标题 ==========
             historyTitle: "📝 历史记录",
             statisticsTitle: "📊 统计分析",
             achievementsTitle: "⭐ 成就系统",
@@ -123,7 +117,6 @@ const MathGame = (function() {
             leaderboardTitle: "🏆 排行榜",
             profileTitle: "👤 个人资料",
             
-            // ========== 表格 ==========
             tableNumber: "#",
             tableTarget: "目标",
             tableNum1: "数字1",
@@ -132,7 +125,6 @@ const MathGame = (function() {
             tableTime: "用时(秒)",
             clearHistory: "清空本次记录",
             
-            // ========== 云端同步 ==========
             cloudSync: "☁️ 云端同步",
             syncing: "🔄 同步中...",
             syncSuccess: "✅ 同步成功",
@@ -141,7 +133,6 @@ const MathGame = (function() {
             syncNow: "立即同步",
             autoSync: "自动同步",
             
-            // ========== 教师申请 ==========
             teacherApplication: "👨‍🏫 教师账号申请",
             applyForTeacher: "申请成为教师",
             schoolName: "学校名称",
@@ -163,7 +154,6 @@ const MathGame = (function() {
             needLogin: "请先登录后再申请教师账号",
             cancel: "取消",
             
-            // ========== 教师工具 ==========
             teacherTools: "👨‍🏫 教师工具",
             teacherToolsTitle: "👨‍🏫 教师管理控制台",
             batchRegister: "📦 批量注册学生账号",
@@ -199,7 +189,6 @@ const MathGame = (function() {
             syncWrongQuestions: "☁️ 同步错题到云端",
             clearWrongQuestions: "🗑️ 清空本地错题",
             
-            // ========== 管理员工具 ==========
             adminTools: "👑 管理工具",
             adminToolsTitle: "👑 系统管理控制台",
             systemStats: "📊 系统统计",
@@ -231,7 +220,6 @@ const MathGame = (function() {
             announcementPlaceholder: "输入公告内容...",
             publishAnnouncement: "发布公告",
             
-            // ========== 排行榜 ==========
             leaderboardEasy: "🟢 简单模式",
             leaderboardStandard: "🟠 挑战30",
             leaderboardChallenge: "🔴 激情90秒",
@@ -257,7 +245,6 @@ const MathGame = (function() {
             myBest: "我的最佳",
             refresh: "刷新",
             
-            // ========== 统计 ==========
             totalGames: "总游戏次数",
             totalQuestions: "总答题数",
             totalCorrect: "总正确数",
@@ -270,7 +257,6 @@ const MathGame = (function() {
             noHistoryStats: "暂无历史统计数据",
             statsDescription: "完成游戏并保存成绩后，统计数据将显示在这里",
             
-            // ========== 游戏结束 ==========
             finalScore: "最终得分",
             finalCompleted: "完成题数",
             finalTime: "用时",
@@ -285,7 +271,6 @@ const MathGame = (function() {
             gameGiveup: "🏁 游戏结束",
             gameEnd: "🎉 游戏结束!",
             
-            // ========== 成就系统 ==========
             achievementProgress: "成就进度",
             level: "等级",
             completed: "已完成",
@@ -351,13 +336,11 @@ const MathGame = (function() {
             masterGoldDesc: "解锁3个黄金级成就",
             masterPlatinumDesc: "解锁1个铂金级成就",
             
-            // ========== 错题本 ==========
             wrongAnswer: "错误答案",
             shouldBe: "应为",
             errors: "错误次数",
             moreQuestions: "还有 {count} 条错题",
             
-            // ========== 通用 ==========
             confirm: "确定",
             close: "关闭",
             save: "保存",
@@ -370,10 +353,8 @@ const MathGame = (function() {
             switchedToEnglish: "已切换到英文",
             languageText: "English",
             
-            // ========== 登录提示（统一键名）==========
             loginPrompt: "立即登录，与其他玩家一较高下！",
             
-            // ========== 离线模式 ==========
             offlineMode: "📴 离线模式",
             connecting: "🔄 正在连接服务器...",
             connectionFailed: "❌ 连接失败，使用离线模式",
@@ -382,7 +363,6 @@ const MathGame = (function() {
             laptopCompatibilityMode: "💻 笔记本兼容模式已启用"
         },
         en: {
-            // ========== Game Main Interface ==========
             gameTitle: "🧮 Math Addition Match",
             gameSubtitle: "Educational Edition | Cloud Sync | Real-time Leaderboard",
             history: "📝 History",
@@ -392,7 +372,6 @@ const MathGame = (function() {
             leaderboard: "🏆 Leaderboard",
             profile: "👤 Profile",
             
-            // ========== Game Modes ==========
             modeStandard: "📚 Challenge 30",
             modeStandardDesc: "Complete 30 questions, compete by time",
             modeChallenge: "⚡ Passion 90s",
@@ -402,7 +381,6 @@ const MathGame = (function() {
             modeCustom: "⚙️ Custom Mode",
             modeCustomDesc: "Set your own parameters",
             
-            // ========== Game Settings ==========
             numberRange: "Number Range:",
             rangeEasy: "0-9 (Easy)",
             rangeStandard: "0-14 (Standard)",
@@ -412,7 +390,6 @@ const MathGame = (function() {
             questionCount: "Questions:",
             timeLimit: "Time Limit (seconds):",
             
-            // ========== In Game ==========
             scoreLabel: "Score",
             completedLabel: "Completed",
             timeLeft: "Time Left",
@@ -423,7 +400,6 @@ const MathGame = (function() {
             refreshButton: "🔄 Refresh",
             endGameButton: "⏹️ End",
             
-            // ========== User Auth ==========
             user: "User",
             logout: "Logout",
             loginTitle: "🔐 User Login",
@@ -441,7 +417,6 @@ const MathGame = (function() {
             hasAccount: "Already have an account?",
             loginNow: "Login Now",
             
-            // ========== Modal Titles ==========
             historyTitle: "📝 History Records",
             statisticsTitle: "📊 Statistics Analysis",
             achievementsTitle: "⭐ Achievement System",
@@ -449,7 +424,6 @@ const MathGame = (function() {
             leaderboardTitle: "🏆 Leaderboard",
             profileTitle: "👤 Profile",
             
-            // ========== Tables ==========
             tableNumber: "#",
             tableTarget: "Target",
             tableNum1: "Num1",
@@ -458,7 +432,6 @@ const MathGame = (function() {
             tableTime: "Time(s)",
             clearHistory: "Clear Current History",
             
-            // ========== Cloud Sync ==========
             cloudSync: "☁️ Cloud Sync",
             syncing: "🔄 Syncing...",
             syncSuccess: "✅ Sync Successful",
@@ -467,7 +440,6 @@ const MathGame = (function() {
             syncNow: "Sync Now",
             autoSync: "Auto Sync",
             
-            // ========== Teacher Application ==========
             teacherApplication: "👨‍🏫 Teacher Application",
             applyForTeacher: "Apply for Teacher",
             schoolName: "School Name",
@@ -489,7 +461,6 @@ const MathGame = (function() {
             needLogin: "Please login first to apply for teacher account",
             cancel: "Cancel",
             
-            // ========== Teacher Tools ==========
             teacherTools: "👨‍🏫 Teacher Tools",
             teacherToolsTitle: "👨‍🏫 Teacher Management Console",
             batchRegister: "📦 Batch Register Students",
@@ -525,7 +496,6 @@ const MathGame = (function() {
             syncWrongQuestions: "☁️ Sync Wrong Questions",
             clearWrongQuestions: "🗑️ Clear Local Wrong Questions",
             
-            // ========== Admin Tools ==========
             adminTools: "👑 Admin Tools",
             adminToolsTitle: "👑 System Administration Console",
             systemStats: "📊 System Statistics",
@@ -557,7 +527,6 @@ const MathGame = (function() {
             announcementPlaceholder: "Enter announcement...",
             publishAnnouncement: "Publish Announcement",
             
-            // ========== Leaderboard ==========
             leaderboardEasy: "🟢 Easy Mode",
             leaderboardStandard: "🟠 Challenge 30",
             leaderboardChallenge: "🔴 Passion 90s",
@@ -583,7 +552,6 @@ const MathGame = (function() {
             myBest: "My Best",
             refresh: "Refresh",
             
-            // ========== Statistics ==========
             totalGames: "Total Games",
             totalQuestions: "Total Questions",
             totalCorrect: "Total Correct",
@@ -596,7 +564,6 @@ const MathGame = (function() {
             noHistoryStats: "No historical statistics",
             statsDescription: "After completing games and saving scores, statistics will be shown here",
             
-            // ========== Game Over ==========
             finalScore: "Final Score",
             finalCompleted: "Completed",
             finalTime: "Time Used",
@@ -611,7 +578,6 @@ const MathGame = (function() {
             gameGiveup: "🏁 Game Over",
             gameEnd: "🎉 Game Over!",
             
-            // ========== Achievement System ==========
             achievementProgress: "Achievement Progress",
             level: "Level",
             completed: "Completed",
@@ -677,13 +643,11 @@ const MathGame = (function() {
             masterGoldDesc: "Unlock 3 Gold achievements",
             masterPlatinumDesc: "Unlock 1 Platinum achievement",
             
-            // ========== Wrong Book ==========
             wrongAnswer: "Wrong answer",
             shouldBe: "should be",
             errors: "Errors",
             moreQuestions: "... {count} more questions",
             
-            // ========== Common ==========
             confirm: "Confirm",
             close: "Close",
             save: "Save",
@@ -696,10 +660,8 @@ const MathGame = (function() {
             switchedToEnglish: "Switched to English",
             languageText: "中文",
             
-            // ========== Login Prompt（统一键名）==========
             loginPrompt: "Login now and compete with other players!",
             
-            // ========== Offline Mode ==========
             offlineMode: "📴 Offline Mode",
             connecting: "🔄 Connecting to server...",
             connectionFailed: "❌ Connection failed, using offline mode",
@@ -736,12 +698,11 @@ const MathGame = (function() {
     let authMode = 'login';
     let currentLanguage = 'zh';
     let isAdminUser = false;
-    let isSuperAdmin = false;  // 新增：超级管理员标志
-    let isSchoolAdmin = false; // 新增：学校管理员标志
-    let isTeacher = false;     // 新增：教师标志
+    let isSuperAdmin = false;
+    let isSchoolAdmin = false;
+    let isTeacher = false;
     let isSupabaseReady = false;
     
-    // ==================== 云端同步状态 ====================
     let syncState = {
         lastSyncTime: null,
         isSyncing: false,
@@ -753,7 +714,6 @@ const MathGame = (function() {
     
     let autoSyncTimer = null;
     
-    // ==================== 阶梯式成就系统 ====================
     const ACHIEVEMENT_LEVELS = {
         BRONZE: 1,
         SILVER: 2,
@@ -775,7 +735,6 @@ const MathGame = (function() {
     const LEVEL_ICONS = { 1: '🥉', 2: '🥈', 3: '🥇', 4: '🏆' };
     const LEVEL_COLORS = { 1: '#CD7F32', 2: '#C0C0C0', 3: '#FFD700', 4: '#E5E4E2' };
     
-    // 完整阶梯式成就定义
     const LADDER_ACHIEVEMENTS = [
         { id: 'victory_bronze', category: 'victory', level: 1, icon: '🥉', nameKey: 'victoryBronze', descKey: 'victoryBronzeDesc', requirement: { type: 'games_completed', value: 1 }, reward: { score: 10 } },
         { id: 'victory_silver', category: 'victory', level: 2, icon: '🥈', nameKey: 'victorySilver', descKey: 'victorySilverDesc', requirement: { type: 'games_completed', value: 10 }, reward: { score: 50 } },
@@ -1097,7 +1056,7 @@ const MathGame = (function() {
                 currentUser = user;
                 console.log('用户已登录:', user.email);
                 
-                await checkUserRole(); // 新增：检查用户角色
+                await checkUserRole();
                 updateUserInfo();
                 
                 setTimeout(async () => {
@@ -1127,7 +1086,7 @@ const MathGame = (function() {
         }
     }
     
-    // ==================== 新增：完整的角色检查函数 ====================
+    // ==================== 修复版角色检查函数 ====================
     async function checkUserRole() {
         if (!currentUser) {
             isAdminUser = false;
@@ -1142,29 +1101,33 @@ const MathGame = (function() {
             const userMeta = currentUser.user_metadata || {};
             const userRole = userMeta.role || 'student';
             
-            console.log('检查用户角色:', { email: userEmail, role: userRole, metadata: userMeta });
+            console.log('检查用户角色:', { 
+                email: userEmail, 
+                role: userRole, 
+                metadata: userMeta,
+                adminEmails: CONFIG.ADMIN_EMAILS 
+            });
             
-            // 1. 超级管理员检查（多种方式）
-            isSuperAdmin = (
-                userRole === 'super_admin' ||
-                userRole === 'admin' ||  // 兼容旧数据
-                CONFIG.ADMIN_EMAILS.some(adminEmail => adminEmail.toLowerCase() === userEmail) ||
-                userMeta.is_super_admin === true
+            // ✅ 优先检查邮箱是否在管理员列表中
+            const isEmailInAdminList = CONFIG.ADMIN_EMAILS.some(adminEmail => 
+                adminEmail.toLowerCase() === userEmail
             );
+            
+            // 1. 超级管理员检查（邮箱匹配优先）
+            isSuperAdmin = isEmailInAdminList || 
+                          userRole === 'super_admin' ||
+                          userRole === 'admin' ||  // 兼容旧数据
+                          userMeta.is_super_admin === true;
             
             // 2. 学校管理员检查
-            isSchoolAdmin = (
-                userRole === 'school_admin' ||
-                (userRole === 'admin' && userMeta.school_id) ||  // 有学校ID的admin视为学校管理员
-                isSuperAdmin  // 超级管理员自动拥有学校管理员权限
-            );
+            isSchoolAdmin = userRole === 'school_admin' ||
+                           (userRole === 'admin' && userMeta.school_id) ||  // 有学校ID的admin视为学校管理员
+                           isSuperAdmin;  // 超级管理员自动拥有学校管理员权限
             
             // 3. 教师检查
-            isTeacher = (
-                userRole === 'teacher' ||
-                (userRole === 'admin' && userMeta.approved === true) ||
-                isSchoolAdmin  // 学校管理员自动拥有教师权限
-            );
+            isTeacher = userRole === 'teacher' ||
+                       (userRole === 'admin' && userMeta.approved === true) ||
+                       isSchoolAdmin;  // 学校管理员自动拥有教师权限
             
             // 4. 兼容旧代码的 isAdminUser
             isAdminUser = isSuperAdmin || isSchoolAdmin;
@@ -1173,7 +1136,8 @@ const MathGame = (function() {
                 isSuperAdmin,
                 isSchoolAdmin,
                 isTeacher,
-                isAdminUser
+                isAdminUser,
+                isEmailInAdminList
             });
             
             return true;
@@ -1184,7 +1148,6 @@ const MathGame = (function() {
     }
     
     async function checkIfAdmin() {
-        // 兼容旧函数，调用新函数
         await checkUserRole();
         return isAdminUser;
     }
@@ -1210,7 +1173,7 @@ const MathGame = (function() {
             if (data && data.user) {
                 currentUser = data.user;
                 
-                await checkUserRole(); // 使用新函数
+                await checkUserRole();
                 updateUserInfo();
                 closeAuthModal();
                 
@@ -1256,7 +1219,7 @@ const MathGame = (function() {
             if (data && data.user) {
                 currentUser = data.user;
                 
-                await checkUserRole(); // 使用新函数
+                await checkUserRole();
                 updateUserInfo();
                 closeAuthModal();
                 
@@ -1393,7 +1356,6 @@ const MathGame = (function() {
                 }
             }
             
-            // 调试信息
             console.log('UI更新 - 权限状态:', {
                 isSuperAdmin,
                 isSchoolAdmin,
@@ -1759,7 +1721,6 @@ const MathGame = (function() {
                 return;
             }
             
-            // ✅ 添加离线模式检查
             if (offlineMode) {
                 showMessage(
                     currentLanguage === 'zh' 
@@ -1778,7 +1739,6 @@ const MathGame = (function() {
                 return;
             }
             
-            // 使用新的角色检查
             const canUseTeacherTools = isSuperAdmin || isSchoolAdmin || 
                 (isTeacher && currentUser.user_metadata?.approved === true);
             
@@ -1795,7 +1755,6 @@ const MathGame = (function() {
             const teacherToolsModal = document.getElementById('teacher-tools-modal');
             if (!teacherToolsModal) return;
             
-            // 加载待审核教师申请列表
             let pendingApplications = [];
             try {
                 let query = supabase
@@ -1804,7 +1763,6 @@ const MathGame = (function() {
                     .eq('status', 'pending')
                     .order('created_at', { ascending: false });
                 
-                // 学校管理员只能看到本校申请
                 if (isSchoolAdmin && !isSuperAdmin) {
                     const schoolId = currentUser.user_metadata?.school_id;
                     if (schoolId) {
@@ -1821,7 +1779,6 @@ const MathGame = (function() {
                 console.error('加载待审核教师申请失败:', e);
             }
             
-            // 加载已批准教师列表
             let approvedTeachers = [];
             try {
                 let query = supabase
@@ -1830,7 +1787,6 @@ const MathGame = (function() {
                     .eq('status', 'approved')
                     .order('created_at', { ascending: false });
                 
-                // 学校管理员只能看到本校教师
                 if (isSchoolAdmin && !isSuperAdmin) {
                     const schoolId = currentUser.user_metadata?.school_id;
                     if (schoolId) {
@@ -1847,7 +1803,6 @@ const MathGame = (function() {
                 console.error('加载已批准教师失败:', e);
             }
             
-            // 生成教师工具界面
             const teacherToolsHtml = `
                 <div style="padding: 25px; max-width: 1200px; margin: 0 auto;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
@@ -1860,7 +1815,6 @@ const MathGame = (function() {
                         </button>
                     </div>
                     
-                    <!-- 标签页导航 -->
                     <div style="display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 25px; overflow-x: auto; gap: 10px;">
                         <button class="teacher-tab active" data-tab="batch-register" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid #4CAF50; font-weight: bold; color: #333; cursor: pointer; white-space: nowrap;">
                             📦 ${translations[currentLanguage].batchRegister}
@@ -1874,7 +1828,6 @@ const MathGame = (function() {
                         </button>
                     </div>
                     
-                    <!-- 批量注册标签页 -->
                     <div id="batch-register-tab" class="teacher-tab-content" style="display: block;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                             <h4 style="margin-top: 0; margin-bottom: 20px; color: #333;">${translations[currentLanguage].batchRegister}</h4>
@@ -1902,7 +1855,6 @@ const MathGame = (function() {
                                 </div>
                             </div>
                             
-                            <!-- 上传进度 -->
                             <div id="upload-progress" style="display: none; margin-bottom: 25px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                     <span style="color: #666;">${translations[currentLanguage].uploadProgress}</span>
@@ -1913,10 +1865,8 @@ const MathGame = (function() {
                                 </div>
                             </div>
                             
-                            <!-- 上传结果 -->
                             <div id="upload-result" style="display: none; background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 25px;"></div>
                             
-                            <!-- 生成的账号卡片 -->
                             <div id="account-cards" style="display: none;">
                                 <h4 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                                     <span>${translations[currentLanguage].accountCards}</span>
@@ -1929,7 +1879,6 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <!-- 教师审核标签页 -->
                     <div id="teacher-approval-tab" class="teacher-tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                             <h4 style="margin-top: 0; margin-bottom: 20px; color: #333; display: flex; align-items-center;">
@@ -1983,7 +1932,6 @@ const MathGame = (function() {
                                 </div>
                             `}
                             
-                            <!-- 已批准教师列表 -->
                             <h4 style="margin-top: 40px; margin-bottom: 20px; color: #333;">${translations[currentLanguage].approvedTeachers} (${approvedTeachers.length})</h4>
                             
                             ${approvedTeachers.length === 0 ? `
@@ -2010,7 +1958,6 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <!-- 班级管理标签页 -->
                     <div id="class-management-tab" class="teacher-tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                             <h4 style="margin-top: 0; margin-bottom: 20px; color: #333;">${translations[currentLanguage].classManagement}</h4>
@@ -2026,7 +1973,6 @@ const MathGame = (function() {
             teacherToolsModal.innerHTML = teacherToolsHtml;
             teacherToolsModal.style.display = 'flex';
             
-            // 绑定标签页切换事件
             const teacherTabs = teacherToolsModal.querySelectorAll('.teacher-tab');
             teacherTabs.forEach(tab => {
                 tab.addEventListener('click', function() {
@@ -2048,45 +1994,38 @@ const MathGame = (function() {
                 });
             });
             
-            // 绑定关闭按钮
             teacherToolsModal.querySelector('#close-teacher-tools').addEventListener('click', () => {
                 teacherToolsModal.style.display = 'none';
             });
             
-            // 绑定下载模板按钮
             teacherToolsModal.querySelector('#download-template-btn')?.addEventListener('click', downloadTemplate);
             
-            // 绑定上传Excel按钮
             teacherToolsModal.querySelector('#upload-excel-btn')?.addEventListener('click', () => {
                 document.getElementById('excel-file').click();
             });
             
-            // 绑定文件选择事件
             const excelFile = document.getElementById('excel-file');
             if (excelFile) {
                 excelFile.addEventListener('change', uploadExcelFile);
             }
             
-            // 绑定打印卡片按钮
             teacherToolsModal.querySelector('#print-cards-btn')?.addEventListener('click', printAccountCards);
             
-            // 绑定批准教师按钮
             teacherToolsModal.querySelectorAll('.approve-teacher-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const userId = e.currentTarget.dataset.userId;
                     const email = e.currentTarget.dataset.email;
                     await approveTeacherApplication(userId, email);
-                    showTeacherTools(); // 刷新界面
+                    showTeacherTools();
                 });
             });
             
-            // 绑定拒绝教师按钮
             teacherToolsModal.querySelectorAll('.reject-teacher-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const userId = e.currentTarget.dataset.userId;
                     const email = e.currentTarget.dataset.email;
                     await rejectTeacherApplication(userId, email);
-                    showTeacherTools(); // 刷新界面
+                    showTeacherTools();
                 });
             });
             
@@ -2105,7 +2044,6 @@ const MathGame = (function() {
                 return;
             }
             
-            // 使用新的超级管理员检查
             if (!isSuperAdmin) {
                 showMessage(
                     currentLanguage === 'zh' 
@@ -2116,7 +2054,6 @@ const MathGame = (function() {
                 return;
             }
             
-            // ✅ 添加离线模式检查
             if (offlineMode) {
                 showMessage(
                     currentLanguage === 'zh' 
@@ -2138,7 +2075,6 @@ const MathGame = (function() {
             const adminToolsModal = document.getElementById('admin-tools-modal');
             if (!adminToolsModal) return;
             
-            // 加载系统统计数据
             let systemStats = {
                 totalUsers: 0,
                 totalTeachers: 0,
@@ -2149,13 +2085,11 @@ const MathGame = (function() {
             };
             
             try {
-                // 获取用户统计
                 const { count: userCount } = await supabase
                     .from('game_scores')
                     .select('user_id', { count: 'exact', head: true });
                 systemStats.totalUsers = userCount || 0;
                 
-                // 获取游戏统计
                 const { data: gameStats } = await supabase
                     .from('game_scores')
                     .select('score, questions_completed, correct_count, total_attempts');
@@ -2171,7 +2105,6 @@ const MathGame = (function() {
                 console.error('加载系统统计失败:', e);
             }
             
-            // 生成管理员工具界面
             const adminToolsHtml = `
                 <div style="padding: 25px; max-width: 1200px; margin: 0 auto;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
@@ -2184,7 +2117,6 @@ const MathGame = (function() {
                         </button>
                     </div>
                     
-                    <!-- 标签页导航 -->
                     <div style="display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 25px; overflow-x: auto; gap: 10px;">
                         <button class="admin-tab active" data-tab="system-stats" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid #4CAF50; font-weight: bold; color: #333; cursor: pointer; white-space: nowrap;">
                             📊 ${translations[currentLanguage].systemStats}
@@ -2203,7 +2135,6 @@ const MathGame = (function() {
                         </button>
                     </div>
                     
-                    <!-- 系统统计标签页 -->
                     <div id="system-stats-tab" class="admin-tab-content" style="display: block;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                             <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${translations[currentLanguage].systemStats}</h4>
@@ -2233,7 +2164,6 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <!-- 教师管理标签页 -->
                     <div id="teacher-management-tab" class="admin-tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                             <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${translations[currentLanguage].teacherManagement}</h4>
@@ -2244,7 +2174,6 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <!-- 系统日志标签页 -->
                     <div id="system-logs-tab" class="admin-tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                             <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${translations[currentLanguage].systemLogs}</h4>
@@ -2255,7 +2184,6 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <!-- 数据管理标签页 -->
                     <div id="data-management-tab" class="admin-tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                             <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${translations[currentLanguage].dataManagement}</h4>
@@ -2266,7 +2194,6 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <!-- 系统设置标签页 -->
                     <div id="system-settings-tab" class="admin-tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                             <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${translations[currentLanguage].systemSettings}</h4>
@@ -2282,7 +2209,6 @@ const MathGame = (function() {
             adminToolsModal.innerHTML = adminToolsHtml;
             adminToolsModal.style.display = 'flex';
             
-            // 绑定标签页切换事件
             const adminTabs = adminToolsModal.querySelectorAll('.admin-tab');
             adminTabs.forEach(tab => {
                 tab.addEventListener('click', function() {
@@ -2304,7 +2230,6 @@ const MathGame = (function() {
                 });
             });
             
-            // 绑定关闭按钮
             adminToolsModal.querySelector('#close-admin-tools').addEventListener('click', () => {
                 adminToolsModal.style.display = 'none';
             });
@@ -2318,7 +2243,6 @@ const MathGame = (function() {
     // ==================== 修复版批准教师申请 ====================
     async function approveTeacherApplication(userId, email) {
         try {
-            // 使用新的角色检查
             if (!isSuperAdmin && !isSchoolAdmin) {
                 showMessage(
                     currentLanguage === 'zh' ? '只有超级管理员或学校管理员可以批准教师申请' : 'Only super administrators or school administrators can approve teacher applications',
@@ -2343,7 +2267,6 @@ const MathGame = (function() {
                 return;
             }
             
-            // ✅ 由于客户端无法使用 admin API，改为更新申请表状态并提供手动操作指引
             const { error: appError } = await supabase
                 .from('teacher_applications')
                 .update({
@@ -2364,7 +2287,6 @@ const MathGame = (function() {
                 return;
             }
             
-            // ✅ 显示手动操作指引
             showMessage(
                 currentLanguage === 'zh' 
                     ? `✅ 已标记申请为"已批准"。请登录 Supabase 后台，找到用户 ${email}，将 user_metadata.role 改为 "teacher"` 
@@ -2443,7 +2365,7 @@ const MathGame = (function() {
         }
     }
     
-    // ==================== 教师工具辅助函数（修复版）====================
+    // ==================== 教师工具辅助函数 ====================
     async function downloadTemplate() {
         try {
             const csvContent = "email,姓名,班级,备注\n" +
@@ -2474,7 +2396,6 @@ const MathGame = (function() {
             const file = e.target.files[0];
             if (!file) return;
             
-            // ✅ 添加元素存在性检查
             const uploadProgress = document.getElementById('upload-progress');
             const uploadProgressBar = document.getElementById('upload-progress-bar');
             const uploadStatus = document.getElementById('upload-status');
@@ -2685,7 +2606,7 @@ const MathGame = (function() {
             };
             
             reader.readAsText(file);
-            e.target.value = ''; // 清空文件选择
+            e.target.value = '';
             
         } catch (error) {
             console.error('上传文件失败:', error);
@@ -2696,7 +2617,6 @@ const MathGame = (function() {
     // ==================== 修复版打印账号卡片 ====================
     function printAccountCards() {
         try {
-            // ✅ 添加元素存在性检查
             const container = document.getElementById('account-cards-container');
             if (!container) {
                 showMessage(
@@ -4416,12 +4336,9 @@ const MathGame = (function() {
             leaderboardContent.innerHTML = `<div style="text-align:center;padding:30px;">${translations[currentLanguage].loadingStats}</div>`;
             leaderboardModal.style.display = 'flex';
             
-            // ✅ 使用新的超级管理员检查
             if (isSuperAdmin) {
-                // 超级管理员看到全国排行榜
                 await showNationalLeaderboard(leaderboardContent);
             } else {
-                // 普通用户看到原有排行榜
                 await showSchoolLeaderboard(leaderboardContent);
             }
             
@@ -4431,16 +4348,13 @@ const MathGame = (function() {
         }
     }
     
-    // ✅ 新增：全国排行榜（超级管理员专用）
     async function showNationalLeaderboard(container) {
         try {
-            // 获取全国统计数据
             const { data: stats } = await supabase
                 .from('admin_dashboard_stats')
                 .select('*')
                 .single();
             
-            // 获取全国排行榜数据
             const { data: nationalData } = await supabase
                 .rpc('get_leaderboard', {
                     p_leaderboard_type: 'national',
@@ -4450,7 +4364,6 @@ const MathGame = (function() {
             
             const html = `
                 <div style="padding: 20px;">
-                    <!-- 管理员统计卡片 -->
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
                         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px;">
                             <div style="font-size: 2em;">🏫</div>
@@ -4474,7 +4387,6 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <!-- 全国排行榜 -->
                     <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                         <h4 style="display: flex; align-items: center; margin-top: 0; margin-bottom: 20px;">
                             <span style="background: #4CAF50; color: white; width: 32px; height: 32px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🏆</span>
@@ -4528,7 +4440,6 @@ const MathGame = (function() {
         }
     }
     
-    // ✅ 原有学校排行榜（保持不变）
     async function showSchoolLeaderboard(container) {
         let easyScore = [], easyAccuracy = [], easySpeed = [];
         let standardScore = [], standardAccuracy = [], standardSpeed = [];
@@ -4574,7 +4485,6 @@ const MathGame = (function() {
                     </button>
                 </div>
                 
-                <!-- 简单模式 3个榜单 -->
                 <div style="margin-bottom: 40px;">
                     <h4 style="display: flex; align-items: center; color: #8BC34A; border-bottom: 3px solid #8BC34A; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                         <span style="background: #8BC34A; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🟢</span>
@@ -4590,7 +4500,6 @@ const MathGame = (function() {
                     </div>
                 </div>
                 
-                <!-- 挑战30模式 3个榜单 -->
                 <div style="margin-bottom: 40px;">
                     <h4 style="display: flex; align-items: center; color: #FF9800; border-bottom: 3px solid #FF9800; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                         <span style="background: #FF9800; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🟠</span>
@@ -4606,7 +4515,6 @@ const MathGame = (function() {
                     </div>
                 </div>
                 
-                <!-- 激情90秒模式 3个榜单 -->
                 <div style="margin-bottom: 40px;">
                     <h4 style="display: flex; align-items: center; color: #f44336; border-bottom: 3px solid #f44336; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                         <span style="background: #f44336; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🔴</span>
@@ -4719,7 +4627,6 @@ const MathGame = (function() {
                 </div>
                 
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" class="leaderboard-grid">
-                    <!-- 简单模式 -->
                     <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 18px; backdrop-filter: blur(5px);">
                         <div style="display: flex; align-items: center; margin-bottom: 15px;">
                             <span style="background: #8BC34A; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🟢</span>
@@ -4741,7 +4648,6 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <!-- 挑战30模式 -->
                     <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 18px; backdrop-filter: blur(5px);">
                         <div style="display: flex; align-items: center; margin-bottom: 15px;">
                             <span style="background: #FF9800; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🟠</span>
@@ -4763,7 +4669,6 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <!-- 激情90秒模式 -->
                     <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 18px; backdrop-filter: blur(5px);">
                         <div style="display: flex; align-items: center; margin-bottom: 15px;">
                             <span style="background: #f44336; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🔴</span>
@@ -4797,7 +4702,6 @@ const MathGame = (function() {
         `;
     }
     
-    // ==================== 修复版 generateLoginPrompt ====================
     function generateLoginPrompt() {
         return `
             <div style="margin-top: 40px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); border-radius: 20px; padding: 30px; text-align: center; color: white;">
@@ -5011,17 +4915,6 @@ const MathGame = (function() {
         showMessage(currentLanguage === 'zh' ? '提示已激活！' : 'Hint activated!', 'info');
     }
     
-    function refreshNumbers() {
-        const gameGrid = document.getElementById('game-grid');
-        if (!gameGrid) return;
-        
-        gameGrid.style.opacity = '0.5';
-        setTimeout(() => {
-            generateNumberGrid();
-            gameGrid.style.opacity = '1';
-        }, 500);
-    }
-    
     function restartGame() {
         const gameOverElement = document.getElementById('game-over');
         if (gameOverElement) gameOverElement.style.display = 'none';
@@ -5092,7 +4985,6 @@ const MathGame = (function() {
             const style = document.createElement('style');
             style.id = 'math-game-responsive-styles';
             style.textContent = `
-                /* ========== 全局响应式设置 ========== */
                 * {
                     box-sizing: border-box;
                     margin: 0;
@@ -5107,14 +4999,12 @@ const MathGame = (function() {
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
                 }
                 
-                /* ========== 游戏容器 ========== */
                 #game-container {
                     max-width: 1200px;
                     margin: 0 auto;
                     padding: 20px;
                 }
                 
-                /* ========== 游戏网格 - 完美适配所有屏幕 ========== */
                 #game-grid {
                     display: grid;
                     grid-template-columns: repeat(5, 1fr);
@@ -5199,7 +5089,6 @@ const MathGame = (function() {
                     100% { opacity: 0; transform: scale(0); }
                 }
                 
-                /* ========== 侧边栏响应式 ========== */
                 .sidebar {
                     width: 280px;
                     background: white;
@@ -5251,7 +5140,6 @@ const MathGame = (function() {
                     }
                 }
                 
-                /* ========== 主内容区 ========== */
                 .main-content {
                     margin-left: 280px;
                     padding: 20px;
@@ -5266,7 +5154,6 @@ const MathGame = (function() {
                     }
                 }
                 
-                /* ========== 游戏信息栏响应式 ========== */
                 #game-info {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
@@ -5317,7 +5204,6 @@ const MathGame = (function() {
                     }
                 }
                 
-                /* ========== 目标栏响应式 ========== */
                 #target-container {
                     text-align: center;
                     padding: 16px;
@@ -5345,7 +5231,6 @@ const MathGame = (function() {
                     }
                 }
                 
-                /* ========== 游戏控制按钮响应式 ========== */
                 #game-controls {
                     display: flex;
                     justify-content: center;
@@ -5386,7 +5271,6 @@ const MathGame = (function() {
                     }
                 }
                 
-                /* ========== 弹窗响应式 ========== */
                 .modal-content {
                     width: 90%;
                     max-width: 800px;
@@ -5408,7 +5292,6 @@ const MathGame = (function() {
                     }
                 }
                 
-                /* ========== 排行榜卡片响应式 ========== */
                 .leaderboard-grid {
                     display: grid;
                     grid-template-columns: repeat(3, 1fr);
@@ -5427,7 +5310,6 @@ const MathGame = (function() {
                     }
                 }
                 
-                /* ========== 成就卡片响应式 ========== */
                 .achievements-grid {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
@@ -5452,7 +5334,6 @@ const MathGame = (function() {
                     }
                 }
                 
-                /* ========== 加载动画 ========== */
                 #loading-overlay {
                     position: fixed;
                     top: 0;
@@ -5491,7 +5372,6 @@ const MathGame = (function() {
                     pointer-events: none;
                 }
                 
-                /* ========== 消息提示 ========== */
                 .message-popup {
                     animation: slideDown 0.3s ease;
                 }
@@ -5829,7 +5709,6 @@ const MathGame = (function() {
         performFullSync,
         getSyncStatus: () => syncState,
         isOfflineMode: () => offlineMode,
-        // 新增：获取角色状态
         getRoles: () => ({
             isSuperAdmin,
             isSchoolAdmin,
