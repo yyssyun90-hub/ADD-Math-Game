@@ -1,5 +1,7 @@
 // 确保页面已完全加载
 (function() {
+    'use strict';
+    
     console.log('🎮 数学加法消消乐 - 启动诊断...');
     
     // ==================== 全局错误捕获 ====================
@@ -23,23 +25,31 @@
             text-align: center;
             animation: slideDown 0.3s ease;
         `;
-        errorDiv.textContent = `⚠️ 游戏加载遇到问题: ${e.message || '未知错误'}。正在尝试恢复...`;
+        errorDiv.textContent = `⚠️ 游戏加载遇到问题: ${e && e.message ? e.message : '未知错误'}。正在尝试恢复...`;
         document.body.appendChild(errorDiv);
         
-        setTimeout(() => {
-            errorDiv.style.opacity = '0';
-            setTimeout(() => errorDiv.remove(), 300);
+        setTimeout(function() {
+            if (errorDiv && errorDiv.parentNode) {
+                errorDiv.style.opacity = '0';
+                setTimeout(function() {
+                    if (errorDiv.parentNode) {
+                        errorDiv.parentNode.removeChild(errorDiv);
+                    }
+                }, 300);
+            }
         }, 5000);
     });
 
     window.addEventListener('unhandledrejection', function(e) {
-        console.error('❌ 未处理的Promise错误:', e.reason);
+        console.error('❌ 未处理的Promise错误:', e && e.reason ? e.reason : '未知错误');
     });
 })();
 
-const MathGame = (function() {
+var MathGame = (function() {
+    'use strict';
+    
     // ==================== 配置 ====================
-    const CONFIG = {
+    var CONFIG = {
         SUPABASE_URLS: [
             'https://ytoailyxejdgtpfwcdci.supabase.co',
             'https://ytoailyxejdgtpfwcdci.supabase.co',
@@ -50,11 +60,12 @@ const MathGame = (function() {
         SYNC_INTERVAL: 300000,
         CACHE_EXPIRY: 3600000,
         OFFLINE_MODE: false,
-        USE_MOCK_DATA: false
+        USE_MOCK_DATA: false,
+        LEADERBOARD_CACHE_TIME: 300000 // 5分钟
     };
     
     // ==================== 多语言支持 ====================
-    const translations = {
+    var translations = {
         zh: {
             gameTitle: "🧮 数学加法消消乐",
             gameSubtitle: "教学优化版 | 云端同步 | 实时排行榜",
@@ -221,8 +232,10 @@ const MathGame = (function() {
             publishAnnouncement: "发布公告",
             
             leaderboardEasy: "🟢 简单模式",
-            leaderboardStandard: "🟠 挑战30",
-            leaderboardChallenge: "🔴 激情90秒",
+            leaderboardStandard: "🟠 标准模式",
+            leaderboardChallenge: "🔴 困难模式",
+            leaderboardChallengeMode: "⚡ 激情90秒",
+            leaderboardStandardMode: "📚 挑战30",
             leaderboardEasyScore: "🏆 高分榜",
             leaderboardStandardScore: "🏆 高分榜",
             leaderboardChallengeScore: "🏆 高分榜",
@@ -239,8 +252,8 @@ const MathGame = (function() {
             time: "用时",
             date: "日期",
             easyMode: "简单模式",
-            standardMode: "挑战30",
-            challengeMode: "激情90秒",
+            standardMode: "标准模式",
+            challengeMode: "困难模式",
             noData: "暂无数据",
             myBest: "我的最佳",
             refresh: "刷新",
@@ -528,8 +541,10 @@ const MathGame = (function() {
             publishAnnouncement: "Publish Announcement",
             
             leaderboardEasy: "🟢 Easy Mode",
-            leaderboardStandard: "🟠 Challenge 30",
-            leaderboardChallenge: "🔴 Passion 90s",
+            leaderboardStandard: "🟠 Standard Mode",
+            leaderboardChallenge: "🔴 Hard Mode",
+            leaderboardChallengeMode: "⚡ Passion 90s",
+            leaderboardStandardMode: "📚 Challenge 30",
             leaderboardEasyScore: "🏆 High Score",
             leaderboardStandardScore: "🏆 High Score",
             leaderboardChallengeScore: "🏆 High Score",
@@ -546,8 +561,8 @@ const MathGame = (function() {
             time: "Time",
             date: "Date",
             easyMode: "Easy Mode",
-            standardMode: "Challenge 30",
-            challengeMode: "Passion 90s",
+            standardMode: "Standard Mode",
+            challengeMode: "Hard Mode",
             noData: "No Data",
             myBest: "My Best",
             refresh: "Refresh",
@@ -672,38 +687,38 @@ const MathGame = (function() {
     };
     
     // ==================== 全局变量 ====================
-    let supabase = null;
-    let supabaseInitialized = false;
-    let offlineMode = false;
-    let mockDataEnabled = false;
-    let connectionRetryCount = 0;
-    const MAX_RETRY_COUNT = 3;
+    var supabase = null;
+    var supabaseInitialized = false;
+    var offlineMode = false;
+    var mockDataEnabled = false;
+    var connectionRetryCount = 0;
+    var MAX_RETRY_COUNT = 3;
     
-    let score = 0;
-    let selectedCards = [];
-    let timeLeft = 90;
-    let timerInterval = null;
-    let completedQuestions = 0;
-    let correctCount = 0;
-    let totalAttempts = 0;
-    let startTime = null;
-    let currentTarget = 10;
-    let currentMode = 'standard';
-    let gameActive = false;
-    let hintCooldown = 0;
-    let hintInterval = null;
-    let gameHistory = [];
-    let wrongQuestions = [];
-    let currentUser = null;
-    let authMode = 'login';
-    let currentLanguage = 'zh';
-    let isAdminUser = false;
-    let isSuperAdmin = false;
-    let isSchoolAdmin = false;
-    let isTeacher = false;
-    let isSupabaseReady = false;
+    var score = 0;
+    var selectedCards = [];
+    var timeLeft = 90;
+    var timerInterval = null;
+    var completedQuestions = 0;
+    var correctCount = 0;
+    var totalAttempts = 0;
+    var startTime = null;
+    var currentTarget = 10;
+    var currentMode = 'standard';
+    var gameActive = false;
+    var hintCooldown = 0;
+    var hintInterval = null;
+    var gameHistory = [];
+    var wrongQuestions = [];
+    var currentUser = null;
+    var authMode = 'login';
+    var currentLanguage = 'zh';
+    var isAdminUser = false;
+    var isSuperAdmin = false;
+    var isSchoolAdmin = false;
+    var isTeacher = false;
+    var isSupabaseReady = false;
     
-    let syncState = {
+    var syncState = {
         lastSyncTime: null,
         isSyncing: false,
         syncHistory: [],
@@ -712,16 +727,34 @@ const MathGame = (function() {
         offlineMode: false
     };
     
-    let autoSyncTimer = null;
+    var autoSyncTimer = null;
+    var syncTimeout = null;
     
-    const ACHIEVEMENT_LEVELS = {
+    // 缓存DOM元素
+    var cachedElements = {
+        pagination: null,
+        leaderboardTitle: null
+    };
+    
+    // ==================== 排行榜状态管理 ====================
+    var leaderboardState = {
+        currentGameMode: 'challenge',
+        currentDifficulty: 'easy',
+        currentPage: 1,
+        pageSize: 10,
+        totalPages: 1,
+        totalCount: 0,
+        sortBy: 'score'
+    };
+    
+    var ACHIEVEMENT_LEVELS = {
         BRONZE: 1,
         SILVER: 2,
         GOLD: 3,
         PLATINUM: 4
     };
     
-    const ACHIEVEMENT_CATEGORIES = {
+    var ACHIEVEMENT_CATEGORIES = {
         VICTORY: 'victory',
         SCORE: 'score',
         ACCURACY: 'accuracy',
@@ -730,12 +763,12 @@ const MathGame = (function() {
         MASTER: 'master'
     };
     
-    const CATEGORY_ORDER = ['victory', 'score', 'accuracy', 'speed', 'persistence', 'master'];
-    const CATEGORY_ICONS = { victory: '🏆', score: '💯', accuracy: '🎯', speed: '⚡', persistence: '💪', master: '👑' };
-    const LEVEL_ICONS = { 1: '🥉', 2: '🥈', 3: '🥇', 4: '🏆' };
-    const LEVEL_COLORS = { 1: '#CD7F32', 2: '#C0C0C0', 3: '#FFD700', 4: '#E5E4E2' };
+    var CATEGORY_ORDER = ['victory', 'score', 'accuracy', 'speed', 'persistence', 'master'];
+    var CATEGORY_ICONS = { victory: '🏆', score: '💯', accuracy: '🎯', speed: '⚡', persistence: '💪', master: '👑' };
+    var LEVEL_ICONS = { 1: '🥉', 2: '🥈', 3: '🥇', 4: '🏆' };
+    var LEVEL_COLORS = { 1: '#CD7F32', 2: '#C0C0C0', 3: '#FFD700', 4: '#E5E4E2' };
     
-    const LADDER_ACHIEVEMENTS = [
+    var LADDER_ACHIEVEMENTS = [
         { id: 'victory_bronze', category: 'victory', level: 1, icon: '🥉', nameKey: 'victoryBronze', descKey: 'victoryBronzeDesc', requirement: { type: 'games_completed', value: 1 }, reward: { score: 10 } },
         { id: 'victory_silver', category: 'victory', level: 2, icon: '🥈', nameKey: 'victorySilver', descKey: 'victorySilverDesc', requirement: { type: 'games_completed', value: 10 }, reward: { score: 50 } },
         { id: 'victory_gold', category: 'victory', level: 3, icon: '🥇', nameKey: 'victoryGold', descKey: 'victoryGoldDesc', requirement: { type: 'games_completed', value: 50 }, reward: { score: 200 } },
@@ -762,8 +795,8 @@ const MathGame = (function() {
         { id: 'master_platinum', category: 'master', level: 4, icon: '👑', nameKey: 'masterPlatinum', descKey: 'masterPlatinumDesc', requirement: { type: 'platinum_count', value: 1 }, reward: { score: 1000 } }
     ];
     
-    let achievementStates = new Map();
-    let playerStats = {
+    var achievementStates = new Map();
+    var playerStats = {
         gamesCompleted: 0,
         bestScore: 0,
         bestAccuracy: 0,
@@ -777,36 +810,62 @@ const MathGame = (function() {
         platinumCount: 0
     };
     
-    let lastAnswerTime = null;
-    let currentFastestAnswer = 999;
+    var lastAnswerTime = null;
+    var currentFastestAnswer = 999;
     
-    const MODE_CONFIG = {
+    var MODE_CONFIG = {
         standard: { questions: 30, time: null, hasTimeLimit: false, leaderboardType: 'standard', displayName: '挑战30' },
         challenge: { questions: null, time: 90, hasTimeLimit: true, leaderboardType: 'challenge', displayName: '激情90秒' },
         practice: { questions: null, time: null, hasTimeLimit: false, leaderboardType: null, displayName: '练习模式' },
         custom: { questions: 20, time: 60, hasTimeLimit: true, leaderboardType: null, displayName: '自定义' }
     };
     
-    const RANGE_CONFIG = {
-        '0-9': { min: 0, max: 9, targetMin: 5, targetMax: 10, leaderboardType: 'easy', displayName: '简单模式' },
-        '0-14': { min: 0, max: 14, targetMin: 6, targetMax: 14, leaderboardType: 'standard', displayName: '挑战30' },
-        '5-18': { min: 5, max: 18, targetMin: 8, targetMax: 18, leaderboardType: 'challenge', displayName: '激情90秒' }
+    var DIFFICULTY_CONFIG = {
+        'easy': { range: '0-9', displayName: '简单模式', icon: '🟢' },
+        'medium': { range: '0-14', displayName: '标准模式', icon: '🟠' },
+        'hard': { range: '5-18', displayName: '困难模式', icon: '🔴' }
+    };
+    
+    var RANGE_CONFIG = {
+        '0-9': { min: 0, max: 9, targetMin: 5, targetMax: 10, difficulty: 'easy', displayName: '简单模式' },
+        '0-14': { min: 0, max: 14, targetMin: 6, targetMax: 14, difficulty: 'medium', displayName: '标准模式' },
+        '5-18': { min: 5, max: 18, targetMin: 8, targetMax: 18, difficulty: 'hard', displayName: '困难模式' }
     };
     
     // ==================== 工具函数 ====================
-    function showMessage(text, type = 'info', duration = 2000) {
+    function showMessage(text, type, duration) {
+        if (!text) return;
+        
+        type = type || 'info';
+        duration = duration || 2000;
+        
         try {
-            document.querySelectorAll('.message-popup').forEach(msg => msg.remove());
+            var messages = document.querySelectorAll('.message-popup');
+            for (var i = 0; i < messages.length; i++) {
+                if (messages[i] && messages[i].parentNode) {
+                    messages[i].parentNode.removeChild(messages[i]);
+                }
+            }
             
-            const message = document.createElement('div');
+            var message = document.createElement('div');
             message.className = 'message-popup';
             message.textContent = text;
+            
+            var bgColor;
+            if (type === 'success') {
+                bgColor = '#4CAF50';
+            } else if (type === 'error') {
+                bgColor = '#ff4444';
+            } else {
+                bgColor = '#2196F3';
+            }
+            
             message.style.cssText = `
                 position: fixed;
                 top: 20px;
                 left: 50%;
                 transform: translateX(-50%);
-                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#ff4444' : '#2196F3'};
+                background: ${bgColor};
                 color: white;
                 padding: 12px 24px;
                 border-radius: 30px;
@@ -819,13 +878,13 @@ const MathGame = (function() {
             
             document.body.appendChild(message);
             
-            setTimeout(() => {
+            setTimeout(function() {
                 if (message && message.parentNode) {
                     message.style.opacity = '0';
                     message.style.transform = 'translateX(-50%) translateY(-20px)';
                     message.style.transition = 'all 0.3s ease';
-                    setTimeout(() => {
-                        if (message.parentNode) {
+                    setTimeout(function() {
+                        if (message && message.parentNode) {
                             message.parentNode.removeChild(message);
                         }
                     }, 300);
@@ -836,26 +895,48 @@ const MathGame = (function() {
         }
     }
     
+    function getTranslation(key, defaultValue) {
+        if (!key) return defaultValue || '';
+        
+        var lang = currentLanguage || 'zh';
+        var trans = translations[lang];
+        
+        if (trans && trans[key] !== undefined) {
+            return trans[key];
+        }
+        
+        return defaultValue || key;
+    }
+    
     function setLanguage(lang) {
         try {
             if (lang !== 'zh' && lang !== 'en') return;
             currentLanguage = lang;
-            localStorage?.setItem('mathGameLanguage', lang);
             
-            document.querySelectorAll('[data-i18n]').forEach(element => {
-                const key = element.getAttribute('data-i18n');
-                if (translations[lang] && translations[lang][key]) {
+            try {
+                localStorage.setItem('mathGameLanguage', lang);
+            } catch (e) {
+                console.warn('无法保存语言设置:', e);
+            }
+            
+            var elements = document.querySelectorAll('[data-i18n]');
+            for (var i = 0; i < elements.length; i++) {
+                var element = elements[i];
+                var key = element.getAttribute('data-i18n');
+                var translation = getTranslation(key);
+                
+                if (translation) {
                     if (element.hasAttribute('placeholder')) {
-                        element.setAttribute('placeholder', translations[lang][key]);
+                        element.setAttribute('placeholder', translation);
                     } else {
-                        element.textContent = translations[lang][key];
+                        element.textContent = translation;
                     }
                 }
-            });
+            }
             
-            const languageText = document.getElementById('language-text');
+            var languageText = document.getElementById('language-text');
             if (languageText) {
-                languageText.textContent = translations[lang].languageText;
+                languageText.textContent = getTranslation('languageText', 'English');
             }
             
             updateModeDisplayNames();
@@ -864,7 +945,7 @@ const MathGame = (function() {
                 updateUserInfo();
             }
             
-            const openModals = {
+            var openModals = {
                 'history-modal': showHistory,
                 'statistics-modal': showStatistics,
                 'achievements-modal': showAchievements,
@@ -875,19 +956,21 @@ const MathGame = (function() {
                 'admin-tools-modal': showAdminTools
             };
             
-            Object.keys(openModals).forEach(modalId => {
-                const modal = document.getElementById(modalId);
-                if (modal && modal.style.display === 'flex') {
-                    openModals[modalId]();
+            for (var modalId in openModals) {
+                if (openModals.hasOwnProperty(modalId)) {
+                    var modal = document.getElementById(modalId);
+                    if (modal && modal.style.display === 'flex') {
+                        openModals[modalId]();
+                    }
                 }
-            });
+            }
             
-            const gameOverElement = document.getElementById('game-over');
+            var gameOverElement = document.getElementById('game-over');
             if (gameOverElement && gameOverElement.style.display === 'flex') {
                 updateGameOverText();
             }
             
-            console.log(`语言已切换到: ${lang}`);
+            console.log('语言已切换到: ' + lang);
         } catch (error) {
             console.error('设置语言失败:', error);
         }
@@ -895,32 +978,32 @@ const MathGame = (function() {
     
     function updateModeDisplayNames() {
         try {
-            const modeStandard = document.querySelector('[data-mode="standard"] span');
-            const modeChallenge = document.querySelector('[data-mode="challenge"] span');
-            const modePractice = document.querySelector('[data-mode="practice"] span');
-            const modeCustom = document.querySelector('[data-mode="custom"] span');
+            var modeStandard = document.querySelector('[data-mode="standard"] .mode-title');
+            var modeChallenge = document.querySelector('[data-mode="challenge"] .mode-title');
+            var modePractice = document.querySelector('[data-mode="practice"] .mode-title');
+            var modeCustom = document.querySelector('[data-mode="custom"] .mode-title');
             
-            if (modeStandard) modeStandard.textContent = translations[currentLanguage].modeStandard;
-            if (modeChallenge) modeChallenge.textContent = translations[currentLanguage].modeChallenge;
-            if (modePractice) modePractice.textContent = translations[currentLanguage].modePractice;
-            if (modeCustom) modeCustom.textContent = translations[currentLanguage].modeCustom;
+            if (modeStandard) modeStandard.textContent = getTranslation('modeStandard', '📚 挑战30');
+            if (modeChallenge) modeChallenge.textContent = getTranslation('modeChallenge', '⚡ 激情90秒');
+            if (modePractice) modePractice.textContent = getTranslation('modePractice', '🎯 练习模式');
+            if (modeCustom) modeCustom.textContent = getTranslation('modeCustom', '⚙️ 自定义');
             
-            const modeStandardDesc = document.querySelector('[data-mode="standard"] .mode-desc');
-            const modeChallengeDesc = document.querySelector('[data-mode="challenge"] .mode-desc');
-            const modePracticeDesc = document.querySelector('[data-mode="practice"] .mode-desc');
-            const modeCustomDesc = document.querySelector('[data-mode="custom"] .mode-desc');
+            var modeStandardDesc = document.querySelector('[data-mode="standard"] .mode-desc');
+            var modeChallengeDesc = document.querySelector('[data-mode="challenge"] .mode-desc');
+            var modePracticeDesc = document.querySelector('[data-mode="practice"] .mode-desc');
+            var modeCustomDesc = document.querySelector('[data-mode="custom"] .mode-desc');
             
-            if (modeStandardDesc) modeStandardDesc.textContent = translations[currentLanguage].modeStandardDesc;
-            if (modeChallengeDesc) modeChallengeDesc.textContent = translations[currentLanguage].modeChallengeDesc;
-            if (modePracticeDesc) modePracticeDesc.textContent = translations[currentLanguage].modePracticeDesc;
-            if (modeCustomDesc) modeCustomDesc.textContent = translations[currentLanguage].modeCustomDesc;
+            if (modeStandardDesc) modeStandardDesc.textContent = getTranslation('modeStandardDesc', '完成30题，比拼用时');
+            if (modeChallengeDesc) modeChallengeDesc.textContent = getTranslation('modeChallengeDesc', '90秒时间，比拼题数');
+            if (modePracticeDesc) modePracticeDesc.textContent = getTranslation('modePracticeDesc', '无时间限制，专心学习');
+            if (modeCustomDesc) modeCustomDesc.textContent = getTranslation('modeCustomDesc', '自设参数，灵活练习');
             
-            const startBtn = document.getElementById('start-btn');
+            var startBtn = document.getElementById('start-btn');
             if (startBtn) {
                 if (currentMode === 'practice') {
-                    startBtn.innerHTML = `<span>${translations[currentLanguage].startPractice}</span>`;
+                    startBtn.innerHTML = '<span>' + getTranslation('startPractice', '🎯 开始练习') + '</span>';
                 } else {
-                    startBtn.innerHTML = `<span>${translations[currentLanguage].startGame}</span>`;
+                    startBtn.innerHTML = '<span>' + getTranslation('startGame', '🚀 开始游戏') + '</span>';
                 }
             }
         } catch (error) {
@@ -930,37 +1013,41 @@ const MathGame = (function() {
     
     function updateGameOverText() {
         try {
-            const resultTitle = document.getElementById('result-title');
-            const saveScoreBtn = document.getElementById('save-score-btn');
-            const playAgainBtn = document.getElementById('play-again-btn');
-            const viewLeaderboardBtn = document.getElementById('view-leaderboard-btn');
-            const viewStatisticsBtn = document.getElementById('view-statistics-btn');
-            const playerNameInput = document.getElementById('player-name');
+            var resultTitle = document.getElementById('result-title');
+            var saveScoreBtn = document.getElementById('save-score-btn');
+            var playAgainBtn = document.getElementById('play-again-btn');
+            var viewLeaderboardBtn = document.getElementById('view-leaderboard-btn');
+            var viewStatisticsBtn = document.getElementById('view-statistics-btn');
+            var playerNameInput = document.getElementById('player-name');
             
-            if (saveScoreBtn) saveScoreBtn.innerHTML = `<span>${translations[currentLanguage].saveScore}</span>`;
-            if (playAgainBtn) playAgainBtn.innerHTML = `<span>${translations[currentLanguage].playAgain}</span>`;
-            if (viewLeaderboardBtn) viewLeaderboardBtn.innerHTML = `<span>${translations[currentLanguage].viewLeaderboard}</span>`;
-            if (viewStatisticsBtn) viewStatisticsBtn.innerHTML = `<span>${translations[currentLanguage].viewStatistics}</span>`;
-            if (playerNameInput) playerNameInput.placeholder = translations[currentLanguage].playerNamePlaceholder;
+            if (saveScoreBtn) saveScoreBtn.innerHTML = '<span>' + getTranslation('saveScore', '保存成绩') + '</span>';
+            if (playAgainBtn) playAgainBtn.innerHTML = '<span>' + getTranslation('playAgain', '再玩一次') + '</span>';
+            if (viewLeaderboardBtn) viewLeaderboardBtn.innerHTML = '<span>' + getTranslation('viewLeaderboard', '查看排行榜') + '</span>';
+            if (viewStatisticsBtn) viewStatisticsBtn.innerHTML = '<span>' + getTranslation('viewStatistics', '查看统计') + '</span>';
+            if (playerNameInput) playerNameInput.placeholder = getTranslation('playerNamePlaceholder', '请输入你的名字');
             
-            const finalScoreLabel = document.querySelector('.final-score-label');
-            const finalCompletedLabel = document.querySelector('.final-completed-label');
-            const finalTimeLabel = document.querySelector('.final-time-label');
-            const finalAccuracyLabel = document.querySelector('.final-accuracy-label');
+            var finalScoreLabel = document.querySelector('.stat-item:first-child .stat-label');
+            var finalCompletedLabel = document.querySelector('.stat-item:nth-child(2) .stat-label');
+            var finalTimeLabel = document.querySelector('.stat-item:nth-child(3) .stat-label');
+            var finalAccuracyLabel = document.querySelector('.stat-item:nth-child(4) .stat-label');
             
-            if (finalScoreLabel) finalScoreLabel.textContent = translations[currentLanguage].finalScore;
-            if (finalCompletedLabel) finalCompletedLabel.textContent = translations[currentLanguage].finalCompleted;
-            if (finalTimeLabel) finalTimeLabel.textContent = translations[currentLanguage].finalTime;
-            if (finalAccuracyLabel) finalAccuracyLabel.textContent = translations[currentLanguage].finalAccuracy;
+            if (finalScoreLabel) finalScoreLabel.textContent = getTranslation('finalScore', '最终得分');
+            if (finalCompletedLabel) finalCompletedLabel.textContent = getTranslation('finalCompleted', '完成题数');
+            if (finalTimeLabel) finalTimeLabel.textContent = getTranslation('finalTime', '用时');
+            if (finalAccuracyLabel) finalAccuracyLabel.textContent = getTranslation('finalAccuracy', '正确率');
         } catch (error) {
             console.error('更新游戏结束文字失败:', error);
         }
     }
     
     function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+        if (!array || !array.length) return array;
+        
+        for (var i = array.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
         }
         return array;
     }
@@ -973,55 +1060,70 @@ const MathGame = (function() {
             console.warn('⚠️ 在本地文件系统运行，启用离线模式');
             offlineMode = true;
             syncState.offlineMode = true;
-            showMessage(currentLanguage === 'zh' ? '📴 离线模式：请在本地服务器中运行游戏' : '📴 Offline mode: Please run on a local server', 'warning', 5000);
+            showMessage(
+                getTranslation('offlineMode', '📴 离线模式') + '：' + 
+                (currentLanguage === 'zh' ? '请在本地服务器中运行游戏' : 'Please run on a local server'), 
+                'warning', 5000
+            );
             return false;
         }
         
-        const isLaptop = window.screen.width >= 1024 && window.screen.width <= 1440 && 
+        var isLaptop = window.screen.width >= 1024 && window.screen.width <= 1440 && 
                         !('ontouchstart' in window) && window.navigator.maxTouchPoints === 0;
         
         if (isLaptop) {
             console.log('💻 检测到笔记本电脑，启用兼容模式');
-            showMessage(translations[currentLanguage].laptopCompatibilityMode, 'info', 3000);
+            showMessage(getTranslation('laptopCompatibilityMode', '💻 笔记本兼容模式已启用'), 'info', 3000);
         }
         
-        for (let i = 0; i < CONFIG.SUPABASE_URLS.length; i++) {
-            try {
-                const supabaseUrl = CONFIG.SUPABASE_URLS[i];
-                const supabaseKey = CONFIG.SUPABASE_ANON_KEY;
-                
-                console.log(`尝试连接 Supabase (${i + 1}/${CONFIG.SUPABASE_URLS.length})...`);
-                
-                supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
-                    auth: {
-                        autoRefreshToken: true,
-                        persistSession: true,
-                        detectSessionInUrl: true,
-                        storage: window.localStorage
-                    },
-                    global: {
-                        headers: {
-                            'X-Client-Info': 'math-addition-game@1.0.0'
+        var retryCount = 0;
+        var maxRetries = 3;
+        
+        while (retryCount < maxRetries && !isSupabaseReady) {
+            for (var i = 0; i < CONFIG.SUPABASE_URLS.length; i++) {
+                try {
+                    var supabaseUrl = CONFIG.SUPABASE_URLS[i];
+                    var supabaseKey = CONFIG.SUPABASE_ANON_KEY;
+                    
+                    console.log('尝试连接 Supabase (' + (i + 1) + '/' + CONFIG.SUPABASE_URLS.length + ')...');
+                    
+                    supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
+                        auth: {
+                            autoRefreshToken: true,
+                            persistSession: true,
+                            detectSessionInUrl: true,
+                            storage: window.localStorage
+                        },
+                        global: {
+                            headers: {
+                                'X-Client-Info': 'math-addition-game@1.0.0'
+                            }
                         }
+                    });
+                    
+                    var result = await supabase.auth.getSession();
+                    
+                    if (!result.error) {
+                        console.log('✅ Supabase连接成功 (节点 ' + (i + 1) + ')');
+                        isSupabaseReady = true;
+                        offlineMode = false;
+                        syncState.offlineMode = false;
+                        return true;
+                    } else {
+                        console.warn('⚠️ 节点 ' + (i + 1) + ' 连接失败:', result.error.message);
                     }
-                });
-                
-                const { error } = await supabase.auth.getSession();
-                
-                if (!error) {
-                    console.log(`✅ Supabase连接成功 (节点 ${i + 1})`);
-                    isSupabaseReady = true;
-                    offlineMode = false;
-                    syncState.offlineMode = false;
-                    return true;
-                } else {
-                    console.warn(`⚠️ 节点 ${i + 1} 连接失败:`, error.message);
+                } catch (e) {
+                    console.warn('⚠️ 节点 ' + (i + 1) + ' 连接异常:', e.message);
                 }
-            } catch (e) {
-                console.warn(`⚠️ 节点 ${i + 1} 连接异常:`, e.message);
+                
+                await new Promise(function(resolve) { setTimeout(resolve, 500); });
             }
             
-            await new Promise(resolve => setTimeout(resolve, 500));
+            retryCount++;
+            if (retryCount < maxRetries) {
+                console.log('🔄 重试连接... (' + retryCount + '/' + maxRetries + ')');
+                await new Promise(function(resolve) { setTimeout(resolve, 2000); });
+            }
         }
         
         console.error('❌ 所有Supabase节点都连接失败，进入离线模式');
@@ -1045,29 +1147,29 @@ const MathGame = (function() {
         if (!isSupabaseReady || !supabase || offlineMode) return false;
         
         try {
-            const { data: { user }, error } = await supabase.auth.getUser();
+            var result = await supabase.auth.getUser();
             
-            if (error) {
-                console.error('获取用户失败:', error);
+            if (result.error) {
+                console.error('获取用户失败:', result.error);
                 return false;
             }
             
-            if (user) {
-                currentUser = user;
-                console.log('用户已登录:', user.email);
+            if (result.data && result.data.user) {
+                currentUser = result.data.user;
+                console.log('用户已登录:', currentUser.email);
                 
                 await checkUserRole();
                 updateUserInfo();
                 
-                setTimeout(async () => {
+                setTimeout(async function() {
                     await loadAchievementsFromCloud();
                     await loadWrongQuestionsFromCloud();
                     await loadUserStats();
                     await loadUserScores();
                     
                     if (syncState.lastSyncTime) {
-                        const lastSync = new Date(syncState.lastSyncTime);
-                        const now = new Date();
+                        var lastSync = new Date(syncState.lastSyncTime);
+                        var now = new Date();
                         if (now - lastSync > 30 * 60 * 1000) {
                             performFullSync();
                         }
@@ -1086,7 +1188,7 @@ const MathGame = (function() {
         }
     }
     
-    // ==================== 修复版角色检查函数 ====================
+    // ==================== 角色检查函数 ====================
     async function checkUserRole() {
         if (!currentUser) {
             isAdminUser = false;
@@ -1097,9 +1199,9 @@ const MathGame = (function() {
         }
         
         try {
-            const userEmail = currentUser.email?.toLowerCase() || '';
-            const userMeta = currentUser.user_metadata || {};
-            const userRole = userMeta.role || 'student';
+            var userEmail = currentUser.email ? currentUser.email.toLowerCase() : '';
+            var userMeta = currentUser.user_metadata || {};
+            var userRole = userMeta.role || 'student';
             
             console.log('检查用户角色:', { 
                 email: userEmail, 
@@ -1108,36 +1210,35 @@ const MathGame = (function() {
                 adminEmails: CONFIG.ADMIN_EMAILS 
             });
             
-            // ✅ 优先检查邮箱是否在管理员列表中
-            const isEmailInAdminList = CONFIG.ADMIN_EMAILS.some(adminEmail => 
-                adminEmail.toLowerCase() === userEmail
-            );
+            var isEmailInAdminList = false;
+            for (var i = 0; i < CONFIG.ADMIN_EMAILS.length; i++) {
+                if (CONFIG.ADMIN_EMAILS[i].toLowerCase() === userEmail) {
+                    isEmailInAdminList = true;
+                    break;
+                }
+            }
             
-            // 1. 超级管理员检查（邮箱匹配优先）
             isSuperAdmin = isEmailInAdminList || 
                           userRole === 'super_admin' ||
-                          userRole === 'admin' ||  // 兼容旧数据
-                          userMeta.is_super_admin === true;
+                          userRole === 'admin' ||
+                          (userMeta.is_super_admin === true);
             
-            // 2. 学校管理员检查
             isSchoolAdmin = userRole === 'school_admin' ||
-                           (userRole === 'admin' && userMeta.school_id) ||  // 有学校ID的admin视为学校管理员
-                           isSuperAdmin;  // 超级管理员自动拥有学校管理员权限
+                           (userRole === 'admin' && userMeta.school_id) ||
+                           isSuperAdmin;
             
-            // 3. 教师检查
             isTeacher = userRole === 'teacher' ||
                        (userRole === 'admin' && userMeta.approved === true) ||
-                       isSchoolAdmin;  // 学校管理员自动拥有教师权限
+                       isSchoolAdmin;
             
-            // 4. 兼容旧代码的 isAdminUser
             isAdminUser = isSuperAdmin || isSchoolAdmin;
             
             console.log('角色检查结果:', {
-                isSuperAdmin,
-                isSchoolAdmin,
-                isTeacher,
-                isAdminUser,
-                isEmailInAdminList
+                isSuperAdmin: isSuperAdmin,
+                isSchoolAdmin: isSchoolAdmin,
+                isTeacher: isTeacher,
+                isAdminUser: isAdminUser,
+                isEmailInAdminList: isEmailInAdminList
             });
             
             return true;
@@ -1159,19 +1260,19 @@ const MathGame = (function() {
                 return false;
             }
             
-            const { data, error } = await supabase.auth.signInWithPassword({
+            var result = await supabase.auth.signInWithPassword({
                 email: email.trim(),
                 password: password.trim()
             });
             
-            if (error) {
-                const errorElement = document.getElementById('auth-error');
-                if (errorElement) errorElement.textContent = error.message;
+            if (result.error) {
+                var errorElement = document.getElementById('auth-error');
+                if (errorElement) errorElement.textContent = result.error.message;
                 return false;
             }
             
-            if (data && data.user) {
-                currentUser = data.user;
+            if (result.data && result.data.user) {
+                currentUser = result.data.user;
                 
                 await checkUserRole();
                 updateUserInfo();
@@ -1184,7 +1285,7 @@ const MathGame = (function() {
             return false;
         } catch (error) {
             console.error('登录失败:', error);
-            const errorElement = document.getElementById('auth-error');
+            var errorElement = document.getElementById('auth-error');
             if (errorElement) errorElement.textContent = currentLanguage === 'zh' ? '登录失败' : 'Login failed';
             return false;
         }
@@ -1197,12 +1298,12 @@ const MathGame = (function() {
                 return false;
             }
             
-            const userMetadata = {
-                username: username?.trim() || email.split('@')[0],
+            var userMetadata = {
+                username: (username && username.trim()) || email.split('@')[0],
                 role: 'student'
             };
             
-            const { data, error } = await supabase.auth.signUp({
+            var result = await supabase.auth.signUp({
                 email: email.trim(),
                 password: password.trim(),
                 options: {
@@ -1210,14 +1311,14 @@ const MathGame = (function() {
                 }
             });
             
-            if (error) {
-                const errorElement = document.getElementById('auth-error');
-                if (errorElement) errorElement.textContent = error.message;
+            if (result.error) {
+                var errorElement = document.getElementById('auth-error');
+                if (errorElement) errorElement.textContent = result.error.message;
                 return false;
             }
             
-            if (data && data.user) {
-                currentUser = data.user;
+            if (result.data && result.data.user) {
+                currentUser = result.data.user;
                 
                 await checkUserRole();
                 updateUserInfo();
@@ -1230,7 +1331,7 @@ const MathGame = (function() {
             return false;
         } catch (error) {
             console.error('注册失败:', error);
-            const errorElement = document.getElementById('auth-error');
+            var errorElement = document.getElementById('auth-error');
             if (errorElement) errorElement.textContent = currentLanguage === 'zh' ? '注册失败' : 'Registration failed';
             return false;
         }
@@ -1253,10 +1354,10 @@ const MathGame = (function() {
                 await performFullSync();
             }
             
-            const { error } = await supabase.auth.signOut();
+            var result = await supabase.auth.signOut();
             
-            if (error) {
-                showMessage(currentLanguage === 'zh' ? '退出失败: ' : 'Logout failed: ' + error.message, 'error');
+            if (result.error) {
+                showMessage((currentLanguage === 'zh' ? '退出失败: ' : 'Logout failed: ') + result.error.message, 'error');
                 return;
             }
             
@@ -1266,11 +1367,11 @@ const MathGame = (function() {
             isSchoolAdmin = false;
             isTeacher = false;
             
-            const userInfo = document.getElementById('user-info');
-            const teacherToolsBtn = document.getElementById('teacher-tools-btn');
-            const adminToolsBtn = document.getElementById('admin-tools-btn');
-            const syncStatusBtn = document.getElementById('sync-status-btn');
-            const teacherApplicationBtn = document.getElementById('teacher-application-btn');
+            var userInfo = document.getElementById('user-info');
+            var teacherToolsBtn = document.getElementById('teacher-tools-btn');
+            var adminToolsBtn = document.getElementById('admin-tools-btn');
+            var syncStatusBtn = document.getElementById('sync-status-btn');
+            var teacherApplicationBtn = document.getElementById('teacher-application-btn');
             
             if (userInfo) userInfo.style.display = 'none';
             if (teacherToolsBtn) teacherToolsBtn.style.display = 'none';
@@ -1285,27 +1386,27 @@ const MathGame = (function() {
         }
     }
     
-    // ==================== 修复版 updateUserInfo 函数 ====================
+    // ==================== updateUserInfo 函数 ====================
     function updateUserInfo() {
         if (!currentUser) return;
         
         try {
-            const userInfo = document.getElementById('user-info');
-            const userAvatar = document.getElementById('user-avatar');
-            const userName = document.getElementById('user-name');
-            const teacherToolsBtn = document.getElementById('teacher-tools-btn');
-            const adminToolsBtn = document.getElementById('admin-tools-btn');
-            const syncStatusBtn = document.getElementById('sync-status-btn');
-            const teacherApplicationBtn = document.getElementById('teacher-application-btn');
+            var userInfo = document.getElementById('user-info');
+            var userAvatar = document.getElementById('user-avatar');
+            var userName = document.getElementById('user-name');
+            var teacherToolsBtn = document.getElementById('teacher-tools-btn');
+            var adminToolsBtn = document.getElementById('admin-tools-btn');
+            var syncStatusBtn = document.getElementById('sync-status-btn');
+            var teacherApplicationBtn = document.getElementById('teacher-application-btn');
             
             if (!userInfo || !userAvatar || !userName) return;
             
             userInfo.style.display = 'flex';
-            const email = currentUser.email || '';
-            const firstLetter = email.charAt(0).toUpperCase() || '?';
+            var email = currentUser.email || '';
+            var firstLetter = email.charAt(0).toUpperCase() || '?';
             userAvatar.textContent = firstLetter;
             
-            const username = currentUser.user_metadata?.username || email.split('@')[0];
+            var username = (currentUser.user_metadata && currentUser.user_metadata.username) || email.split('@')[0];
             userName.textContent = username;
             
             if (syncStatusBtn) {
@@ -1322,46 +1423,43 @@ const MathGame = (function() {
                 }
             }
             
-            const userRole = currentUser.user_metadata?.role;
+            var userRole = currentUser.user_metadata ? currentUser.user_metadata.role : null;
             
-            // 教师申请按钮：只有学生角色显示
             if (teacherApplicationBtn) {
                 if (userRole === 'student' || !userRole) {
                     teacherApplicationBtn.style.display = 'flex';
-                    const span = teacherApplicationBtn.querySelector('span');
-                    if (span) span.textContent = translations[currentLanguage].applyForTeacher;
+                    var span = teacherApplicationBtn.querySelector('span');
+                    if (span) span.textContent = getTranslation('applyForTeacher', '申请成为教师');
                 } else {
                     teacherApplicationBtn.style.display = 'none';
                 }
             }
             
-            // 教师工具按钮：超级管理员、学校管理员、已批准的教师可见
             if (teacherToolsBtn) {
-                const showTeacherTools = isSuperAdmin || isSchoolAdmin || 
-                    (userRole === 'teacher' && currentUser.user_metadata?.approved === true);
+                var showTeacherTools = isSuperAdmin || isSchoolAdmin || 
+                    (isTeacher && currentUser.user_metadata && currentUser.user_metadata.approved === true);
                 
                 teacherToolsBtn.style.display = showTeacherTools ? 'flex' : 'none';
                 if (showTeacherTools) {
-                    const span = teacherToolsBtn.querySelector('span');
-                    if (span) span.textContent = translations[currentLanguage].teacherTools || '教师工具';
+                    var span = teacherToolsBtn.querySelector('span');
+                    if (span) span.textContent = getTranslation('teacherTools', '教师工具');
                 }
             }
             
-            // 管理员工具按钮：只有超级管理员可见
             if (adminToolsBtn) {
                 adminToolsBtn.style.display = isSuperAdmin ? 'flex' : 'none';
                 if (isSuperAdmin) {
-                    const span = adminToolsBtn.querySelector('span');
-                    if (span) span.textContent = translations[currentLanguage].adminTools || '管理工具';
+                    var span = adminToolsBtn.querySelector('span');
+                    if (span) span.textContent = getTranslation('adminTools', '管理工具');
                 }
             }
             
             console.log('UI更新 - 权限状态:', {
-                isSuperAdmin,
-                isSchoolAdmin,
-                isTeacher,
-                showTeacherTools: teacherToolsBtn?.style.display,
-                showAdminTools: adminToolsBtn?.style.display
+                isSuperAdmin: isSuperAdmin,
+                isSchoolAdmin: isSchoolAdmin,
+                isTeacher: isTeacher,
+                showTeacherTools: teacherToolsBtn ? teacherToolsBtn.style.display : null,
+                showAdminTools: adminToolsBtn ? adminToolsBtn.style.display : null
             });
             
         } catch (error) {
@@ -1372,7 +1470,7 @@ const MathGame = (function() {
     // ==================== 弹窗函数 ====================
     function showAuthModal() {
         try {
-            const authModal = document.getElementById('auth-modal');
+            var authModal = document.getElementById('auth-modal');
             if (authModal) {
                 authModal.style.display = 'flex';
                 updateAuthUI();
@@ -1384,13 +1482,13 @@ const MathGame = (function() {
     
     function closeAuthModal() {
         try {
-            const authModal = document.getElementById('auth-modal');
+            var authModal = document.getElementById('auth-modal');
             if (authModal) authModal.style.display = 'none';
             
-            const authEmail = document.getElementById('auth-email');
-            const authPassword = document.getElementById('auth-password');
-            const authUsername = document.getElementById('auth-username');
-            const authError = document.getElementById('auth-error');
+            var authEmail = document.getElementById('auth-email');
+            var authPassword = document.getElementById('auth-password');
+            var authUsername = document.getElementById('auth-username');
+            var authError = document.getElementById('auth-error');
             
             if (authEmail) authEmail.value = '';
             if (authPassword) authPassword.value = '';
@@ -1403,37 +1501,37 @@ const MathGame = (function() {
     
     function updateAuthUI() {
         try {
-            const isLogin = authMode === 'login';
-            const authTitle = document.getElementById('auth-title');
-            const authSubmitBtn = document.getElementById('auth-submit-btn');
-            const authSwitchText = document.getElementById('auth-switch-text');
-            const authSwitchLink = document.getElementById('auth-switch-link');
-            const authUsernameGroup = document.getElementById('auth-username-group');
-            const roleSelectGroup = document.getElementById('role-select-group');
-            const teacherRegisterFields = document.getElementById('teacher-register-fields');
+            var isLogin = authMode === 'login';
+            var authTitle = document.getElementById('auth-title');
+            var authSubmitBtn = document.getElementById('auth-submit-btn');
+            var authSwitchText = document.getElementById('auth-switch-text');
+            var authSwitchLink = document.getElementById('auth-switch-link');
+            var authUsernameGroup = document.getElementById('auth-username-group');
+            var roleSelectGroup = document.getElementById('role-select-group');
+            var teacherRegisterFields = document.getElementById('teacher-register-fields');
             
             if (authTitle) {
                 authTitle.textContent = isLogin ? 
-                    translations[currentLanguage].loginTitle : 
-                    translations[currentLanguage].registerTitle;
+                    getTranslation('loginTitle', '🔐 用户登录') : 
+                    getTranslation('registerTitle', '📝 用户注册');
             }
             
             if (authSubmitBtn) {
                 authSubmitBtn.textContent = isLogin ? 
-                    translations[currentLanguage].loginButton : 
-                    translations[currentLanguage].registerButton;
+                    getTranslation('loginButton', '登录') : 
+                    getTranslation('registerButton', '注册');
             }
             
             if (authSwitchText) {
                 authSwitchText.textContent = isLogin ? 
-                    translations[currentLanguage].noAccount : 
-                    translations[currentLanguage].hasAccount;
+                    getTranslation('noAccount', '还没有账号？') : 
+                    getTranslation('hasAccount', '已有账号？');
             }
             
             if (authSwitchLink) {
                 authSwitchLink.textContent = isLogin ? 
-                    translations[currentLanguage].registerNow : 
-                    translations[currentLanguage].loginNow;
+                    getTranslation('registerNow', '立即注册') : 
+                    getTranslation('loginNow', '立即登录');
             }
             
             if (authUsernameGroup) {
@@ -1459,24 +1557,24 @@ const MathGame = (function() {
     
     async function handleAuth() {
         try {
-            const emailInput = document.getElementById('auth-email');
-            const passwordInput = document.getElementById('auth-password');
-            const usernameInput = document.getElementById('auth-username');
-            const roleSelect = document.getElementById('auth-role');
-            const schoolInput = document.getElementById('auth-school');
-            const stateInput = document.getElementById('auth-state');
+            var emailInput = document.getElementById('auth-email');
+            var passwordInput = document.getElementById('auth-password');
+            var usernameInput = document.getElementById('auth-username');
+            var roleSelect = document.getElementById('auth-role');
+            var schoolInput = document.getElementById('auth-school');
+            var stateInput = document.getElementById('auth-state');
             
             if (!emailInput || !passwordInput) return;
             
-            const email = emailInput.value.trim();
-            const password = passwordInput.value.trim();
-            const username = usernameInput ? usernameInput.value.trim() : '';
-            const role = roleSelect ? roleSelect.value : 'student';
-            const school = schoolInput ? schoolInput.value.trim() : '';
-            const state = stateInput ? stateInput.value.trim() : '';
+            var email = emailInput.value.trim();
+            var password = passwordInput.value.trim();
+            var username = usernameInput ? usernameInput.value.trim() : '';
+            var role = roleSelect ? roleSelect.value : 'student';
+            var school = schoolInput ? schoolInput.value.trim() : '';
+            var state = stateInput ? stateInput.value.trim() : '';
             
             if (!email || !password) {
-                const errorElement = document.getElementById('auth-error');
+                var errorElement = document.getElementById('auth-error');
                 if (errorElement) errorElement.textContent = currentLanguage === 'zh' ? '请输入邮箱和密码' : 'Please enter email and password';
                 return;
             }
@@ -1495,7 +1593,7 @@ const MathGame = (function() {
     async function showTeacherApplication() {
         try {
             if (!currentUser) {
-                showMessage(translations[currentLanguage].needLogin, 'error');
+                showMessage(getTranslation('needLogin', '请先登录后再申请教师账号'), 'error');
                 showAuthModal();
                 return;
             }
@@ -1513,90 +1611,94 @@ const MathGame = (function() {
                 return;
             }
             
-            const { data: existingApp, error: checkError } = await supabase
+            var checkResult = await supabase
                 .from('teacher_applications')
                 .select('*')
                 .eq('user_id', currentUser.id)
                 .eq('status', 'pending')
                 .limit(1);
             
-            if (checkError) {
-                console.error('检查教师申请失败:', checkError);
+            if (checkResult.error) {
+                console.error('检查教师申请失败:', checkResult.error);
             }
             
-            if (existingApp && existingApp.length > 0) {
-                showMessage(translations[currentLanguage].alreadyApplied, 'info');
+            if (checkResult.data && checkResult.data.length > 0) {
+                showMessage(getTranslation('alreadyApplied', '您已经提交过申请，请耐心等待审核'), 'info');
                 return;
             }
             
-            const applicationHtml = `
+            var applicationHtml = `
                 <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 20px; padding: 30px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); z-index: 4000;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="color: #4CAF50; margin: 0; font-size: clamp(18px, 5vw, 24px);">👨‍🏫 ${translations[currentLanguage].teacherApplication}</h3>
+                        <h3 style="color: #4CAF50; margin: 0; font-size: clamp(18px, 5vw, 24px);">👨‍🏫 ${getTranslation('teacherApplication', '教师账号申请')}</h3>
                         <button id="close-application-btn" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">✕</button>
                     </div>
                     
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${translations[currentLanguage].schoolName}</label>
-                        <input id="app-school" type="text" placeholder="${translations[currentLanguage].schoolNamePlaceholder}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px);">
+                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${getTranslation('schoolName', '学校名称')}</label>
+                        <input id="app-school" type="text" placeholder="${getTranslation('schoolNamePlaceholder', '请输入学校全称')}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px);">
                     </div>
                     
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${translations[currentLanguage].stateRegion}</label>
-                        <input id="app-state" type="text" placeholder="${translations[currentLanguage].stateRegionPlaceholder}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px);">
+                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${getTranslation('stateRegion', '所在州属')}</label>
+                        <input id="app-state" type="text" placeholder="${getTranslation('stateRegionPlaceholder', '请输入州/省/地区')}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px);">
                     </div>
                     
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${translations[currentLanguage].teachingSubject}</label>
-                        <input id="app-subject" type="text" placeholder="${translations[currentLanguage].teachingSubjectPlaceholder}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px);">
+                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${getTranslation('teachingSubject', '教授科目')}</label>
+                        <input id="app-subject" type="text" placeholder="${getTranslation('teachingSubjectPlaceholder', '例如：数学')}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px);">
                     </div>
                     
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${translations[currentLanguage].gradeLevel}</label>
-                        <input id="app-grade" type="text" placeholder="${translations[currentLanguage].gradeLevelPlaceholder}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px);">
+                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${getTranslation('gradeLevel', '任教年级')}</label>
+                        <input id="app-grade" type="text" placeholder="${getTranslation('gradeLevelPlaceholder', '例如：小学三年级')}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px);">
                     </div>
                     
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${translations[currentLanguage].contactPhone}</label>
-                        <input id="app-phone" type="tel" placeholder="${translations[currentLanguage].contactPhonePlaceholder}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px);">
+                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${getTranslation('contactPhone', '联系电话')}</label>
+                        <input id="app-phone" type="tel" placeholder="${getTranslation('contactPhonePlaceholder', '请输入联系电话')}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px);">
                     </div>
                     
                     <div style="margin-bottom: 25px;">
-                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${translations[currentLanguage].reason}</label>
-                        <textarea id="app-reason" rows="4" placeholder="${translations[currentLanguage].reasonPlaceholder}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px); resize: vertical;"></textarea>
+                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: clamp(14px, 4vw, 16px);">${getTranslation('reason', '申请理由')}</label>
+                        <textarea id="app-reason" rows="4" placeholder="${getTranslation('reasonPlaceholder', '请简要说明申请教师账号的原因')}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: clamp(14px, 4vw, 16px); resize: vertical;"></textarea>
                     </div>
                     
                     <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                         <button id="submit-application-btn" style="flex: 2; min-width: 200px; background: #4CAF50; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: clamp(14px, 4vw, 16px); cursor: pointer;">
-                            📨 ${translations[currentLanguage].submitApplication}
+                            📨 ${getTranslation('submitApplication', '提交申请')}
                         </button>
                         <button id="cancel-application-btn" style="flex: 1; min-width: 100px; background: #f44336; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: clamp(14px, 4vw, 16px); cursor: pointer;">
-                            ${translations[currentLanguage].cancel}
+                            ${getTranslation('cancel', '取消')}
                         </button>
                     </div>
                 </div>
             `;
             
-            const applicationDiv = document.createElement('div');
+            var applicationDiv = document.createElement('div');
             applicationDiv.id = 'teacher-application-modal';
             applicationDiv.innerHTML = applicationHtml;
             document.body.appendChild(applicationDiv);
             
-            document.getElementById('close-application-btn').addEventListener('click', () => {
-                applicationDiv.remove();
+            document.getElementById('close-application-btn').addEventListener('click', function() {
+                if (applicationDiv.parentNode) {
+                    applicationDiv.parentNode.removeChild(applicationDiv);
+                }
             });
             
-            document.getElementById('cancel-application-btn').addEventListener('click', () => {
-                applicationDiv.remove();
+            document.getElementById('cancel-application-btn').addEventListener('click', function() {
+                if (applicationDiv.parentNode) {
+                    applicationDiv.parentNode.removeChild(applicationDiv);
+                }
             });
             
-            document.getElementById('submit-application-btn').addEventListener('click', async () => {
-                const school = document.getElementById('app-school').value.trim();
-                const state = document.getElementById('app-state').value.trim();
-                const subject = document.getElementById('app-subject').value.trim();
-                const grade = document.getElementById('app-grade').value.trim();
-                const phone = document.getElementById('app-phone').value.trim();
-                const reason = document.getElementById('app-reason').value.trim();
+            document.getElementById('submit-application-btn').addEventListener('click', async function() {
+                var school = document.getElementById('app-school').value.trim();
+                var state = document.getElementById('app-state').value.trim();
+                var subject = document.getElementById('app-subject').value.trim();
+                var grade = document.getElementById('app-grade').value.trim();
+                var phone = document.getElementById('app-phone').value.trim();
+                var reason = document.getElementById('app-reason').value.trim();
                 
                 if (!school || !state || !subject || !grade || !phone || !reason) {
                     showMessage(currentLanguage === 'zh' ? '请填写所有字段' : 'Please fill in all fields', 'error');
@@ -1604,7 +1706,9 @@ const MathGame = (function() {
                 }
                 
                 await submitTeacherApplication(school, state, subject, grade, phone, reason);
-                applicationDiv.remove();
+                if (applicationDiv.parentNode) {
+                    applicationDiv.parentNode.removeChild(applicationDiv);
+                }
             });
         } catch (error) {
             console.error('显示教师申请表单失败:', error);
@@ -1614,7 +1718,7 @@ const MathGame = (function() {
     async function submitTeacherApplication(school, state, subject, grade, phone, reason) {
         try {
             if (!currentUser) {
-                showMessage(translations[currentLanguage].needLogin, 'error');
+                showMessage(getTranslation('needLogin', '请先登录后再申请教师账号'), 'error');
                 return false;
             }
             
@@ -1628,10 +1732,13 @@ const MathGame = (function() {
                 return false;
             }
             
-            const applicationData = {
+            var username = (currentUser.user_metadata && currentUser.user_metadata.username) || 
+                          (currentUser.email ? currentUser.email.split('@')[0] : '');
+            
+            var applicationData = {
                 user_id: currentUser.id,
                 email: currentUser.email,
-                username: currentUser.user_metadata?.username || currentUser.email?.split('@')[0],
+                username: username,
                 school: school,
                 state: state,
                 subject: subject,
@@ -1642,30 +1749,30 @@ const MathGame = (function() {
                 created_at: new Date().toISOString()
             };
             
-            const { error } = await supabase
+            var result = await supabase
                 .from('teacher_applications')
                 .insert([applicationData]);
             
-            if (error) {
-                console.error('提交教师申请失败:', error);
-                showMessage(translations[currentLanguage].applicationFailed, 'error');
+            if (result.error) {
+                console.error('提交教师申请失败:', result.error);
+                showMessage(getTranslation('applicationFailed', '❌ 申请提交失败，请稍后重试'), 'error');
                 return false;
             }
             
             await sendTeacherApplicationEmail(applicationData);
             
-            showMessage(translations[currentLanguage].applicationSubmitted, 'success');
+            showMessage(getTranslation('applicationSubmitted', '✅ 申请已提交！管理员会尽快审核并通过邮件通知您'), 'success');
             return true;
         } catch (error) {
             console.error('提交教师申请异常:', error);
-            showMessage(translations[currentLanguage].applicationFailed, 'error');
+            showMessage(getTranslation('applicationFailed', '❌ 申请提交失败，请稍后重试'), 'error');
             return false;
         }
     }
     
     async function sendTeacherApplicationEmail(applicationData) {
         try {
-            const emailContent = `
+            var emailContent = `
                 新的教师账号申请
                 -------------------
                 申请人邮箱: ${applicationData.email}
@@ -1691,7 +1798,7 @@ const MathGame = (function() {
             
             console.log('📧 教师申请邮件通知:', emailContent);
             
-            const { error } = await supabase
+            var result = await supabase
                 .from('email_notifications')
                 .insert([{
                     recipient: CONFIG.ADMIN_EMAILS[0],
@@ -1701,8 +1808,8 @@ const MathGame = (function() {
                     created_at: new Date().toISOString()
                 }]);
             
-            if (error) {
-                console.error('存储邮件通知失败:', error);
+            if (result.error) {
+                console.error('存储邮件通知失败:', result.error);
             }
             
             return true;
@@ -1716,7 +1823,7 @@ const MathGame = (function() {
     async function showTeacherTools() {
         try {
             if (!currentUser) {
-                showMessage(translations[currentLanguage].needLogin, 'error');
+                showMessage(getTranslation('needLogin', '请先登录后再申请教师账号'), 'error');
                 showAuthModal();
                 return;
             }
@@ -1739,8 +1846,8 @@ const MathGame = (function() {
                 return;
             }
             
-            const canUseTeacherTools = isSuperAdmin || isSchoolAdmin || 
-                (isTeacher && currentUser.user_metadata?.approved === true);
+            var canUseTeacherTools = isSuperAdmin || isSchoolAdmin || 
+                (isTeacher && currentUser.user_metadata && currentUser.user_metadata.approved === true);
             
             if (!canUseTeacherTools) {
                 showMessage(
@@ -1752,112 +1859,112 @@ const MathGame = (function() {
                 return;
             }
             
-            const teacherToolsModal = document.getElementById('teacher-tools-modal');
+            var teacherToolsModal = document.getElementById('teacher-tools-modal');
             if (!teacherToolsModal) return;
             
-            let pendingApplications = [];
+            var pendingApplications = [];
             try {
-                let query = supabase
+                var query = supabase
                     .from('teacher_applications')
                     .select('*')
                     .eq('status', 'pending')
                     .order('created_at', { ascending: false });
                 
                 if (isSchoolAdmin && !isSuperAdmin) {
-                    const schoolId = currentUser.user_metadata?.school_id;
+                    var schoolId = currentUser.user_metadata ? currentUser.user_metadata.school_id : null;
                     if (schoolId) {
                         query = query.eq('school_id', schoolId);
                     }
                 }
                 
-                const { data, error } = await query;
+                var result = await query;
                 
-                if (!error) {
-                    pendingApplications = data || [];
+                if (!result.error) {
+                    pendingApplications = result.data || [];
                 }
             } catch (e) {
                 console.error('加载待审核教师申请失败:', e);
             }
             
-            let approvedTeachers = [];
+            var approvedTeachers = [];
             try {
-                let query = supabase
+                var query = supabase
                     .from('teacher_applications')
                     .select('*')
                     .eq('status', 'approved')
                     .order('created_at', { ascending: false });
                 
                 if (isSchoolAdmin && !isSuperAdmin) {
-                    const schoolId = currentUser.user_metadata?.school_id;
+                    var schoolId = currentUser.user_metadata ? currentUser.user_metadata.school_id : null;
                     if (schoolId) {
                         query = query.eq('school_id', schoolId);
                     }
                 }
                 
-                const { data, error } = await query;
+                var result = await query;
                 
-                if (!error) {
-                    approvedTeachers = data || [];
+                if (!result.error) {
+                    approvedTeachers = result.data || [];
                 }
             } catch (e) {
                 console.error('加载已批准教师失败:', e);
             }
             
-            const teacherToolsHtml = `
+            var teacherToolsHtml = `
                 <div style="padding: 25px; max-width: 1200px; margin: 0 auto;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                         <h3 style="color: #4CAF50; margin: 0; display: flex; align-items: center;">
                             <span style="font-size: 2em; margin-right: 10px;">👨‍🏫</span>
-                            ${translations[currentLanguage].teacherToolsTitle}
+                            ${getTranslation('teacherToolsTitle', '👨‍🏫 教师管理控制台')}
                         </h3>
                         <button id="close-teacher-tools" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                            ✕ ${translations[currentLanguage].close}
+                            ✕ ${getTranslation('close', '关闭')}
                         </button>
                     </div>
                     
                     <div style="display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 25px; overflow-x: auto; gap: 10px;">
-                        <button class="teacher-tab active" data-tab="batch-register" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid #4CAF50; font-weight: bold; color: #333; cursor: pointer; white-space: nowrap;">
-                            📦 ${translations[currentLanguage].batchRegister}
+                        <button class="tab-btn active" data-tab="batch-register" id="tab-batch-register" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid #4CAF50; font-weight: bold; color: #333; cursor: pointer; white-space: nowrap;">
+                            📦 ${getTranslation('batchRegister', '批量注册学生账号')}
                         </button>
-                        <button class="teacher-tab" data-tab="teacher-approval" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
-                            ✅ ${translations[currentLanguage].teacherApproval}
-                            ${pendingApplications.length > 0 ? `<span style="background: #ff4444; color: white; padding: 2px 8px; border-radius: 12px; margin-left: 8px; font-size: 0.8em;">${pendingApplications.length}</span>` : ''}
+                        <button class="tab-btn" data-tab="teacher-approval" id="tab-teacher-approval" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
+                            ✅ ${getTranslation('teacherApproval', '教师审核')}
+                            ${pendingApplications.length > 0 ? '<span style="background: #ff4444; color: white; padding: 2px 8px; border-radius: 12px; margin-left: 8px; font-size: 0.8em;">' + pendingApplications.length + '</span>' : ''}
                         </button>
-                        <button class="teacher-tab" data-tab="class-management" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
-                            📚 ${translations[currentLanguage].classManagement}
+                        <button class="tab-btn" data-tab="class-management" id="tab-class-management" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
+                            📚 ${getTranslation('classManagement', '班级管理')}
                         </button>
                     </div>
                     
-                    <div id="batch-register-tab" class="teacher-tab-content" style="display: block;">
+                    <div id="batch-register-tab" class="tab-content" style="display: block;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 20px; color: #333;">${translations[currentLanguage].batchRegister}</h4>
+                            <h4 style="margin-top: 0; margin-bottom: 20px; color: #333;">${getTranslation('batchRegister', '批量注册学生账号')}</h4>
                             
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px;">
                                 <div>
-                                    <label style="display: block; margin-bottom: 8px; color: #666; font-weight: bold;">${translations[currentLanguage].defaultPassword}</label>
-                                    <input id="default-password" type="text" placeholder="${translations[currentLanguage].defaultPasswordPlaceholder}" value="stu123456" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px;">
+                                    <label style="display: block; margin-bottom: 8px; color: #666; font-weight: bold;">${getTranslation('defaultPassword', '默认密码')}</label>
+                                    <input id="default-password" type="text" placeholder="${getTranslation('defaultPasswordPlaceholder', '留空则使用 stu123456')}" value="stu123456" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px;">
                                 </div>
                                 <div>
-                                    <label style="display: block; margin-bottom: 8px; color: #666; font-weight: bold;">${translations[currentLanguage].className}</label>
-                                    <input id="class-name" type="text" placeholder="${translations[currentLanguage].classNamePlaceholder}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px;">
+                                    <label style="display: block; margin-bottom: 8px; color: #666; font-weight: bold;">${getTranslation('className', '班级名称')}</label>
+                                    <input id="class-name" type="text" placeholder="${getTranslation('classNamePlaceholder', '例如：三年一班')}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px;">
                                 </div>
                             </div>
                             
                             <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">
                                 <button id="download-template-btn" style="background: #6c757d; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                                    📥 ${translations[currentLanguage].downloadTemplate}
+                                    📥 ${getTranslation('downloadTemplate', '下载模板')}
                                 </button>
                                 <div style="position: relative; display: inline-block;">
                                     <input type="file" id="excel-file" accept=".csv,.xlsx,.xls" style="position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer;">
                                     <button id="upload-excel-btn" style="background: #4CAF50; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                                        📤 ${translations[currentLanguage].uploadExcel}
+                                        📤 ${getTranslation('uploadExcel', '上传Excel/CSV')}
                                     </button>
                                 </div>
                             </div>
                             
                             <div id="upload-progress" style="display: none; margin-bottom: 25px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #666;">${translations[currentLanguage].uploadProgress}</span>
+                                    <span style="color: #666;">${getTranslation('uploadProgress', '上传进度')}</span>
                                     <span id="upload-status" style="color: #4CAF50;">0%</span>
                                 </div>
                                 <div style="background: #f0f0f0; border-radius: 10px; height: 10px; overflow: hidden;">
@@ -1869,9 +1976,9 @@ const MathGame = (function() {
                             
                             <div id="account-cards" style="display: none;">
                                 <h4 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                    <span>${translations[currentLanguage].accountCards}</span>
+                                    <span>${getTranslation('accountCards', '生成的账号卡片')}</span>
                                     <button id="print-cards-btn" style="background: #2196F3; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                                        🖨️ ${translations[currentLanguage].printCards}
+                                        🖨️ ${getTranslation('printCards', '打印卡片')}
                                     </button>
                                 </h4>
                                 <div id="account-cards-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;"></div>
@@ -1879,75 +1986,79 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <div id="teacher-approval-tab" class="teacher-tab-content" style="display: none;">
+                    <div id="teacher-approval-tab" class="tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                             <h4 style="margin-top: 0; margin-bottom: 20px; color: #333; display: flex; align-items-center;">
-                                <span>${translations[currentLanguage].teacherApproval}</span>
+                                <span>${getTranslation('teacherApproval', '教师审核')}</span>
                                 <span style="background: #ff4444; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; margin-left: 15px;">${pendingApplications.length}</span>
                             </h4>
                             
                             ${pendingApplications.length === 0 ? `
                                 <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
                                     <div style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;">👨‍🏫</div>
-                                    <p style="color: #666; margin: 0;">${translations[currentLanguage].noPendingApplications}</p>
+                                    <p style="color: #666; margin: 0;">${getTranslation('noPendingApplications', '暂无待审核的教师申请')}</p>
                                 </div>
                             ` : `
                                 <div style="overflow-x: auto;">
                                     <table style="width: 100%; border-collapse: collapse;">
                                         <thead>
                                             <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
-                                                <th style="padding: 15px; text-align: left; color: #666;">${translations[currentLanguage].applicant}</th>
-                                                <th style="padding: 15px; text-align: left; color: #666;">${translations[currentLanguage].schoolName}</th>
-                                                <th style="padding: 15px; text-align: left; color: #666;">${translations[currentLanguage].teachingSubject}</th>
-                                                <th style="padding: 15px; text-align: left; color: #666;">${translations[currentLanguage].applyTime}</th>
-                                                <th style="padding: 15px; text-align: center; color: #666;">${translations[currentLanguage].status}</th>
-                                                <th style="padding: 15px; text-align: center; color: #666;">${translations[currentLanguage].approve}</th>
+                                                <th style="padding: 15px; text-align: left; color: #666;">${getTranslation('applicant', '申请人')}</th>
+                                                <th style="padding: 15px; text-align: left; color: #666;">${getTranslation('schoolName', '学校名称')}</th>
+                                                <th style="padding: 15px; text-align: left; color: #666;">${getTranslation('teachingSubject', '教授科目')}</th>
+                                                <th style="padding: 15px; text-align: left; color: #666;">${getTranslation('applyTime', '申请时间')}</th>
+                                                <th style="padding: 15px; text-align: center; color: #666;">${getTranslation('status', '状态')}</th>
+                                                <th style="padding: 15px; text-align: center; color: #666;">${getTranslation('approve', '批准')}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            ${pendingApplications.map(app => `
+                                            ${pendingApplications.map(function(app) {
+                                                return `
                                                 <tr style="border-bottom: 1px solid #f0f0f0;">
                                                     <td style="padding: 15px;">
-                                                        <div style="font-weight: bold; color: #333;">${app.username || app.email.split('@')[0]}</div>
+                                                        <div style="font-weight: bold; color: #333;">${app.username || (app.email ? app.email.split('@')[0] : '')}</div>
                                                         <div style="color: #666; font-size: 0.85em;">${app.email}</div>
                                                     </td>
                                                     <td style="padding: 15px; color: #333;">${app.school}</td>
                                                     <td style="padding: 15px; color: #333;">${app.subject} (${app.grade})</td>
                                                     <td style="padding: 15px; color: #999; font-size: 0.9em;">${new Date(app.created_at).toLocaleDateString()}</td>
                                                     <td style="padding: 15px; text-align: center;">
-                                                        <span style="background: #FF9800; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85em;">${translations[currentLanguage].pending}</span>
+                                                        <span style="background: #FF9800; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85em;">${getTranslation('pending', '待审核')}</span>
                                                     </td>
                                                     <td style="padding: 15px; text-align: center;">
                                                         <button class="approve-teacher-btn" data-user-id="${app.user_id}" data-email="${app.email}" style="background: #4CAF50; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 0.85em; cursor: pointer; margin-right: 8px;">
-                                                            ✓ ${translations[currentLanguage].approve}
+                                                            ✓ ${getTranslation('approve', '批准')}
                                                         </button>
                                                         <button class="reject-teacher-btn" data-user-id="${app.user_id}" data-email="${app.email}" style="background: #ff4444; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 0.85em; cursor: pointer;">
-                                                            ✗ ${translations[currentLanguage].reject}
+                                                            ✗ ${getTranslation('reject', '拒绝')}
                                                         </button>
                                                     </td>
                                                 </tr>
-                                            `).join('')}
+                                                `;
+                                            }).join('')}
                                         </tbody>
                                     </table>
                                 </div>
                             `}
                             
-                            <h4 style="margin-top: 40px; margin-bottom: 20px; color: #333;">${translations[currentLanguage].approvedTeachers} (${approvedTeachers.length})</h4>
+                            <h4 style="margin-top: 40px; margin-bottom: 20px; color: #333;">${getTranslation('approvedTeachers', '已通过教师')} (${approvedTeachers.length})</h4>
                             
                             ${approvedTeachers.length === 0 ? `
                                 <div style="text-align: center; padding: 30px 20px; background: #f8f9fa; border-radius: 12px;">
-                                    <p style="color: #999; margin: 0;">${translations[currentLanguage].noApprovedTeachers}</p>
+                                    <p style="color: #999; margin: 0;">${getTranslation('noApprovedTeachers', '暂无已批准的教师')}</p>
                                 </div>
                             ` : `
                                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
-                                    ${approvedTeachers.slice(0, 5).map(app => `
+                                    ${approvedTeachers.slice(0, 5).map(function(app) {
+                                        return `
                                         <div style="background: #f8f9fa; border-radius: 12px; padding: 15px; border-left: 4px solid #4CAF50;">
-                                            <div style="font-weight: bold; color: #333; margin-bottom: 5px;">${app.username || app.email.split('@')[0]}</div>
+                                            <div style="font-weight: bold; color: #333; margin-bottom: 5px;">${app.username || (app.email ? app.email.split('@')[0] : '')}</div>
                                             <div style="color: #666; font-size: 0.85em; margin-bottom: 3px;">${app.email}</div>
                                             <div style="color: #666; font-size: 0.85em;">${app.school} · ${app.subject}</div>
                                             <div style="color: #999; font-size: 0.75em; margin-top: 8px;">✓ ${new Date(app.created_at).toLocaleDateString()}</div>
                                         </div>
-                                    `).join('')}
+                                        `;
+                                    }).join('')}
                                     ${approvedTeachers.length > 5 ? `
                                         <div style="text-align: center; padding: 15px; color: #666;">
                                             ... 还有 ${approvedTeachers.length - 5} 名已批准教师
@@ -1958,9 +2069,9 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <div id="class-management-tab" class="teacher-tab-content" style="display: none;">
+                    <div id="class-management-tab" class="tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 20px; color: #333;">${translations[currentLanguage].classManagement}</h4>
+                            <h4 style="margin-top: 0; margin-bottom: 20px; color: #333;">${getTranslation('classManagement', '班级管理')}</h4>
                             <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
                                 <div style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;">📚</div>
                                 <p style="color: #666; margin: 0;">${currentLanguage === 'zh' ? '班级管理功能开发中，敬请期待...' : 'Class management feature coming soon...'}</p>
@@ -1973,61 +2084,76 @@ const MathGame = (function() {
             teacherToolsModal.innerHTML = teacherToolsHtml;
             teacherToolsModal.style.display = 'flex';
             
-            const teacherTabs = teacherToolsModal.querySelectorAll('.teacher-tab');
-            teacherTabs.forEach(tab => {
+            var teacherTabs = teacherToolsModal.querySelectorAll('.tab-btn');
+            for (var i = 0; i < teacherTabs.length; i++) {
+                var tab = teacherTabs[i];
                 tab.addEventListener('click', function() {
-                    teacherTabs.forEach(t => {
+                    for (var j = 0; j < teacherTabs.length; j++) {
+                        var t = teacherTabs[j];
                         t.classList.remove('active');
                         t.style.borderBottomColor = 'transparent';
                         t.style.color = '#666';
-                    });
+                    }
                     
                     this.classList.add('active');
                     this.style.borderBottomColor = '#4CAF50';
                     this.style.color = '#333';
                     
-                    const tabId = this.dataset.tab;
-                    teacherToolsModal.querySelectorAll('.teacher-tab-content').forEach(content => {
-                        content.style.display = 'none';
-                    });
-                    teacherToolsModal.querySelector(`#${tabId}-tab`).style.display = 'block';
+                    var tabId = this.id.replace('tab-', '');
+                    var contents = teacherToolsModal.querySelectorAll('.tab-content');
+                    for (var k = 0; k < contents.length; k++) {
+                        contents[k].style.display = 'none';
+                    }
+                    var targetTab = document.getElementById(tabId + '-tab');
+                    if (targetTab) targetTab.style.display = 'block';
                 });
-            });
+            }
             
-            teacherToolsModal.querySelector('#close-teacher-tools').addEventListener('click', () => {
+            teacherToolsModal.querySelector('#close-teacher-tools').addEventListener('click', function() {
                 teacherToolsModal.style.display = 'none';
             });
             
-            teacherToolsModal.querySelector('#download-template-btn')?.addEventListener('click', downloadTemplate);
+            var downloadBtn = teacherToolsModal.querySelector('#download-template-btn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', downloadTemplate);
+            }
             
-            teacherToolsModal.querySelector('#upload-excel-btn')?.addEventListener('click', () => {
-                document.getElementById('excel-file').click();
-            });
+            var uploadBtn = teacherToolsModal.querySelector('#upload-excel-btn');
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', function() {
+                    document.getElementById('excel-file').click();
+                });
+            }
             
-            const excelFile = document.getElementById('excel-file');
+            var excelFile = document.getElementById('excel-file');
             if (excelFile) {
                 excelFile.addEventListener('change', uploadExcelFile);
             }
             
-            teacherToolsModal.querySelector('#print-cards-btn')?.addEventListener('click', printAccountCards);
+            var printBtn = teacherToolsModal.querySelector('#print-cards-btn');
+            if (printBtn) {
+                printBtn.addEventListener('click', printAccountCards);
+            }
             
-            teacherToolsModal.querySelectorAll('.approve-teacher-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const userId = e.currentTarget.dataset.userId;
-                    const email = e.currentTarget.dataset.email;
+            var approveBtns = teacherToolsModal.querySelectorAll('.approve-teacher-btn');
+            for (var i = 0; i < approveBtns.length; i++) {
+                approveBtns[i].addEventListener('click', async function(e) {
+                    var userId = e.currentTarget.dataset.userId;
+                    var email = e.currentTarget.dataset.email;
                     await approveTeacherApplication(userId, email);
                     showTeacherTools();
                 });
-            });
+            }
             
-            teacherToolsModal.querySelectorAll('.reject-teacher-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const userId = e.currentTarget.dataset.userId;
-                    const email = e.currentTarget.dataset.email;
+            var rejectBtns = teacherToolsModal.querySelectorAll('.reject-teacher-btn');
+            for (var i = 0; i < rejectBtns.length; i++) {
+                rejectBtns[i].addEventListener('click', async function(e) {
+                    var userId = e.currentTarget.dataset.userId;
+                    var email = e.currentTarget.dataset.email;
                     await rejectTeacherApplication(userId, email);
                     showTeacherTools();
                 });
-            });
+            }
             
         } catch (error) {
             console.error('显示教师工具失败:', error);
@@ -2039,7 +2165,7 @@ const MathGame = (function() {
     async function showAdminTools() {
         try {
             if (!currentUser) {
-                showMessage(translations[currentLanguage].needLogin, 'error');
+                showMessage(getTranslation('needLogin', '请先登录后再申请教师账号'), 'error');
                 showAuthModal();
                 return;
             }
@@ -2072,10 +2198,10 @@ const MathGame = (function() {
                 return;
             }
             
-            const adminToolsModal = document.getElementById('admin-tools-modal');
+            var adminToolsModal = document.getElementById('admin-tools-modal');
             if (!adminToolsModal) return;
             
-            let systemStats = {
+            var systemStats = {
                 totalUsers: 0,
                 totalTeachers: 0,
                 totalStudents: 0,
@@ -2085,88 +2211,98 @@ const MathGame = (function() {
             };
             
             try {
-                const { count: userCount } = await supabase
+                var countResult = await supabase
                     .from('game_scores')
                     .select('user_id', { count: 'exact', head: true });
-                systemStats.totalUsers = userCount || 0;
+                systemStats.totalUsers = countResult.count || 0;
                 
-                const { data: gameStats } = await supabase
+                var gameStatsResult = await supabase
                     .from('game_scores')
                     .select('score, questions_completed, correct_count, total_attempts');
                 
-                if (gameStats) {
+                if (gameStatsResult.data) {
+                    var gameStats = gameStatsResult.data;
                     systemStats.totalGames = gameStats.length;
-                    systemStats.totalQuestions = gameStats.reduce((sum, g) => sum + (g.questions_completed || 0), 0);
-                    const totalCorrect = gameStats.reduce((sum, g) => sum + (g.correct_count || 0), 0);
-                    const totalAttempts = gameStats.reduce((sum, g) => sum + (g.total_attempts || 0), 0);
+                    
+                    var totalQuestions = 0;
+                    var totalCorrect = 0;
+                    var totalAttempts = 0;
+                    
+                    for (var i = 0; i < gameStats.length; i++) {
+                        totalQuestions += gameStats[i].questions_completed || 0;
+                        totalCorrect += gameStats[i].correct_count || 0;
+                        totalAttempts += gameStats[i].total_attempts || 0;
+                    }
+                    
+                    systemStats.totalQuestions = totalQuestions;
                     systemStats.avgAccuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
                 }
             } catch (e) {
                 console.error('加载系统统计失败:', e);
             }
             
-            const adminToolsHtml = `
+            var adminToolsHtml = `
                 <div style="padding: 25px; max-width: 1200px; margin: 0 auto;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                         <h3 style="color: #4CAF50; margin: 0; display: flex; align-items: center;">
                             <span style="font-size: 2em; margin-right: 10px;">👑</span>
-                            ${translations[currentLanguage].adminToolsTitle}
+                            ${getTranslation('adminToolsTitle', '👑 系统管理控制台')}
                         </h3>
                         <button id="close-admin-tools" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                            ✕ ${translations[currentLanguage].close}
+                            ✕ ${getTranslation('close', '关闭')}
                         </button>
                     </div>
                     
                     <div style="display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 25px; overflow-x: auto; gap: 10px;">
-                        <button class="admin-tab active" data-tab="system-stats" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid #4CAF50; font-weight: bold; color: #333; cursor: pointer; white-space: nowrap;">
-                            📊 ${translations[currentLanguage].systemStats}
+                        <button class="tab-btn active" data-tab="system-stats" id="tab-system-stats" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid #4CAF50; font-weight: bold; color: #333; cursor: pointer; white-space: nowrap;">
+                            📊 ${getTranslation('systemStats', '系统统计')}
                         </button>
-                        <button class="admin-tab" data-tab="teacher-management" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
-                            👨‍🏫 ${translations[currentLanguage].teacherManagement}
+                        <button class="tab-btn" data-tab="teacher-management" id="tab-teacher-management" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
+                            👨‍🏫 ${getTranslation('teacherManagement', '教师管理')}
                         </button>
-                        <button class="admin-tab" data-tab="system-logs" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
-                            📋 ${translations[currentLanguage].systemLogs}
+                        <button class="tab-btn" data-tab="system-logs" id="tab-system-logs" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
+                            📋 ${getTranslation('systemLogs', '系统日志')}
                         </button>
-                        <button class="admin-tab" data-tab="data-management" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
-                            💾 ${translations[currentLanguage].dataManagement}
+                        <button class="tab-btn" data-tab="data-management" id="tab-data-management" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
+                            💾 ${getTranslation('dataManagement', '数据管理')}
                         </button>
-                        <button class="admin-tab" data-tab="system-settings" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
-                            ⚙️ ${translations[currentLanguage].systemSettings}
+                        <button class="tab-btn" data-tab="system-settings" id="tab-system-settings" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
+                            ⚙️ ${getTranslation('systemSettings', '系统设置')}
                         </button>
                     </div>
                     
-                    <div id="system-stats-tab" class="admin-tab-content" style="display: block;">
+                    <div id="system-stats-tab" class="tab-content" style="display: block;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${translations[currentLanguage].systemStats}</h4>
+                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${getTranslation('systemStats', '系统统计')}</h4>
                             
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
                                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
                                     <div style="font-size: 2em; margin-bottom: 10px;">👥</div>
-                                    <div style="font-size: 0.9em; opacity: 0.9;">${translations[currentLanguage].totalUsers}</div>
+                                    <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('totalUsers', '总用户数')}</div>
                                     <div style="font-size: 2.5em; font-weight: bold;">${systemStats.totalUsers}</div>
                                 </div>
                                 <div style="background: linear-gradient(135deg, #6b8cff 0%, #4a6cf7 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
                                     <div style="font-size: 2em; margin-bottom: 10px;">🎮</div>
-                                    <div style="font-size: 0.9em; opacity: 0.9;">${translations[currentLanguage].totalGames}</div>
+                                    <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('totalGames', '总游戏局数')}</div>
                                     <div style="font-size: 2.5em; font-weight: bold;">${systemStats.totalGames}</div>
                                 </div>
                                 <div style="background: linear-gradient(135deg, #ff8c5a 0%, #ff6b4a 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
                                     <div style="font-size: 2em; margin-bottom: 10px;">❓</div>
-                                    <div style="font-size: 0.9em; opacity: 0.9;">${translations[currentLanguage].totalQuestions}</div>
+                                    <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('totalQuestions', '总答题数')}</div>
                                     <div style="font-size: 2.5em; font-weight: bold;">${systemStats.totalQuestions}</div>
                                 </div>
                                 <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
                                     <div style="font-size: 2em; margin-bottom: 10px;">🎯</div>
-                                    <div style="font-size: 0.9em; opacity: 0.9;">${translations[currentLanguage].avgAccuracy}</div>
+                                    <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('avgAccuracy', '平均正确率')}</div>
                                     <div style="font-size: 2.5em; font-weight: bold;">${systemStats.avgAccuracy}%</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div id="teacher-management-tab" class="admin-tab-content" style="display: none;">
+                    <div id="teacher-management-tab" class="tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${translations[currentLanguage].teacherManagement}</h4>
+                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${getTranslation('teacherManagement', '教师管理')}</h4>
                             <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
                                 <div style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;">👨‍🏫</div>
                                 <p style="color: #666; margin: 0;">${currentLanguage === 'zh' ? '教师管理功能开发中，敬请期待...' : 'Teacher management feature coming soon...'}</p>
@@ -2174,9 +2310,9 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <div id="system-logs-tab" class="admin-tab-content" style="display: none;">
+                    <div id="system-logs-tab" class="tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${translations[currentLanguage].systemLogs}</h4>
+                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${getTranslation('systemLogs', '系统日志')}</h4>
                             <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
                                 <div style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;">📋</div>
                                 <p style="color: #666; margin: 0;">${currentLanguage === 'zh' ? '系统日志功能开发中，敬请期待...' : 'System logs feature coming soon...'}</p>
@@ -2184,9 +2320,9 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <div id="data-management-tab" class="admin-tab-content" style="display: none;">
+                    <div id="data-management-tab" class="tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${translations[currentLanguage].dataManagement}</h4>
+                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${getTranslation('dataManagement', '数据管理')}</h4>
                             <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
                                 <div style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;">💾</div>
                                 <p style="color: #666; margin: 0;">${currentLanguage === 'zh' ? '数据管理功能开发中，敬请期待...' : 'Data management feature coming soon...'}</p>
@@ -2194,9 +2330,9 @@ const MathGame = (function() {
                         </div>
                     </div>
                     
-                    <div id="system-settings-tab" class="admin-tab-content" style="display: none;">
+                    <div id="system-settings-tab" class="tab-content" style="display: none;">
                         <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${translations[currentLanguage].systemSettings}</h4>
+                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${getTranslation('systemSettings', '系统设置')}</h4>
                             <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
                                 <div style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;">⚙️</div>
                                 <p style="color: #666; margin: 0;">${currentLanguage === 'zh' ? '系统设置功能开发中，敬请期待...' : 'System settings feature coming soon...'}</p>
@@ -2209,28 +2345,32 @@ const MathGame = (function() {
             adminToolsModal.innerHTML = adminToolsHtml;
             adminToolsModal.style.display = 'flex';
             
-            const adminTabs = adminToolsModal.querySelectorAll('.admin-tab');
-            adminTabs.forEach(tab => {
+            var adminTabs = adminToolsModal.querySelectorAll('.tab-btn');
+            for (var i = 0; i < adminTabs.length; i++) {
+                var tab = adminTabs[i];
                 tab.addEventListener('click', function() {
-                    adminTabs.forEach(t => {
+                    for (var j = 0; j < adminTabs.length; j++) {
+                        var t = adminTabs[j];
                         t.classList.remove('active');
                         t.style.borderBottomColor = 'transparent';
                         t.style.color = '#666';
-                    });
+                    }
                     
                     this.classList.add('active');
                     this.style.borderBottomColor = '#4CAF50';
                     this.style.color = '#333';
                     
-                    const tabId = this.dataset.tab;
-                    adminToolsModal.querySelectorAll('.admin-tab-content').forEach(content => {
-                        content.style.display = 'none';
-                    });
-                    adminToolsModal.querySelector(`#${tabId}-tab`).style.display = 'block';
+                    var tabId = this.id.replace('tab-', '');
+                    var contents = adminToolsModal.querySelectorAll('.tab-content');
+                    for (var k = 0; k < contents.length; k++) {
+                        contents[k].style.display = 'none';
+                    }
+                    var targetTab = document.getElementById(tabId + '-tab');
+                    if (targetTab) targetTab.style.display = 'block';
                 });
-            });
+            }
             
-            adminToolsModal.querySelector('#close-admin-tools').addEventListener('click', () => {
+            adminToolsModal.querySelector('#close-admin-tools').addEventListener('click', function() {
                 adminToolsModal.style.display = 'none';
             });
             
@@ -2267,7 +2407,7 @@ const MathGame = (function() {
                 return;
             }
             
-            const { error: appError } = await supabase
+            var result = await supabase
                 .from('teacher_applications')
                 .update({
                     status: 'approved',
@@ -2278,8 +2418,8 @@ const MathGame = (function() {
                 .eq('user_id', userId)
                 .eq('status', 'pending');
             
-            if (appError) {
-                console.error('更新申请状态失败:', appError);
+            if (result.error) {
+                console.error('更新申请状态失败:', result.error);
                 showMessage(
                     currentLanguage === 'zh' ? '更新申请状态失败' : 'Failed to update application status',
                     'error'
@@ -2289,8 +2429,8 @@ const MathGame = (function() {
             
             showMessage(
                 currentLanguage === 'zh' 
-                    ? `✅ 已标记申请为"已批准"。请登录 Supabase 后台，找到用户 ${email}，将 user_metadata.role 改为 "teacher"` 
-                    : `✅ Application marked as approved. Please login to Supabase dashboard, find user ${email}, and set user_metadata.role to "teacher"`,
+                    ? '✅ 已标记申请为"已批准"。请登录 Supabase 后台，找到用户 ' + email + '，将 user_metadata.role 改为 "teacher"' 
+                    : '✅ Application marked as approved. Please login to Supabase dashboard, find user ' + email + ', and set user_metadata.role to "teacher"',
                 'success',
                 8000
             );
@@ -2331,7 +2471,7 @@ const MathGame = (function() {
                 return;
             }
             
-            const { error: appError } = await supabase
+            var result = await supabase
                 .from('teacher_applications')
                 .update({
                     status: 'rejected',
@@ -2342,17 +2482,17 @@ const MathGame = (function() {
                 .eq('user_id', userId)
                 .eq('status', 'pending');
             
-            if (appError) {
-                console.error('更新申请状态失败:', appError);
+            if (result.error) {
+                console.error('更新申请状态失败:', result.error);
                 showMessage(
-                    currentLanguage === 'zh' ? '拒绝失败：' + appError.message : 'Rejection failed: ' + appError.message,
+                    currentLanguage === 'zh' ? '拒绝失败：' + result.error.message : 'Rejection failed: ' + result.error.message,
                     'error'
                 );
                 return;
             }
             
             showMessage(
-                currentLanguage === 'zh' ? `❌ 已拒绝教师申请: ${email}` : `❌ Rejected teacher application: ${email}`,
+                currentLanguage === 'zh' ? '❌ 已拒绝教师申请: ' + email : '❌ Rejected teacher application: ' + email,
                 'success'
             );
             
@@ -2368,14 +2508,14 @@ const MathGame = (function() {
     // ==================== 教师工具辅助函数 ====================
     async function downloadTemplate() {
         try {
-            const csvContent = "email,姓名,班级,备注\n" +
+            var csvContent = "email,姓名,班级,备注\n" +
                 "student1@example.com,张三,三年一班,数学课代表\n" +
                 "student2@example.com,李四,三年一班,副班长\n" +
                 "student3@example.com,王五,三年二班,学习委员";
             
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
+            var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            var url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
             link.setAttribute('download', '学生批量注册模板.csv');
             link.style.visibility = 'hidden';
@@ -2393,15 +2533,15 @@ const MathGame = (function() {
     
     async function uploadExcelFile(e) {
         try {
-            const file = e.target.files[0];
+            var file = e.target.files[0];
             if (!file) return;
             
-            const uploadProgress = document.getElementById('upload-progress');
-            const uploadProgressBar = document.getElementById('upload-progress-bar');
-            const uploadStatus = document.getElementById('upload-status');
-            const uploadResult = document.getElementById('upload-result');
-            const accountCards = document.getElementById('account-cards');
-            const accountCardsContainer = document.getElementById('account-cards-container');
+            var uploadProgress = document.getElementById('upload-progress');
+            var uploadProgressBar = document.getElementById('upload-progress-bar');
+            var uploadStatus = document.getElementById('upload-status');
+            var uploadResult = document.getElementById('upload-result');
+            var accountCards = document.getElementById('account-cards');
+            var accountCardsContainer = document.getElementById('account-cards-container');
             
             if (!uploadProgress || !uploadProgressBar || !uploadStatus) {
                 console.error('上传进度元素不存在');
@@ -2412,8 +2552,11 @@ const MathGame = (function() {
                 return;
             }
             
-            const defaultPassword = document.getElementById('default-password')?.value.trim() || 'stu123456';
-            const className = document.getElementById('class-name')?.value.trim() || '未命名班级';
+            var defaultPasswordInput = document.getElementById('default-password');
+            var defaultPassword = defaultPasswordInput ? defaultPasswordInput.value.trim() : 'stu123456';
+            
+            var classNameInput = document.getElementById('class-name');
+            var className = classNameInput ? classNameInput.value.trim() : '未命名班级';
             
             if (defaultPassword.length < 6) {
                 showMessage(currentLanguage === 'zh' ? '默认密码至少需要6位' : 'Default password must be at least 6 characters', 'error');
@@ -2427,29 +2570,29 @@ const MathGame = (function() {
             if (accountCards) accountCards.style.display = 'none';
             if (accountCardsContainer) accountCardsContainer.innerHTML = '';
             
-            const reader = new FileReader();
+            var reader = new FileReader();
             reader.onload = async function(e) {
                 try {
-                    const csvContent = e.target.result;
-                    const rows = csvContent.split('\n');
+                    var csvContent = e.target.result;
+                    var rows = csvContent.split('\n');
                     
                     if (rows.length < 2) {
                         showMessage(currentLanguage === 'zh' ? 'CSV文件格式不正确' : 'Invalid CSV file format', 'error');
                         return;
                     }
                     
-                    const students = [];
-                    const errors = [];
+                    var students = [];
+                    var errors = [];
                     
-                    for (let i = 1; i < rows.length; i++) {
+                    for (var i = 1; i < rows.length; i++) {
                         if (!rows[i].trim()) continue;
                         
-                        const columns = rows[i].split(',');
+                        var columns = rows[i].split(',');
                         if (columns.length >= 2) {
-                            const email = columns[0].trim();
-                            const name = columns[1].trim();
-                            const studentClass = columns.length > 2 ? columns[2].trim() : className;
-                            const note = columns.length > 3 ? columns[3].trim() : '';
+                            var email = columns[0].trim();
+                            var name = columns[1].trim();
+                            var studentClass = columns.length > 2 ? columns[2].trim() : className;
+                            var note = columns.length > 3 ? columns[3].trim() : '';
                             
                             if (email && email.includes('@')) {
                                 students.push({
@@ -2460,12 +2603,12 @@ const MathGame = (function() {
                                     password: defaultPassword
                                 });
                             } else {
-                                errors.push(`第${i+1}行: 邮箱格式不正确 - ${email}`);
+                                errors.push('第' + (i+1) + '行: 邮箱格式不正确 - ' + email);
                             }
                         }
                         
                         if (uploadProgressBar) {
-                            uploadProgressBar.style.width = `${(i / rows.length) * 50}%`;
+                            uploadProgressBar.style.width = ((i / rows.length) * 50) + '%';
                         }
                     }
                     
@@ -2476,19 +2619,19 @@ const MathGame = (function() {
                     
                     if (uploadStatus) {
                         uploadStatus.textContent = currentLanguage === 'zh' 
-                            ? `找到 ${students.length} 名学生，正在注册...` 
-                            : `Found ${students.length} students, registering...`;
+                            ? '找到 ' + students.length + ' 名学生，正在注册...' 
+                            : 'Found ' + students.length + ' students, registering...';
                     }
                     
-                    const results = [];
-                    let successCount = 0;
-                    let failCount = 0;
+                    var results = [];
+                    var successCount = 0;
+                    var failCount = 0;
                     
-                    for (let i = 0; i < students.length; i++) {
-                        const student = students[i];
+                    for (var i = 0; i < students.length; i++) {
+                        var student = students[i];
                         
                         try {
-                            const { data, error } = await supabase.auth.admin.createUser({
+                            var result = await supabase.auth.admin.createUser({
                                 email: student.email,
                                 password: student.password,
                                 email_confirm: true,
@@ -2502,11 +2645,11 @@ const MathGame = (function() {
                                 }
                             });
                             
-                            if (error) {
+                            if (result.error) {
                                 results.push({
                                     email: student.email,
                                     status: '失败',
-                                    message: error.message,
+                                    message: result.error.message,
                                     class: student.class
                                 });
                                 failCount++;
@@ -2532,39 +2675,40 @@ const MathGame = (function() {
                         }
                         
                         if (uploadProgressBar) {
-                            uploadProgressBar.style.width = `${50 + (i / students.length) * 50}%`;
+                            uploadProgressBar.style.width = (50 + (i / students.length) * 50) + '%';
                         }
                         if (uploadStatus) {
                             uploadStatus.textContent = currentLanguage === 'zh' 
-                                ? `正在注册 ${i+1}/${students.length}...` 
-                                : `Registering ${i+1}/${students.length}...`;
+                                ? '正在注册 ' + (i+1) + '/' + students.length + '...' 
+                                : 'Registering ' + (i+1) + '/' + students.length + '...';
                         }
                         
-                        await new Promise(resolve => setTimeout(resolve, 100));
+                        await new Promise(function(resolve) { setTimeout(resolve, 100); });
                     }
                     
                     if (uploadResult) {
                         uploadResult.style.display = 'block';
                         uploadResult.innerHTML = `
                             <h4>${currentLanguage === 'zh' ? '批量注册结果' : 'Batch Registration Results'}</h4>
-                            <p>${currentLanguage === 'zh' ? `总计: ${students.length} 名学生` : `Total: ${students.length} students`}</p>
-                            <p style="color: #4CAF50;">${currentLanguage === 'zh' ? `成功: ${successCount}` : `Success: ${successCount}`}</p>
-                            <p style="color: #ff4444;">${currentLanguage === 'zh' ? `失败: ${failCount}` : `Failed: ${failCount}`}</p>
-                            ${errors.length > 0 ? `<p style="color: #FF9800;">${currentLanguage === 'zh' ? `解析错误: ${errors.length}` : `Parse errors: ${errors.length}`}</p>` : ''}
+                            <p>${currentLanguage === 'zh' ? '总计: ' + students.length + ' 名学生' : 'Total: ' + students.length + ' students'}</p>
+                            <p style="color: #4CAF50;">${currentLanguage === 'zh' ? '成功: ' + successCount : 'Success: ' + successCount}</p>
+                            <p style="color: #ff4444;">${currentLanguage === 'zh' ? '失败: ' + failCount : 'Failed: ' + failCount}</p>
+                            ${errors.length > 0 ? '<p style="color: #FF9800;">' + (currentLanguage === 'zh' ? '解析错误: ' + errors.length : 'Parse errors: ' + errors.length) + '</p>' : ''}
                         `;
                     }
                     
                     if (uploadStatus) {
                         uploadStatus.textContent = currentLanguage === 'zh' 
-                            ? `完成！成功: ${successCount}, 失败: ${failCount}` 
-                            : `Complete! Success: ${successCount}, Failed: ${failCount}`;
+                            ? '完成！成功: ' + successCount + ', 失败: ' + failCount 
+                            : 'Complete! Success: ' + successCount + ', Failed: ' + failCount;
                     }
                     
-                    const successfulStudents = results.filter(r => r.status === '成功');
+                    var successfulStudents = results.filter(function(r) { return r.status === '成功'; });
                     if (successfulStudents.length > 0 && accountCards && accountCardsContainer) {
                         accountCardsContainer.innerHTML = '';
-                        successfulStudents.forEach((student) => {
-                            const card = document.createElement('div');
+                        for (var j = 0; j < successfulStudents.length; j++) {
+                            var student = successfulStudents[j];
+                            var card = document.createElement('div');
                             card.className = 'account-card';
                             card.style.cssText = `
                                 background: white;
@@ -2581,15 +2725,15 @@ const MathGame = (function() {
                                 <div style="color: #4CAF50; font-size: 0.9em; margin-top: 5px;">✓ ${currentLanguage === 'zh' ? '注册成功' : 'Registered'}</div>
                             `;
                             accountCardsContainer.appendChild(card);
-                        });
+                        }
                         accountCards.style.display = 'block';
                     }
                     
                     if (successCount > 0) {
                         showMessage(
                             currentLanguage === 'zh' 
-                                ? `成功注册 ${successCount} 名学生账号` 
-                                : `Successfully registered ${successCount} student accounts`,
+                                ? '成功注册 ' + successCount + ' 名学生账号' 
+                                : 'Successfully registered ' + successCount + ' student accounts',
                             'success'
                         );
                     }
@@ -2617,7 +2761,7 @@ const MathGame = (function() {
     // ==================== 修复版打印账号卡片 ====================
     function printAccountCards() {
         try {
-            const container = document.getElementById('account-cards-container');
+            var container = document.getElementById('account-cards-container');
             if (!container) {
                 showMessage(
                     currentLanguage === 'zh' ? '没有可打印的账号卡片' : 'No account cards to print',
@@ -2626,7 +2770,7 @@ const MathGame = (function() {
                 return;
             }
             
-            const printContent = container.innerHTML;
+            var printContent = container.innerHTML;
             if (!printContent.trim()) {
                 showMessage(
                     currentLanguage === 'zh' ? '没有可打印的内容' : 'No content to print',
@@ -2635,7 +2779,7 @@ const MathGame = (function() {
                 return;
             }
             
-            const originalContent = document.body.innerHTML;
+            var originalContent = document.body.innerHTML;
             
             document.body.innerHTML = `
                 <!DOCTYPE html>
@@ -2676,9 +2820,13 @@ const MathGame = (function() {
     // ==================== 云端同步核心功能 ====================
     function initCloudSync() {
         try {
-            const savedSyncState = localStorage.getItem('mathGameSyncState');
+            var savedSyncState = localStorage.getItem('mathGameSyncState');
             if (savedSyncState) {
-                syncState = JSON.parse(savedSyncState);
+                try {
+                    syncState = JSON.parse(savedSyncState);
+                } catch (e) {
+                    console.warn('解析同步状态失败:', e);
+                }
             }
             startAutoSync();
             console.log('云端同步初始化完成', syncState);
@@ -2692,7 +2840,7 @@ const MathGame = (function() {
             clearInterval(autoSyncTimer);
         }
         
-        autoSyncTimer = setInterval(() => {
+        autoSyncTimer = setInterval(function() {
             if (currentUser && isSupabaseReady && !syncState.isSyncing && !offlineMode) {
                 console.log('自动同步触发');
                 performFullSync();
@@ -2716,7 +2864,9 @@ const MathGame = (function() {
         }
     }
     
-    function addSyncHistory(type, status, details = '') {
+    function addSyncHistory(type, status, details) {
+        if (!details) details = '';
+        
         syncState.syncHistory.unshift({
             timestamp: new Date().toISOString(),
             type: type,
@@ -2766,13 +2916,13 @@ const MathGame = (function() {
         try {
             if (!currentUser || !supabase) return false;
             
-            const localScores = localStorage.getItem(`mathGameScores_${currentUser.id}_pending`);
+            var localScores = localStorage.getItem('mathGameScores_' + currentUser.id + '_pending');
             if (localScores) {
-                const pendingScores = JSON.parse(localScores);
-                for (const score of pendingScores) {
-                    await supabase.from('game_scores').insert([score]);
+                var pendingScores = JSON.parse(localScores);
+                for (var i = 0; i < pendingScores.length; i++) {
+                    await supabase.from('game_scores').insert([pendingScores[i]]);
                 }
-                localStorage.removeItem(`mathGameScores_${currentUser.id}_pending`);
+                localStorage.removeItem('mathGameScores_' + currentUser.id + '_pending');
             }
             return true;
         } catch (error) {
@@ -2784,46 +2934,48 @@ const MathGame = (function() {
     // ==================== 成就系统核心函数 ====================
     function loadAchievements() {
         try {
-            const savedStates = localStorage.getItem('mathGameAchievementStates');
+            var savedStates = localStorage.getItem('mathGameAchievementStates');
             if (savedStates) {
-                const parsed = JSON.parse(savedStates);
+                var parsed = JSON.parse(savedStates);
                 achievementStates = new Map(Object.entries(parsed));
             } else {
-                LADDER_ACHIEVEMENTS.forEach(ach => {
+                for (var i = 0; i < LADDER_ACHIEVEMENTS.length; i++) {
+                    var ach = LADDER_ACHIEVEMENTS[i];
                     achievementStates.set(ach.id, {
                         unlocked: false,
                         progress: 0,
                         unlockedAt: null
                     });
-                });
+                }
             }
             
-            const savedStats = localStorage.getItem('mathGamePlayerStats');
+            var savedStats = localStorage.getItem('mathGamePlayerStats');
             if (savedStats) {
                 playerStats = JSON.parse(savedStats);
             }
             
             if (currentUser && isSupabaseReady && !offlineMode) {
-                setTimeout(() => {
+                setTimeout(function() {
                     loadAchievementsFromCloud();
                 }, 1000);
             }
         } catch (error) {
             console.error('加载成就失败:', error);
-            LADDER_ACHIEVEMENTS.forEach(ach => {
+            for (var i = 0; i < LADDER_ACHIEVEMENTS.length; i++) {
+                var ach = LADDER_ACHIEVEMENTS[i];
                 achievementStates.set(ach.id, {
                     unlocked: false,
                     progress: 0,
                     unlockedAt: null
                 });
-            });
+            }
         }
     }
     
     function saveAchievements() {
         try {
-            const statesObject = {};
-            achievementStates.forEach((value, key) => {
+            var statesObject = {};
+            achievementStates.forEach(function(value, key) {
                 statesObject[key] = value;
             });
             
@@ -2834,7 +2986,7 @@ const MathGame = (function() {
             saveSyncState();
             
             if (currentUser && isSupabaseReady && !offlineMode) {
-                setTimeout(() => {
+                setTimeout(function() {
                     syncAchievementsToCloud();
                 }, 100);
             }
@@ -2847,12 +2999,12 @@ const MathGame = (function() {
         try {
             if (!currentUser || !isSupabaseReady || !supabase) return false;
             
-            const statesObject = {};
-            achievementStates.forEach((value, key) => {
+            var statesObject = {};
+            achievementStates.forEach(function(value, key) {
                 statesObject[key] = value;
             });
             
-            const achievementData = {
+            var achievementData = {
                 user_id: currentUser.id,
                 email: currentUser.email,
                 achievement_states: statesObject,
@@ -2861,13 +3013,13 @@ const MathGame = (function() {
                 version: syncState.dataVersion
             };
             
-            const { data: existingData } = await supabase
+            var existingResult = await supabase
                 .from('player_achievements')
                 .select('id')
                 .eq('user_id', currentUser.id)
                 .limit(1);
             
-            if (existingData && existingData.length > 0) {
+            if (existingResult.data && existingResult.data.length > 0) {
                 await supabase
                     .from('player_achievements')
                     .update(achievementData)
@@ -2891,24 +3043,28 @@ const MathGame = (function() {
         try {
             if (!currentUser || !isSupabaseReady || !supabase) return false;
             
-            const { data, error } = await supabase
+            var result = await supabase
                 .from('player_achievements')
                 .select('*')
                 .eq('user_id', currentUser.id)
                 .limit(1);
             
-            if (error) {
-                console.error('从云端加载成就失败:', error);
+            if (result.error) {
+                console.error('从云端加载成就失败:', result.error);
                 return false;
             }
             
-            if (data && data.length > 0) {
-                const cloudData = data[0];
+            if (result.data && result.data.length > 0) {
+                var cloudData = result.data[0];
                 
                 if (cloudData.achievement_states) {
-                    Object.entries(cloudData.achievement_states).forEach(([key, value]) => {
+                    var entries = Object.entries(cloudData.achievement_states);
+                    for (var i = 0; i < entries.length; i++) {
+                        var key = entries[i][0];
+                        var value = entries[i][1];
+                        
                         if (achievementStates.has(key)) {
-                            const local = achievementStates.get(key);
+                            var local = achievementStates.get(key);
                             if (value.unlocked && !local.unlocked) {
                                 achievementStates.set(key, value);
                             } else if (value.progress > local.progress) {
@@ -2916,17 +3072,18 @@ const MathGame = (function() {
                                 achievementStates.set(key, local);
                             }
                         }
-                    });
+                    }
                 }
                 
                 if (cloudData.player_stats) {
-                    playerStats.gamesCompleted = Math.max(playerStats.gamesCompleted, cloudData.player_stats.gamesCompleted || 0);
-                    playerStats.bestScore = Math.max(playerStats.bestScore, cloudData.player_stats.bestScore || 0);
-                    playerStats.bestAccuracy = Math.max(playerStats.bestAccuracy, cloudData.player_stats.bestAccuracy || 0);
-                    playerStats.fastestAnswer = Math.min(playerStats.fastestAnswer, cloudData.player_stats.fastestAnswer || 999);
-                    playerStats.totalQuestions = Math.max(playerStats.totalQuestions, cloudData.player_stats.totalQuestions || 0);
-                    playerStats.totalCorrect = Math.max(playerStats.totalCorrect, cloudData.player_stats.totalCorrect || 0);
-                    playerStats.totalAttempts = Math.max(playerStats.totalAttempts, cloudData.player_stats.totalAttempts || 0);
+                    var cloudStats = cloudData.player_stats;
+                    playerStats.gamesCompleted = Math.max(playerStats.gamesCompleted, cloudStats.gamesCompleted || 0);
+                    playerStats.bestScore = Math.max(playerStats.bestScore, cloudStats.bestScore || 0);
+                    playerStats.bestAccuracy = Math.max(playerStats.bestAccuracy, cloudStats.bestAccuracy || 0);
+                    playerStats.fastestAnswer = Math.min(playerStats.fastestAnswer, cloudStats.fastestAnswer || 999);
+                    playerStats.totalQuestions = Math.max(playerStats.totalQuestions, cloudStats.totalQuestions || 0);
+                    playerStats.totalCorrect = Math.max(playerStats.totalCorrect, cloudStats.totalCorrect || 0);
+                    playerStats.totalAttempts = Math.max(playerStats.totalAttempts, cloudStats.totalAttempts || 0);
                 }
                 
                 updateAchievementCounts();
@@ -2949,7 +3106,7 @@ const MathGame = (function() {
             playerStats.bestScore = score;
         }
         
-        const currentAccuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+        var currentAccuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
         if (currentAccuracy > playerStats.bestAccuracy) {
             playerStats.bestAccuracy = currentAccuracy;
         }
@@ -2969,8 +3126,9 @@ const MathGame = (function() {
         playerStats.goldCount = 0;
         playerStats.platinumCount = 0;
         
-        LADDER_ACHIEVEMENTS.forEach(ach => {
-            const state = achievementStates.get(ach.id);
+        for (var i = 0; i < LADDER_ACHIEVEMENTS.length; i++) {
+            var ach = LADDER_ACHIEVEMENTS[i];
+            var state = achievementStates.get(ach.id);
             if (state && state.unlocked) {
                 switch(ach.level) {
                     case 1: playerStats.bronzeCount++; break;
@@ -2979,7 +3137,7 @@ const MathGame = (function() {
                     case 4: playerStats.platinumCount++; break;
                 }
             }
-        });
+        }
     }
     
     function checkAchievementRequirement(achievement) {
@@ -3013,12 +3171,13 @@ const MathGame = (function() {
     }
     
     function checkAndUnlockAchievements() {
-        let unlockedCount = 0;
+        var unlockedCount = 0;
         
-        LADDER_ACHIEVEMENTS.forEach(ach => {
-            const state = achievementStates.get(ach.id);
+        for (var i = 0; i < LADDER_ACHIEVEMENTS.length; i++) {
+            var ach = LADDER_ACHIEVEMENTS[i];
+            var state = achievementStates.get(ach.id);
             if (!state || !state.unlocked) {
-                const isUnlocked = checkAchievementRequirement(ach);
+                var isUnlocked = checkAchievementRequirement(ach);
                 if (isUnlocked) {
                     achievementStates.set(ach.id, {
                         unlocked: true,
@@ -3029,9 +3188,9 @@ const MathGame = (function() {
                     showAchievementUnlock(ach);
                     unlockedCount++;
                 } else {
-                    const progress = getAchievementProgress(ach);
-                    const total = ach.requirement.value;
-                    const progressPercent = Math.round((progress / total) * 100);
+                    var progress = getAchievementProgress(ach);
+                    var total = ach.requirement.value;
+                    var progressPercent = Math.round((progress / total) * 100);
                     
                     if (state) {
                         state.progress = Math.min(progressPercent, 100);
@@ -3039,19 +3198,19 @@ const MathGame = (function() {
                     }
                 }
             }
-        });
+        }
         
         if (unlockedCount > 0) {
             updateAchievementCounts();
             saveAchievements();
-            setTimeout(() => {
+            setTimeout(function() {
                 checkAndUnlockAchievements();
             }, 100);
         }
     }
     
     function showAchievementUnlock(achievement) {
-        const unlockDiv = document.createElement('div');
+        var unlockDiv = document.createElement('div');
         unlockDiv.className = 'achievement-unlock';
         unlockDiv.style.cssText = `
             position: fixed;
@@ -3070,20 +3229,25 @@ const MathGame = (function() {
             max-width: 400px;
         `;
         
+        var nameText = getTranslation(achievement.nameKey, '');
+        var descText = getTranslation(achievement.descKey, '');
+        var levelText = getTranslation('level', '等级');
+        var unlockedText = getTranslation('unlocked', '已解锁');
+        
         unlockDiv.innerHTML = `
             <div style="font-size: clamp(3em, 10vw, 4em); margin-bottom: 15px;">${achievement.icon}</div>
-            <div style="font-size: clamp(1.5em, 5vw, 1.8em); font-weight: bold; margin-bottom: 10px;">🎉 ${translations[currentLanguage].unlocked}!</div>
-            <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold; margin-bottom: 5px;">${translations[currentLanguage][achievement.nameKey]}</div>
-            <div style="font-size: clamp(0.9em, 3vw, 1em); opacity: 0.9; margin-bottom: 15px;">${translations[currentLanguage][achievement.descKey]}</div>
+            <div style="font-size: clamp(1.5em, 5vw, 1.8em); font-weight: bold; margin-bottom: 10px;">🎉 ${unlockedText}!</div>
+            <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold; margin-bottom: 5px;">${nameText}</div>
+            <div style="font-size: clamp(0.9em, 3vw, 1em); opacity: 0.9; margin-bottom: 15px;">${descText}</div>
             <div style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: clamp(0.8em, 3vw, 0.9em);">${LEVEL_ICONS[achievement.level]} ${translations[currentLanguage].level} ${achievement.level}</span>
+                <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: clamp(0.8em, 3vw, 0.9em);">${LEVEL_ICONS[achievement.level]} ${levelText} ${achievement.level}</span>
                 <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: clamp(0.8em, 3vw, 0.9em);">+${achievement.reward.score} ${currentLanguage === 'zh' ? '分' : 'pts'}</span>
             </div>
         `;
         
         document.body.appendChild(unlockDiv);
         
-        const style = document.createElement('style');
+        var style = document.createElement('style');
         style.textContent = `
             @keyframes achievementPop {
                 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
@@ -3096,11 +3260,11 @@ const MathGame = (function() {
         `;
         document.head.appendChild(style);
         
-        setTimeout(() => {
+        setTimeout(function() {
             unlockDiv.style.opacity = '0';
             unlockDiv.style.transform = 'translate(-50%, -50%) scale(0.8)';
             unlockDiv.style.transition = 'all 0.3s ease';
-            setTimeout(() => {
+            setTimeout(function() {
                 if (unlockDiv.parentNode) {
                     unlockDiv.parentNode.removeChild(unlockDiv);
                 }
@@ -3113,40 +3277,48 @@ const MathGame = (function() {
         try {
             loadAchievements();
             
-            const container = document.getElementById('achievements-grid');
-            const achievementsModal = document.getElementById('achievements-modal');
-            const achievementsTitle = document.getElementById('achievements-title');
+            var container = document.getElementById('achievements-grid');
+            var achievementsModal = document.getElementById('achievements-modal');
+            var achievementsTitle = document.getElementById('achievements-title');
             
             if (!container || !achievementsModal) return;
             
-            if (achievementsTitle) achievementsTitle.textContent = translations[currentLanguage].achievementsTitle;
+            if (achievementsTitle) achievementsTitle.textContent = getTranslation('achievementsTitle', '⭐ 成就系统');
             
             container.innerHTML = '';
             
-            const categorizedAchievements = {};
-            LADDER_ACHIEVEMENTS.forEach(ach => {
+            var categorizedAchievements = {};
+            for (var i = 0; i < LADDER_ACHIEVEMENTS.length; i++) {
+                var ach = LADDER_ACHIEVEMENTS[i];
                 if (!categorizedAchievements[ach.category]) {
                     categorizedAchievements[ach.category] = [];
                 }
                 categorizedAchievements[ach.category].push(ach);
-            });
+            }
             
-            CATEGORY_ORDER.forEach(category => {
+            for (var c = 0; c < CATEGORY_ORDER.length; c++) {
+                var category = CATEGORY_ORDER[c];
                 if (categorizedAchievements[category]) {
-                    categorizedAchievements[category].sort((a, b) => a.level - b.level);
+                    categorizedAchievements[category].sort(function(a, b) { return a.level - b.level; });
                 }
-            });
+            }
             
-            const totalAchievements = LADDER_ACHIEVEMENTS.length;
-            let unlockedCount = 0;
-            achievementStates.forEach(state => {
+            var totalAchievements = LADDER_ACHIEVEMENTS.length;
+            var unlockedCount = 0;
+            achievementStates.forEach(function(state) {
                 if (state.unlocked) unlockedCount++;
             });
             
-            const statsHtml = `
+            var achievementProgress = getTranslation('achievementProgress', '成就进度');
+            var bronzeText = getTranslation('bronze', '青铜');
+            var silverText = getTranslation('silver', '白银');
+            var goldText = getTranslation('gold', '黄金');
+            var platinumText = getTranslation('platinum', '铂金');
+            
+            var statsHtml = `
                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: clamp(20px, 5vw, 25px); margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                        <span style="font-size: clamp(1.2em, 4vw, 1.5em); font-weight: bold;">⭐ ${translations[currentLanguage].achievementProgress}</span>
+                        <span style="font-size: clamp(1.2em, 4vw, 1.5em); font-weight: bold;">⭐ ${achievementProgress}</span>
                         <span style="background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 25px; font-size: clamp(0.9em, 3vw, 1.1em);">
                             ${unlockedCount}/${totalAchievements}
                         </span>
@@ -3158,47 +3330,54 @@ const MathGame = (function() {
                         <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px;">
                             <div style="font-size: 1.8em;">🥉</div>
                             <div style="font-size: clamp(1em, 4vw, 1.2em); font-weight: bold;">${playerStats.bronzeCount}</div>
-                            <div style="font-size: clamp(0.8em, 3vw, 0.85em); opacity: 0.9;">${translations[currentLanguage].bronze}</div>
+                            <div style="font-size: clamp(0.8em, 3vw, 0.85em); opacity: 0.9;">${bronzeText}</div>
                         </div>
                         <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px;">
                             <div style="font-size: 1.8em;">🥈</div>
                             <div style="font-size: clamp(1em, 4vw, 1.2em); font-weight: bold;">${playerStats.silverCount}</div>
-                            <div style="font-size: clamp(0.8em, 3vw, 0.85em); opacity: 0.9;">${translations[currentLanguage].silver}</div>
+                            <div style="font-size: clamp(0.8em, 3vw, 0.85em); opacity: 0.9;">${silverText}</div>
                         </div>
                         <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px;">
                             <div style="font-size: 1.8em;">🥇</div>
                             <div style="font-size: clamp(1em, 4vw, 1.2em); font-weight: bold;">${playerStats.goldCount}</div>
-                            <div style="font-size: clamp(0.8em, 3vw, 0.85em); opacity: 0.9;">${translations[currentLanguage].gold}</div>
+                            <div style="font-size: clamp(0.8em, 3vw, 0.85em); opacity: 0.9;">${goldText}</div>
                         </div>
                         <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px;">
                             <div style="font-size: 1.8em;">🏆</div>
                             <div style="font-size: clamp(1em, 4vw, 1.2em); font-weight: bold;">${playerStats.platinumCount}</div>
-                            <div style="font-size: clamp(0.8em, 3vw, 0.85em); opacity: 0.9;">${translations[currentLanguage].platinum}</div>
+                            <div style="font-size: clamp(0.8em, 3vw, 0.85em); opacity: 0.9;">${platinumText}</div>
                         </div>
                     </div>
                 </div>
             `;
             
-            let achievementsHtml = '<div style="display: flex; flex-direction: column; gap: 30px;">';
+            var achievementsHtml = '<div style="display: flex; flex-direction: column; gap: 30px;">';
             
-            CATEGORY_ORDER.forEach(category => {
-                const achievements = categorizedAchievements[category];
-                if (!achievements || achievements.length === 0) return;
+            for (var c = 0; c < CATEGORY_ORDER.length; c++) {
+                var category = CATEGORY_ORDER[c];
+                var achievements = categorizedAchievements[category];
+                if (!achievements || achievements.length === 0) continue;
+                
+                var categoryName = getTranslation('category' + category.charAt(0).toUpperCase() + category.slice(1), '');
                 
                 achievementsHtml += `
                     <div style="background: white; border-radius: 20px; padding: clamp(15px, 4vw, 20px); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                         <h4 style="display: flex; align-items: center; margin-top: 0; margin-bottom: 20px; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; flex-wrap: wrap;">
                             <span style="font-size: clamp(1.5em, 5vw, 2em); margin-right: 12px;">${CATEGORY_ICONS[category]}</span>
-                            <span style="font-size: clamp(1.1em, 4vw, 1.3em); font-weight: bold;">${translations[currentLanguage]['category' + category.charAt(0).toUpperCase() + category.slice(1)]}</span>
+                            <span style="font-size: clamp(1.1em, 4vw, 1.3em); font-weight: bold;">${categoryName}</span>
                         </h4>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;" class="achievements-grid">
                 `;
                 
-                achievements.forEach(ach => {
-                    const state = achievementStates.get(ach.id);
-                    const isUnlocked = state && state.unlocked;
-                    const progress = state ? state.progress : 0;
-                    const levelColor = LEVEL_COLORS[ach.level];
+                for (var a = 0; a < achievements.length; a++) {
+                    var ach = achievements[a];
+                    var state = achievementStates.get(ach.id);
+                    var isUnlocked = state && state.unlocked;
+                    var progress = state ? state.progress : 0;
+                    var levelColor = LEVEL_COLORS[ach.level];
+                    
+                    var achName = getTranslation(ach.nameKey, '');
+                    var achDesc = getTranslation(ach.descKey, '');
                     
                     achievementsHtml += `
                         <div style="background: ${isUnlocked ? 'linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%)' : '#ffffff'}; 
@@ -3219,15 +3398,15 @@ const MathGame = (function() {
                             <div style="font-size: clamp(2em, 6vw, 2.8em); margin-bottom: 10px;">${ach.icon}</div>
                             
                             <div style="font-weight: bold; color: ${levelColor}; font-size: clamp(0.8em, 3vw, 0.9em); margin-bottom: 8px; background: ${levelColor}20; padding: 4px 10px; border-radius: 20px; display: inline-block; align-self: center;">
-                                ${LEVEL_ICONS[ach.level]} ${translations[currentLanguage].level} ${ach.level}
+                                ${LEVEL_ICONS[ach.level]} ${getTranslation('level', '等级')} ${ach.level}
                             </div>
                             
                             <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px; font-size: clamp(0.9em, 3.5vw, 1.1em);">
-                                ${translations[currentLanguage][ach.nameKey]}
+                                ${achName}
                             </div>
                             
                             <div style="color: #6c757d; font-size: clamp(0.8em, 2.8vw, 0.85em); margin-bottom: 15px; line-height: 1.4; flex-grow: 1;">
-                                ${translations[currentLanguage][ach.descKey]}
+                                ${achDesc}
                             </div>
                             
                             <div style="background: #f1f3f5; border-radius: 12px; height: 8px; overflow: hidden; margin-bottom: 8px;">
@@ -3235,7 +3414,7 @@ const MathGame = (function() {
                             </div>
                             
                             <div style="display: flex; justify-content: space-between; color: #6c757d; font-size: clamp(0.7em, 2.5vw, 0.8em); margin-top: 5px;">
-                                <span>${isUnlocked ? '✓ ' + translations[currentLanguage].unlocked : progress + '%'}</span>
+                                <span>${isUnlocked ? '✓ ' + getTranslation('unlocked', '已解锁') : progress + '%'}</span>
                                 <span style="color: ${levelColor};">+${ach.reward.score}</span>
                             </div>
                             
@@ -3246,13 +3425,13 @@ const MathGame = (function() {
                             ` : ''}
                         </div>
                     `;
-                });
+                }
                 
                 achievementsHtml += `
                         </div>
                     </div>
                 `;
-            });
+            }
             
             achievementsHtml += '</div>';
             container.innerHTML = statsHtml + achievementsHtml;
@@ -3265,23 +3444,26 @@ const MathGame = (function() {
     // ==================== 游戏核心功能 ====================
     function selectMode(mode) {
         currentMode = mode;
-        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-        const targetBtn = document.querySelector(`[data-mode="${mode}"]`);
+        var modeBtns = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < modeBtns.length; i++) {
+            modeBtns[i].classList.remove('active');
+        }
+        var targetBtn = document.querySelector('[data-mode="' + mode + '"]');
         if (targetBtn) targetBtn.classList.add('active');
         
-        const customSettings = document.getElementById('custom-settings');
+        var customSettings = document.getElementById('custom-settings');
         if (mode === 'custom') {
             if (customSettings) customSettings.style.display = 'flex';
         } else {
             if (customSettings) customSettings.style.display = 'none';
         }
         
-        const startBtn = document.getElementById('start-btn');
+        var startBtn = document.getElementById('start-btn');
         if (startBtn) {
             if (mode === 'practice') {
-                startBtn.innerHTML = `<span>${translations[currentLanguage].startPractice}</span>`;
+                startBtn.innerHTML = '<span>' + getTranslation('startPractice', '🎯 开始练习') + '</span>';
             } else {
-                startBtn.innerHTML = `<span>${translations[currentLanguage].startGame}</span>`;
+                startBtn.innerHTML = '<span>' + getTranslation('startGame', '🚀 开始游戏') + '</span>';
             }
         }
     }
@@ -3295,12 +3477,16 @@ const MathGame = (function() {
         
         resetGame();
         
-        const range = document.getElementById('number-range')?.value || '0-14';
-        const modeConfig = { ...MODE_CONFIG[currentMode] };
+        var rangeInput = document.getElementById('number-range');
+        var range = rangeInput ? rangeInput.value : '0-14';
+        var modeConfig = {};
+        for (var key in MODE_CONFIG[currentMode]) {
+            modeConfig[key] = MODE_CONFIG[currentMode][key];
+        }
         
         if (currentMode === 'custom') {
-            const questionsInput = document.getElementById('custom-questions');
-            const timeInput = document.getElementById('custom-time');
+            var questionsInput = document.getElementById('custom-questions');
+            var timeInput = document.getElementById('custom-time');
             modeConfig.questions = questionsInput ? parseInt(questionsInput.value) || 20 : 20;
             modeConfig.time = timeInput ? parseInt(timeInput.value) || 60 : 60;
         }
@@ -3309,12 +3495,12 @@ const MathGame = (function() {
             timeLeft = modeConfig.time || 90;
         }
         
-        const gameInfo = document.getElementById('game-info');
-        const progressContainer = document.getElementById('progress-container');
-        const targetContainer = document.getElementById('target-container');
-        const gameControls = document.getElementById('game-controls');
-        const modeSelection = document.querySelector('.mode-selection');
-        const gameSetting = document.querySelector('.game-setting');
+        var gameInfo = document.getElementById('game-info');
+        var progressContainer = document.getElementById('progress-container');
+        var targetContainer = document.getElementById('target-container');
+        var gameControls = document.getElementById('game-controls');
+        var modeSelection = document.querySelector('.mode-selection');
+        var gameSetting = document.querySelector('.game-setting');
         
         if (gameInfo) gameInfo.style.display = 'grid';
         if (progressContainer) progressContainer.style.display = 'block';
@@ -3323,7 +3509,7 @@ const MathGame = (function() {
         if (modeSelection) modeSelection.style.display = 'none';
         if (gameSetting) gameSetting.style.display = 'none';
         
-        const gameGrid = document.getElementById('game-grid');
+        var gameGrid = document.getElementById('game-grid');
         if (gameGrid) {
             gameGrid.style.display = 'grid';
             gameGrid.innerHTML = '';
@@ -3338,7 +3524,7 @@ const MathGame = (function() {
         lastAnswerTime = null;
         
         if (modeConfig.hasTimeLimit) {
-            const timeElement = document.getElementById('time');
+            var timeElement = document.getElementById('time');
             if (timeElement) timeElement.textContent = timeLeft;
             timerInterval = setInterval(updateTimer, 1000);
         } else {
@@ -3368,17 +3554,17 @@ const MathGame = (function() {
             hintInterval = null;
         }
         
-        const scoreElement = document.getElementById('score');
-        const completedElement = document.getElementById('completed');
-        const accuracyElement = document.getElementById('accuracy');
-        const progressBar = document.getElementById('progress-bar');
+        var scoreElement = document.getElementById('score');
+        var completedElement = document.getElementById('completed');
+        var accuracyElement = document.getElementById('accuracy');
+        var progressBar = document.getElementById('progress-bar');
         
         if (scoreElement) scoreElement.textContent = '0';
         if (completedElement) completedElement.textContent = '0/30';
         if (accuracyElement) accuracyElement.textContent = '100%';
         if (progressBar) progressBar.style.width = '100%';
         
-        const gameGrid = document.getElementById('game-grid');
+        var gameGrid = document.getElementById('game-grid');
         if (gameGrid) gameGrid.innerHTML = '';
         
         loadWrongQuestions();
@@ -3386,31 +3572,35 @@ const MathGame = (function() {
     }
     
     function generateNumberGrid() {
-        const gameGrid = document.getElementById('game-grid');
+        var gameGrid = document.getElementById('game-grid');
         if (!gameGrid) return;
         
-        const range = document.getElementById('number-range')?.value || '0-14';
-        const config = RANGE_CONFIG[range];
+        var rangeInput = document.getElementById('number-range');
+        var range = rangeInput ? rangeInput.value : '0-14';
+        var config = RANGE_CONFIG[range];
         if (!config) return;
         
         gameGrid.innerHTML = '';
-        const numbers = [];
+        var numbers = [];
         
-        for (let i = 0; i < 10; i++) {
-            const num = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+        for (var i = 0; i < 10; i++) {
+            var num = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
             numbers.push(num);
         }
         
         shuffleArray(numbers);
         
-        numbers.forEach((number) => {
-            const card = document.createElement('div');
+        for (var i = 0; i < numbers.length; i++) {
+            var number = numbers[i];
+            var card = document.createElement('div');
             card.className = 'number-card';
             card.textContent = number;
             card.dataset.value = number;
-            card.addEventListener('click', () => selectCard(card));
+            card.addEventListener('click', function(c) {
+                return function() { selectCard(c); };
+            }(card));
             gameGrid.appendChild(card);
-        });
+        }
         
         setTimeout(checkAndAutoRefresh, 300);
     }
@@ -3420,7 +3610,13 @@ const MathGame = (function() {
         
         if (card.classList.contains('selected')) {
             card.classList.remove('selected');
-            selectedCards = selectedCards.filter(c => c !== card);
+            var newSelected = [];
+            for (var i = 0; i < selectedCards.length; i++) {
+                if (selectedCards[i] !== card) {
+                    newSelected.push(selectedCards[i]);
+                }
+            }
+            selectedCards = newSelected;
             return;
         }
         
@@ -3441,13 +3637,13 @@ const MathGame = (function() {
     function checkMatch() {
         if (selectedCards.length !== 2) return;
         
-        const num1 = parseInt(selectedCards[0].dataset.value);
-        const num2 = parseInt(selectedCards[1].dataset.value);
-        const sum = num1 + num2;
-        const isCorrect = sum === currentTarget;
+        var num1 = parseInt(selectedCards[0].dataset.value);
+        var num2 = parseInt(selectedCards[1].dataset.value);
+        var sum = num1 + num2;
+        var isCorrect = sum === currentTarget;
         
         if (lastAnswerTime) {
-            const answerTime = (new Date() - lastAnswerTime) / 1000;
+            var answerTime = (new Date() - lastAnswerTime) / 1000;
             if (answerTime < currentFastestAnswer) {
                 currentFastestAnswer = answerTime;
             }
@@ -3468,22 +3664,25 @@ const MathGame = (function() {
             completedQuestions++;
             showFeedback(currentLanguage === 'zh' ? '✓ 正确!' : '✓ Correct!', 'success');
             
-            selectedCards.forEach(card => card.classList.add('disappear'));
-            setTimeout(() => {
-                selectedCards.forEach(card => {
-                    if (card.parentNode) {
+            for (var i = 0; i < selectedCards.length; i++) {
+                selectedCards[i].classList.add('disappear');
+            }
+            setTimeout(function() {
+                for (var j = 0; j < selectedCards.length; j++) {
+                    var card = selectedCards[j];
+                    if (card && card.parentNode) {
                         card.parentNode.removeChild(card);
                     }
-                });
+                }
                 selectedCards = [];
                 
-                const remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
+                var remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
                 if (remainingCards.length < 2) {
                     generateNumberGrid();
                 } else {
                     if (!hasValidCombination(currentTarget, remainingCards)) {
                         showMessage(currentLanguage === 'zh' ? '没有匹配的组合，自动刷新数字！' : 'No matching combinations, refreshing numbers!', 'info');
-                        setTimeout(() => {
+                        setTimeout(function() {
                             refreshNumbers();
                         }, 500);
                     }
@@ -3498,20 +3697,22 @@ const MathGame = (function() {
                 return;
             }
             
-            setTimeout(() => {
+            setTimeout(function() {
                 generateNewTarget();
             }, 800);
         } else {
             recordWrongQuestion(num1, num2, sum, currentTarget);
             
             showFeedback(currentLanguage === 'zh' ? '✗ 错误' : '✗ Wrong', 'error');
-            selectedCards.forEach(card => card.classList.remove('selected'));
+            for (var i = 0; i < selectedCards.length; i++) {
+                selectedCards[i].classList.remove('selected');
+            }
             selectedCards = [];
             
-            const remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
+            var remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
             if (!hasValidCombination(currentTarget, remainingCards)) {
                 showMessage(currentLanguage === 'zh' ? '没有匹配的组合，自动刷新数字！' : 'No matching combinations, refreshing numbers!', 'info');
-                setTimeout(() => {
+                setTimeout(function() {
                     refreshNumbers();
                 }, 500);
             }
@@ -3521,13 +3722,13 @@ const MathGame = (function() {
     }
     
     function showFeedback(text, type) {
-        const feedback = document.getElementById('match-feedback');
+        var feedback = document.getElementById('match-feedback');
         if (!feedback) return;
         
         feedback.textContent = text;
         feedback.style.color = type === 'success' ? '#4CAF50' : '#ff4444';
         feedback.style.opacity = '1';
-        setTimeout(() => { feedback.style.opacity = '0'; }, 1000);
+        setTimeout(function() { feedback.style.opacity = '0'; }, 1000);
     }
     
     function updateTimer() {
@@ -3536,11 +3737,11 @@ const MathGame = (function() {
         timeLeft--;
         if (timeLeft < 0) timeLeft = 0;
         
-        const timeElement = document.getElementById('time');
+        var timeElement = document.getElementById('time');
         if (timeElement) timeElement.textContent = timeLeft;
         
         if (timeLeft <= 10) {
-            const timeContainer = document.getElementById('time-container');
+            var timeContainer = document.getElementById('time-container');
             if (timeContainer) timeContainer.classList.add('time-warning');
         }
         
@@ -3552,42 +3753,43 @@ const MathGame = (function() {
     function updateElapsedTime() {
         if (!gameActive || !startTime) return;
         
-        const elapsed = Math.floor((new Date() - startTime) / 1000);
-        const timeElement = document.getElementById('time');
+        var elapsed = Math.floor((new Date() - startTime) / 1000);
+        var timeElement = document.getElementById('time');
         if (timeElement) timeElement.textContent = elapsed;
     }
     
     function updateDisplay() {
-        const scoreElement = document.getElementById('score');
-        const completedElement = document.getElementById('completed');
-        const accuracyElement = document.getElementById('accuracy');
+        var scoreElement = document.getElementById('score');
+        var completedElement = document.getElementById('completed');
+        var accuracyElement = document.getElementById('accuracy');
         
         if (scoreElement) scoreElement.textContent = score;
         
         if (completedElement) {
-            const modeConfig = MODE_CONFIG[currentMode];
+            var modeConfig = MODE_CONFIG[currentMode];
             if (modeConfig.questions) {
-                completedElement.textContent = `${completedQuestions}/${modeConfig.questions}`;
+                completedElement.textContent = completedQuestions + '/' + modeConfig.questions;
             } else {
                 completedElement.textContent = completedQuestions.toString();
             }
         }
         
         if (accuracyElement) {
-            const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+            var accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
             accuracyElement.textContent = accuracy + '%';
         }
     }
     
     function generateNewTarget() {
-        const range = document.getElementById('number-range')?.value || '0-14';
-        const config = RANGE_CONFIG[range];
+        var rangeInput = document.getElementById('number-range');
+        var range = rangeInput ? rangeInput.value : '0-14';
+        var config = RANGE_CONFIG[range];
         if (!config) return;
         
-        const targetRange = config.targetMax - config.targetMin;
+        var targetRange = config.targetMax - config.targetMin;
         currentTarget = Math.floor(Math.random() * (targetRange + 1)) + config.targetMin;
         
-        const targetSumElement = document.getElementById('target-sum');
+        var targetSumElement = document.getElementById('target-sum');
         if (targetSumElement) targetSumElement.textContent = currentTarget;
         
         setTimeout(checkAndAutoRefresh, 300);
@@ -3596,10 +3798,13 @@ const MathGame = (function() {
     function hasValidCombination(targetSum, cards) {
         if (!cards || cards.length < 2) return false;
         
-        const numbers = cards.map(card => parseInt(card.dataset.value));
+        var numbers = [];
+        for (var i = 0; i < cards.length; i++) {
+            numbers.push(parseInt(cards[i].dataset.value));
+        }
         
-        for (let i = 0; i < numbers.length; i++) {
-            for (let j = i + 1; j < numbers.length; j++) {
+        for (var i = 0; i < numbers.length; i++) {
+            for (var j = i + 1; j < numbers.length; j++) {
                 if (numbers[i] + numbers[j] === targetSum) {
                     return true;
                 }
@@ -3611,21 +3816,21 @@ const MathGame = (function() {
     function checkAndAutoRefresh() {
         if (!gameActive) return;
         
-        const remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
+        var remainingCards = Array.from(document.querySelectorAll('.number-card:not(.disappear)'));
         if (!hasValidCombination(currentTarget, remainingCards)) {
             showMessage(currentLanguage === 'zh' ? '没有匹配的组合，自动刷新数字！' : 'No matching combinations, refreshing numbers!', 'info');
-            setTimeout(() => {
+            setTimeout(function() {
                 refreshNumbers();
             }, 500);
         }
     }
     
     function refreshNumbers() {
-        const gameGrid = document.getElementById('game-grid');
+        var gameGrid = document.getElementById('game-grid');
         if (!gameGrid) return;
         
         gameGrid.style.opacity = '0.5';
-        setTimeout(() => {
+        setTimeout(function() {
             generateNumberGrid();
             gameGrid.style.opacity = '1';
         }, 500);
@@ -3646,37 +3851,37 @@ const MathGame = (function() {
             hintInterval = null;
         }
         
-        let elapsedTime = 0;
+        var elapsedTime = 0;
         if (startTime) {
             elapsedTime = Math.floor((new Date() - startTime) / 1000);
         }
         
-        const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+        var accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
         
-        const finalScoreElement = document.getElementById('final-score');
-        const finalCompletedElement = document.getElementById('final-completed');
-        const finalTimeElement = document.getElementById('final-time');
-        const finalAccuracyElement = document.getElementById('final-accuracy');
-        const resultTitleElement = document.getElementById('result-title');
+        var finalScoreElement = document.getElementById('final-score');
+        var finalCompletedElement = document.getElementById('final-completed');
+        var finalTimeElement = document.getElementById('final-time');
+        var finalAccuracyElement = document.getElementById('final-accuracy');
+        var resultTitleElement = document.getElementById('result-title');
         
         if (finalScoreElement) finalScoreElement.textContent = score;
         if (finalCompletedElement) finalCompletedElement.textContent = completedQuestions;
         if (finalTimeElement) finalTimeElement.textContent = elapsedTime + (currentLanguage === 'zh' ? '秒' : 's');
         if (finalAccuracyElement) finalAccuracyElement.textContent = accuracy + '%';
         
-        const titleMap = {
-            'complete': translations[currentLanguage].gameComplete,
-            'timeout': translations[currentLanguage].gameTimeout,
-            'giveup': translations[currentLanguage].gameGiveup
+        var titleMap = {
+            'complete': getTranslation('gameComplete', '🎉 恭喜完成30题！'),
+            'timeout': getTranslation('gameTimeout', '⏰ 时间到！'),
+            'giveup': getTranslation('gameGiveup', '🏁 游戏结束')
         };
         
         if (resultTitleElement) {
-            resultTitleElement.textContent = titleMap[reason] || translations[currentLanguage].gameEnd;
+            resultTitleElement.textContent = titleMap[reason] || getTranslation('gameEnd', '🎉 游戏结束!');
         }
         
         updateGameOverText();
         
-        const gameOverElement = document.getElementById('game-over');
+        var gameOverElement = document.getElementById('game-over');
         if (gameOverElement) gameOverElement.style.display = 'flex';
         
         updatePlayerStats();
@@ -3692,7 +3897,8 @@ const MathGame = (function() {
         }
         
         if (currentUser && wrongQuestions.length > 0 && !offlineMode) {
-            setTimeout(() => {
+            if (syncTimeout) clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(function() {
                 syncAllWrongQuestionsToCloud();
             }, 2000);
         }
@@ -3705,14 +3911,20 @@ const MathGame = (function() {
     // ==================== 成绩云端存储 ====================
     async function saveGameScoreToCloud(gameScore, questionsCompleted, gameAccuracy, timeUsed) {
         try {
+            var rangeInput = document.getElementById('number-range');
+            var range = rangeInput ? rangeInput.value : '0-14';
+            
             if (!currentUser || !isSupabaseReady || !supabase || offlineMode) {
-                const pendingScore = {
-                    user_id: currentUser?.id,
-                    email: currentUser?.email,
-                    username: currentUser?.user_metadata?.username || currentUser?.email?.split('@')[0] || '匿名玩家',
+                if (!currentUser) return false;
+                
+                var pendingScore = {
+                    user_id: currentUser.id,
+                    email: currentUser.email,
+                    username: (currentUser.user_metadata && currentUser.user_metadata.username) || 
+                              (currentUser.email ? currentUser.email.split('@')[0] : '匿名玩家'),
                     mode: currentMode,
-                    range: document.getElementById('number-range')?.value || '0-14',
-                    leaderboard_type: RANGE_CONFIG[document.getElementById('number-range')?.value || '0-14']?.leaderboardType,
+                    range: range,
+                    leaderboard_type: getLeaderboardType(currentMode, range),
                     score: gameScore,
                     questions_completed: questionsCompleted,
                     total_attempts: totalAttempts,
@@ -3722,9 +3934,10 @@ const MathGame = (function() {
                     created_at: new Date().toISOString()
                 };
                 
-                const pendingScores = JSON.parse(localStorage.getItem(`mathGameScores_${currentUser.id}_pending`) || '[]');
+                var pendingKey = 'mathGameScores_' + currentUser.id + '_pending';
+                var pendingScores = JSON.parse(localStorage.getItem(pendingKey) || '[]');
                 pendingScores.push(pendingScore);
-                localStorage.setItem(`mathGameScores_${currentUser.id}_pending`, JSON.stringify(pendingScores));
+                localStorage.setItem(pendingKey, JSON.stringify(pendingScores));
                 
                 syncState.pendingChanges = true;
                 saveSyncState();
@@ -3732,20 +3945,20 @@ const MathGame = (function() {
                 return false;
             }
             
-            const range = document.getElementById('number-range')?.value || '0-14';
-            const leaderboardType = RANGE_CONFIG[range]?.leaderboardType || 
-                                    (currentMode === 'standard' ? 'standard' : 
-                                     currentMode === 'challenge' ? 'challenge' : null);
+            var leaderboardType = getLeaderboardType(currentMode, range);
             
             if (!leaderboardType) {
                 console.log('当前模式不计入排行榜');
                 return false;
             }
             
-            const scoreData = {
+            var username = (currentUser.user_metadata && currentUser.user_metadata.username) || 
+                          (currentUser.email ? currentUser.email.split('@')[0] : '匿名玩家');
+            
+            var scoreData = {
                 user_id: currentUser.id,
                 email: currentUser.email,
-                username: currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || '匿名玩家',
+                username: username,
                 mode: currentMode,
                 range: range,
                 leaderboard_type: leaderboardType,
@@ -3758,12 +3971,12 @@ const MathGame = (function() {
                 created_at: new Date().toISOString()
             };
             
-            const { error } = await supabase
+            var result = await supabase
                 .from('game_scores')
                 .insert([scoreData]);
             
-            if (error) {
-                console.error('保存成绩到云端失败:', error);
+            if (result.error) {
+                console.error('保存成绩到云端失败:', result.error);
                 return false;
             }
             
@@ -3777,6 +3990,25 @@ const MathGame = (function() {
         }
     }
     
+    // ==================== 获取排行榜类型 ====================
+    function getLeaderboardType(gameMode, range) {
+        var difficultyMap = {
+            '0-9': 'easy',
+            '0-14': 'medium',
+            '5-18': 'hard'
+        };
+        
+        var difficulty = difficultyMap[range] || 'medium';
+        
+        if (gameMode === 'challenge') {
+            return 'challenge_' + difficulty;
+        } else if (gameMode === 'standard') {
+            return 'standard_' + difficulty;
+        }
+        
+        return null;
+    }
+    
     // ==================== 用户统计系统 ====================
     async function loadUserStats() {
         try {
@@ -3784,56 +4016,92 @@ const MathGame = (function() {
                 return null;
             }
             
-            const localStats = localStorage.getItem(`mathGameStats_${currentUser.id}`);
+            var localStatsKey = 'mathGameStats_' + currentUser.id;
+            var localStats = localStorage.getItem(localStatsKey);
             if (localStats) {
                 try {
-                    const stats = JSON.parse(localStats);
+                    var stats = JSON.parse(localStats);
                     if (stats.timestamp && (Date.now() - stats.timestamp) < CONFIG.CACHE_EXPIRY) {
                         return stats;
                     }
                 } catch (e) {}
             }
             
-            const { data: scores, error } = await supabase
+            var result = await supabase
                 .from('game_scores')
                 .select('*')
                 .eq('user_id', currentUser.id)
                 .order('created_at', { ascending: false });
             
-            if (error) {
-                console.error('加载用户统计失败:', error);
+            if (result.error) {
+                console.error('加载用户统计失败:', result.error);
                 return null;
             }
             
+            var scores = result.data;
             if (!scores || scores.length === 0) {
                 return null;
             }
             
-            const stats = {
-                totalGames: scores.length,
-                totalScore: scores.reduce((sum, s) => sum + (s.score || 0), 0),
-                totalQuestions: scores.reduce((sum, s) => sum + (s.questions_completed || 0), 0),
-                totalAttempts: scores.reduce((sum, s) => sum + (s.total_attempts || 0), 0),
-                totalCorrect: scores.reduce((sum, s) => sum + (s.correct_count || 0), 0),
-                bestScore: Math.max(...scores.map(s => s.score || 0)),
-                bestAccuracy: Math.max(...scores.map(s => s.accuracy || 0)),
-                totalTimeUsed: scores.reduce((sum, s) => sum + (s.time_used || 0), 0),
-                modeStats: {
-                    standard: scores.filter(s => s.mode === 'standard').length,
-                    challenge: scores.filter(s => s.mode === 'challenge').length,
-                    practice: scores.filter(s => s.mode === 'practice').length,
-                    custom: scores.filter(s => s.mode === 'custom').length
-                },
-                rangeStats: {
-                    easy: scores.filter(s => s.range === '0-9').length,
-                    standard: scores.filter(s => s.range === '0-14').length,
-                    challenge: scores.filter(s => s.range === '5-18').length
-                },
+            var totalGames = scores.length;
+            var totalScore = 0;
+            var totalQuestions = 0;
+            var totalAttempts = 0;
+            var totalCorrect = 0;
+            var bestScore = 0;
+            var bestAccuracy = 0;
+            var totalTimeUsed = 0;
+            
+            var modeStats = {
+                standard: 0,
+                challenge: 0,
+                practice: 0,
+                custom: 0
+            };
+            
+            var rangeStats = {
+                easy: 0,
+                standard: 0,
+                challenge: 0
+            };
+            
+            for (var i = 0; i < scores.length; i++) {
+                var s = scores[i];
+                totalScore += s.score || 0;
+                totalQuestions += s.questions_completed || 0;
+                totalAttempts += s.total_attempts || 0;
+                totalCorrect += s.correct_count || 0;
+                totalTimeUsed += s.time_used || 0;
+                
+                if ((s.score || 0) > bestScore) bestScore = s.score || 0;
+                if ((s.accuracy || 0) > bestAccuracy) bestAccuracy = s.accuracy || 0;
+                
+                if (s.mode === 'standard') modeStats.standard++;
+                else if (s.mode === 'challenge') modeStats.challenge++;
+                else if (s.mode === 'practice') modeStats.practice++;
+                else if (s.mode === 'custom') modeStats.custom++;
+                
+                if (s.range === '0-9') rangeStats.easy++;
+                else if (s.range === '0-14') rangeStats.standard++;
+                else if (s.range === '5-18') rangeStats.challenge++;
+            }
+            
+            var stats = {
+                totalGames: totalGames,
+                totalScore: totalScore,
+                totalQuestions: totalQuestions,
+                totalAttempts: totalAttempts,
+                totalCorrect: totalCorrect,
+                bestScore: bestScore,
+                bestAccuracy: bestAccuracy,
+                totalTimeUsed: totalTimeUsed,
+                modeStats: modeStats,
+                rangeStats: rangeStats,
                 recentGames: scores.slice(0, 10),
                 timestamp: Date.now()
             };
             
-            localStorage.setItem(`mathGameStats_${currentUser.id}`, JSON.stringify(stats));
+            localStorage.setItem(localStatsKey, JSON.stringify(stats));
             return stats;
         } catch (error) {
             console.error('加载用户统计异常:', error);
@@ -3850,7 +4118,7 @@ const MathGame = (function() {
     // ==================== 错题管理系统 ====================
     function loadWrongQuestions() {
         try {
-            const saved = localStorage.getItem('mathGameWrongQuestions');
+            var saved = localStorage.getItem('mathGameWrongQuestions');
             if (saved) {
                 wrongQuestions = JSON.parse(saved);
             } else {
@@ -3876,13 +4144,18 @@ const MathGame = (function() {
         try {
             loadWrongQuestions();
             
-            const existingQuestionIndex = wrongQuestions.findIndex(q => 
-                q.num1 === num1 && q.num2 === num2 && q.correctSum === correctSum
-            );
+            var existingIndex = -1;
+            for (var i = 0; i < wrongQuestions.length; i++) {
+                var q = wrongQuestions[i];
+                if (q.num1 === num1 && q.num2 === num2 && q.correctSum === correctSum) {
+                    existingIndex = i;
+                    break;
+                }
+            }
             
-            if (existingQuestionIndex >= 0) {
-                wrongQuestions[existingQuestionIndex].count++;
-                wrongQuestions[existingQuestionIndex].timestamp = new Date().toISOString();
+            if (existingIndex >= 0) {
+                wrongQuestions[existingIndex].count++;
+                wrongQuestions[existingIndex].timestamp = new Date().toISOString();
             } else {
                 wrongQuestions.push({
                     num1: num1,
@@ -3897,7 +4170,7 @@ const MathGame = (function() {
             saveWrongQuestions();
             
             if (currentUser && isSupabaseReady && !offlineMode) {
-                setTimeout(() => {
+                setTimeout(function() {
                     syncWrongQuestionToCloud(num1, num2, wrongSum, correctSum);
                 }, 100);
             }
@@ -3912,7 +4185,7 @@ const MathGame = (function() {
                 return false;
             }
             
-            const wrongQuestionData = {
+            var wrongQuestionData = {
                 user_id: currentUser.id,
                 email: currentUser.email,
                 num1: num1,
@@ -3924,7 +4197,7 @@ const MathGame = (function() {
                 updated_at: new Date().toISOString()
             };
             
-            const { data: existingData } = await supabase
+            var existingResult = await supabase
                 .from('wrong_questions')
                 .select('id, count')
                 .eq('user_id', currentUser.id)
@@ -3932,14 +4205,14 @@ const MathGame = (function() {
                 .eq('num2', num2)
                 .limit(1);
             
-            if (existingData && existingData.length > 0) {
+            if (existingResult.data && existingResult.data.length > 0) {
                 await supabase
                     .from('wrong_questions')
                     .update({
-                        count: (existingData[0].count || 1) + 1,
+                        count: (existingResult.data[0].count || 1) + 1,
                         updated_at: new Date().toISOString()
                     })
-                    .eq('id', existingData[0].id);
+                    .eq('id', existingResult.data[0].id);
             } else {
                 await supabase
                     .from('wrong_questions')
@@ -3962,12 +4235,13 @@ const MathGame = (function() {
             loadWrongQuestions();
             if (wrongQuestions.length === 0) return false;
             
-            let successCount = 0;
-            let failCount = 0;
+            var successCount = 0;
+            var failCount = 0;
             
-            for (const question of wrongQuestions) {
+            for (var i = 0; i < wrongQuestions.length; i++) {
+                var question = wrongQuestions[i];
                 try {
-                    const success = await syncWrongQuestionToCloud(
+                    var success = await syncWrongQuestionToCloud(
                         question.num1,
                         question.num2,
                         question.wrongSum,
@@ -3980,7 +4254,7 @@ const MathGame = (function() {
                         failCount++;
                     }
                     
-                    await new Promise(resolve => setTimeout(resolve, 50));
+                    await new Promise(function(resolve) { setTimeout(resolve, 50); });
                 } catch (error) {
                     console.error('同步单个错题失败:', error);
                     failCount++;
@@ -4001,38 +4275,48 @@ const MathGame = (function() {
                 return false;
             }
             
-            const { data, error } = await supabase
+            var result = await supabase
                 .from('wrong_questions')
                 .select('*')
                 .eq('user_id', currentUser.id)
                 .order('created_at', { ascending: false });
             
-            if (error) {
-                console.error('从云端加载错题失败:', error);
+            if (result.error) {
+                console.error('从云端加载错题失败:', result.error);
                 return false;
             }
             
-            if (!data || data.length === 0) {
+            if (!result.data || result.data.length === 0) {
                 return false;
             }
             
-            const cloudQuestions = data.map(item => ({
-                num1: item.num1,
-                num2: item.num2,
-                wrongSum: item.wrong_sum,
-                correctSum: item.correct_sum,
-                count: item.count || 1,
-                timestamp: item.created_at
-            }));
+            var cloudQuestions = [];
+            for (var i = 0; i < result.data.length; i++) {
+                var item = result.data[i];
+                cloudQuestions.push({
+                    num1: item.num1,
+                    num2: item.num2,
+                    wrongSum: item.wrong_sum,
+                    correctSum: item.correct_sum,
+                    count: item.count || 1,
+                    timestamp: item.created_at
+                });
+            }
             
             loadWrongQuestions();
             
-            for (const cloudQuestion of cloudQuestions) {
-                const existingIndex = wrongQuestions.findIndex(q => 
-                    q.num1 === cloudQuestion.num1 && 
-                    q.num2 === cloudQuestion.num2 && 
-                    q.correctSum === cloudQuestion.correctSum
-                );
+            for (var i = 0; i < cloudQuestions.length; i++) {
+                var cloudQuestion = cloudQuestions[i];
+                var existingIndex = -1;
+                for (var j = 0; j < wrongQuestions.length; j++) {
+                    var q = wrongQuestions[j];
+                    if (q.num1 === cloudQuestion.num1 && 
+                        q.num2 === cloudQuestion.num2 && 
+                        q.correctSum === cloudQuestion.correctSum) {
+                        existingIndex = j;
+                        break;
+                    }
+                }
                 
                 if (existingIndex >= 0) {
                     wrongQuestions[existingIndex].count = Math.max(
@@ -4059,111 +4343,111 @@ const MathGame = (function() {
     // ==================== 统计功能 ====================
     async function showStatistics() {
         try {
-            const statisticsContent = document.getElementById('statistics-content');
-            const statisticsModal = document.getElementById('statistics-modal');
-            const statisticsTitle = document.getElementById('statistics-title');
+            var statisticsContent = document.getElementById('statistics-content');
+            var statisticsModal = document.getElementById('statistics-modal');
+            var statisticsTitle = document.getElementById('statistics-title');
             
             if (!statisticsContent || !statisticsModal) return;
             
-            if (statisticsTitle) statisticsTitle.textContent = translations[currentLanguage].statisticsTitle;
+            if (statisticsTitle) statisticsTitle.textContent = getTranslation('statisticsTitle', '📊 统计分析');
             
-            statisticsContent.innerHTML = `<div style="text-align:center;padding:30px;">${translations[currentLanguage].loadingStats}</div>`;
+            statisticsContent.innerHTML = '<div style="text-align:center;padding:30px;">' + getTranslation('loadingStats', '加载统计信息中...') + '</div>';
             statisticsModal.style.display = 'flex';
             
-            let stats = null;
+            var stats = null;
             if (currentUser) {
                 stats = await loadUserStats();
             }
             
-            const sessionStats = calculateStatistics();
+            var sessionStats = calculateStatistics();
             
             if (stats) {
-                const avgAccuracy = stats.totalAttempts > 0 
+                var avgAccuracy = stats.totalAttempts > 0 
                     ? Math.round((stats.totalCorrect / stats.totalAttempts) * 100) 
                     : 0;
-                const avgTimePerQuestion = stats.totalQuestions > 0 
+                var avgTimePerQuestion = stats.totalQuestions > 0 
                     ? (stats.totalTimeUsed / stats.totalQuestions).toFixed(1) 
                     : 0;
                 
-                let html = `
+                var html = `
                     <div style="padding: 20px;">
-                        <h3 style="color: #4CAF50; margin-bottom: 15px;">${translations[currentLanguage].statisticsTitle}</h3>
+                        <h3 style="color: #4CAF50; margin-bottom: 15px;">${getTranslation('statisticsTitle', '📊 统计分析')}</h3>
                         
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
                             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                 <div style="font-size: 1.8em; margin-bottom: 5px;">🏆</div>
-                                <div style="font-size: 0.9em; opacity: 0.9;">${translations[currentLanguage].totalGames}</div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('totalGames', '总游戏次数')}</div>
                                 <div style="font-size: 2em; font-weight: bold;">${stats.totalGames}</div>
                             </div>
                             <div style="background: linear-gradient(135deg, #6b8cff 0%, #4a6cf7 100%); color: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                 <div style="font-size: 1.8em; margin-bottom: 5px;">💯</div>
-                                <div style="font-size: 0.9em; opacity: 0.9;">${translations[currentLanguage].bestScore}</div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('bestScore', '最佳得分')}</div>
                                 <div style="font-size: 2em; font-weight: bold;">${stats.bestScore}</div>
                             </div>
                             <div style="background: linear-gradient(135deg, #ff8c5a 0%, #ff6b4a 100%); color: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                 <div style="font-size: 1.8em; margin-bottom: 5px;">🎯</div>
-                                <div style="font-size: 0.9em; opacity: 0.9;">${translations[currentLanguage].bestAccuracy}</div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('bestAccuracy', '最佳正确率')}</div>
                                 <div style="font-size: 2em; font-weight: bold;">${stats.bestAccuracy}%</div>
                             </div>
                         </div>
                         
                         <div style="background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">📊 ${translations[currentLanguage].modeStats}</h4>
+                            <h4 style="margin-top: 0; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">📊 ${getTranslation('modeStats', '模式统计')}</h4>
                             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px;">
                                 <div style="text-align: center;">
                                     <div style="font-size: 1.5em; color: #4CAF50;">${stats.modeStats.standard}</div>
-                                    <div style="color: #666; font-size: 0.85em;">${translations[currentLanguage].modeStandard}</div>
+                                    <div style="color: #666; font-size: 0.85em;">${getTranslation('modeStandard', '📚 挑战30')}</div>
                                 </div>
                                 <div style="text-align: center;">
                                     <div style="font-size: 1.5em; color: #FF9800;">${stats.modeStats.challenge}</div>
-                                    <div style="color: #666; font-size: 0.85em;">${translations[currentLanguage].modeChallenge}</div>
+                                    <div style="color: #666; font-size: 0.85em;">${getTranslation('modeChallenge', '⚡ 激情90秒')}</div>
                                 </div>
                                 <div style="text-align: center;">
                                     <div style="font-size: 1.5em; color: #2196F3;">${stats.modeStats.practice}</div>
-                                    <div style="color: #666; font-size: 0.85em;">${translations[currentLanguage].modePractice}</div>
+                                    <div style="color: #666; font-size: 0.85em;">${getTranslation('modePractice', '🎯 练习模式')}</div>
                                 </div>
                                 <div style="text-align: center;">
                                     <div style="font-size: 1.5em; color: #9C27B0;">${stats.modeStats.custom}</div>
-                                    <div style="color: #666; font-size: 0.85em;">${translations[currentLanguage].modeCustom}</div>
+                                    <div style="color: #666; font-size: 0.85em;">${getTranslation('modeCustom', '⚙️ 自定义')}</div>
                                 </div>
                             </div>
                         </div>
                         
                         <div style="background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">⚡ ${translations[currentLanguage].accuracyLabel}</h4>
+                            <h4 style="margin-top: 0; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">⚡ ${getTranslation('accuracyLabel', '正确率')}</h4>
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                                 <div>
-                                    <div style="color: #666; margin-bottom: 5px;">${translations[currentLanguage].totalQuestions}</div>
+                                    <div style="color: #666; margin-bottom: 5px;">${getTranslation('totalQuestions', '总答题数')}</div>
                                     <div style="font-size: 1.8em; font-weight: bold; color: #333;">${stats.totalQuestions}</div>
                                 </div>
                                 <div>
-                                    <div style="color: #666; margin-bottom: 5px;">${translations[currentLanguage].totalCorrect}</div>
+                                    <div style="color: #666; margin-bottom: 5px;">${getTranslation('totalCorrect', '总正确数')}</div>
                                     <div style="font-size: 1.8em; font-weight: bold; color: #4CAF50;">${stats.totalCorrect}</div>
                                 </div>
                                 <div>
-                                    <div style="color: #666; margin-bottom: 5px;">${translations[currentLanguage].avgAccuracy}</div>
+                                    <div style="color: #666; margin-bottom: 5px;">${getTranslation('avgAccuracy', '平均正确率')}</div>
                                     <div style="font-size: 1.8em; font-weight: bold; color: #FF9800;">${avgAccuracy}%</div>
                                 </div>
                                 <div>
-                                    <div style="color: #666; margin-bottom: 5px;">${translations[currentLanguage].avgTimePerQuestion}</div>
+                                    <div style="color: #666; margin-bottom: 5px;">${getTranslation('avgTimePerQuestion', '平均每题用时')}</div>
                                     <div style="font-size: 1.8em; font-weight: bold; color: #2196F3;">${avgTimePerQuestion}s</div>
                                 </div>
                             </div>
                         </div>
                         
                         <div style="background: #f8f9fa; border-radius: 15px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; color: #333; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">🎮 ${translations[currentLanguage].myHistory}</h4>
+                            <h4 style="margin-top: 0; color: #333; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">🎮 ${getTranslation('myHistory', '我的历史')}</h4>
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                                 <div>
-                                    <div style="color: #666; font-size: 0.9em;">${translations[currentLanguage].scoreLabel}</div>
+                                    <div style="color: #666; font-size: 0.9em;">${getTranslation('scoreLabel', '得分')}</div>
                                     <div style="font-size: 1.5em; font-weight: bold; color: #4CAF50;">${score}</div>
                                 </div>
                                 <div>
-                                    <div style="color: #666; font-size: 0.9em;">${translations[currentLanguage].completedLabel}</div>
+                                    <div style="color: #666; font-size: 0.9em;">${getTranslation('completedLabel', '完成题数')}</div>
                                     <div style="font-size: 1.5em; font-weight: bold; color: #2196F3;">${completedQuestions}</div>
                                 </div>
                                 <div>
-                                    <div style="color: #666; font-size: 0.9em;">${translations[currentLanguage].accuracyLabel}</div>
+                                    <div style="color: #666; font-size: 0.9em;">${getTranslation('accuracyLabel', '正确率')}</div>
                                     <div style="font-size: 1.5em; font-weight: bold; color: #FF9800;">${sessionStats.accuracy}%</div>
                                 </div>
                             </div>
@@ -4174,26 +4458,26 @@ const MathGame = (function() {
             } else {
                 statisticsContent.innerHTML = `
                     <div style="padding: 20px;">
-                        <h3 style="color: #4CAF50; margin-bottom: 15px;">${translations[currentLanguage].statisticsTitle}</h3>
+                        <h3 style="color: #4CAF50; margin-bottom: 15px;">${getTranslation('statisticsTitle', '📊 统计分析')}</h3>
                         <div style="text-align: center; padding: 30px; background: #f8f9fa; border-radius: 15px;">
                             <div style="font-size: 4em; margin-bottom: 20px;">📊</div>
-                            <h4>${translations[currentLanguage].noHistoryStats}</h4>
-                            <p style="color: #666; margin-top: 10px;">${translations[currentLanguage].statsDescription}</p>
+                            <h4>${getTranslation('noHistoryStats', '暂无历史统计数据')}</h4>
+                            <p style="color: #666; margin-top: 10px;">${getTranslation('statsDescription', '完成游戏并保存成绩后，统计数据将显示在这里')}</p>
                         </div>
                         
                         <div style="margin-top: 30px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">🎮 ${translations[currentLanguage].myHistory}</h4>
+                            <h4 style="margin-top: 0; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">🎮 ${getTranslation('myHistory', '我的历史')}</h4>
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                                 <div>
-                                    <div style="color: #666; font-size: 0.9em;">${translations[currentLanguage].scoreLabel}</div>
+                                    <div style="color: #666; font-size: 0.9em;">${getTranslation('scoreLabel', '得分')}</div>
                                     <div style="font-size: 1.5em; font-weight: bold; color: #4CAF50;">${score}</div>
                                 </div>
                                 <div>
-                                    <div style="color: #666; font-size: 0.9em;">${translations[currentLanguage].completedLabel}</div>
+                                    <div style="color: #666; font-size: 0.9em;">${getTranslation('completedLabel', '完成题数')}</div>
                                     <div style="font-size: 1.5em; font-weight: bold; color: #2196F3;">${completedQuestions}</div>
                                 </div>
                                 <div>
-                                    <div style="color: #666; font-size: 0.9em;">${translations[currentLanguage].accuracyLabel}</div>
+                                    <div style="color: #666; font-size: 0.9em;">${getTranslation('accuracyLabel', '正确率')}</div>
                                     <div style="font-size: 1.5em; font-weight: bold; color: #FF9800;">${sessionStats.accuracy}%</div>
                                 </div>
                             </div>
@@ -4205,7 +4489,7 @@ const MathGame = (function() {
             statisticsModal.style.display = 'flex';
         } catch (error) {
             console.error('显示统计失败:', error);
-            showMessage(translations[currentLanguage].loadingStats, 'error');
+            showMessage(getTranslation('loadingStats', '加载统计信息中...'), 'error');
         }
     }
     
@@ -4218,15 +4502,34 @@ const MathGame = (function() {
     }
     
     // ==================== 排行榜功能 ====================
-    async function loadLeaderboardData(type = 'easy', sortBy = 'score', limit = 10) {
+    var paginationElements = null;
+    
+    async function loadLeaderboardData(type, sortBy, limit, offset) {
+        if (!type) type = 'challenge_easy';
+        if (!sortBy) sortBy = 'score';
+        if (!limit) limit = 10;
+        if (offset === undefined) offset = 0;
+        
         try {
             if (!isSupabaseReady || !supabase || offlineMode) {
+                // 离线模式返回本地缓存
+                var cached = localStorage.getItem('leaderboard_' + type + '_' + sortBy);
+                if (cached) {
+                    try {
+                        var cachedData = JSON.parse(cached);
+                        if (cachedData.timestamp && (Date.now() - cachedData.timestamp) < CONFIG.LEADERBOARD_CACHE_TIME) {
+                            leaderboardState.totalCount = cachedData.count || 0;
+                            leaderboardState.totalPages = Math.ceil(leaderboardState.totalCount / limit);
+                            return cachedData.data || [];
+                        }
+                    } catch (e) {}
+                }
                 return [];
             }
             
-            let query = supabase
+            var query = supabase
                 .from('game_scores')
-                .select('*')
+                .select('*', { count: 'exact' })
                 .eq('leaderboard_type', type);
             
             if (sortBy === 'score') {
@@ -4237,60 +4540,456 @@ const MathGame = (function() {
                 query = query.order('time_used', { ascending: true });
             }
             
-            query = query.order('created_at', { ascending: false }).limit(limit);
+            // 获取总数
+            var countResult = await query;
+            leaderboardState.totalCount = countResult.count || 0;
+            leaderboardState.totalPages = Math.ceil(leaderboardState.totalCount / limit);
             
-            const { data, error } = await query;
+            // 获取分页数据
+            var result = await query
+                .range(offset, offset + limit - 1);
             
-            if (error) {
-                console.error('加载排行榜数据失败:', error);
+            if (result.error) {
+                console.error('加载排行榜数据失败:', result.error);
                 return [];
             }
             
-            return data || [];
+            // 缓存数据
+            if (result.data) {
+                try {
+                    localStorage.setItem('leaderboard_' + type + '_' + sortBy, JSON.stringify({
+                        data: result.data,
+                        count: leaderboardState.totalCount,
+                        timestamp: Date.now()
+                    }));
+                } catch (e) {}
+            }
+            
+            return result.data || [];
         } catch (error) {
             console.error('加载排行榜数据异常:', error);
             return [];
         }
     }
     
-    async function loadUserBestInMode(type) {
+    async function loadUserBestInCombination(gameMode, difficulty) {
         try {
             if (!currentUser || !isSupabaseReady || !supabase || offlineMode) {
                 return null;
             }
             
-            const { data: bestScore } = await supabase
+            var leaderboardType = gameMode + '_' + difficulty;
+            
+            var bestScoreResult = await supabase
                 .from('game_scores')
                 .select('*')
                 .eq('user_id', currentUser.id)
-                .eq('leaderboard_type', type)
+                .eq('leaderboard_type', leaderboardType)
                 .order('score', { ascending: false })
                 .limit(1);
             
-            const { data: bestAccuracy } = await supabase
+            var bestAccuracyResult = await supabase
                 .from('game_scores')
                 .select('*')
                 .eq('user_id', currentUser.id)
-                .eq('leaderboard_type', type)
+                .eq('leaderboard_type', leaderboardType)
                 .order('accuracy', { ascending: false })
                 .limit(1);
             
-            const { data: bestTime } = await supabase
+            var bestTimeResult = await supabase
                 .from('game_scores')
                 .select('*')
                 .eq('user_id', currentUser.id)
-                .eq('leaderboard_type', type)
+                .eq('leaderboard_type', leaderboardType)
                 .order('time_used', { ascending: true })
                 .limit(1);
             
             return {
-                bestScore: bestScore && bestScore.length > 0 ? bestScore[0] : null,
-                bestAccuracy: bestAccuracy && bestAccuracy.length > 0 ? bestAccuracy[0] : null,
-                bestTime: bestTime && bestTime.length > 0 ? bestTime[0] : null
+                bestScore: bestScoreResult.data && bestScoreResult.data.length > 0 ? bestScoreResult.data[0] : null,
+                bestAccuracy: bestAccuracyResult.data && bestAccuracyResult.data.length > 0 ? bestAccuracyResult.data[0] : null,
+                bestTime: bestTimeResult.data && bestTimeResult.data.length > 0 ? bestTimeResult.data[0] : null
             };
         } catch (error) {
             console.error('加载用户最佳成绩失败:', error);
             return null;
+        }
+    }
+    
+    async function showLeaderboard() {
+        try {
+            var leaderboardContent = document.getElementById('leaderboard-content');
+            var leaderboardModal = document.getElementById('leaderboard-modal');
+            
+            if (!leaderboardContent || !leaderboardModal) return;
+            
+            leaderboardContent.innerHTML = '<div style="text-align:center;padding:30px;">' + getTranslation('loadingStats', '加载统计信息中...') + '</div>';
+            leaderboardModal.style.display = 'flex';
+            
+            // 重置排行榜状态
+            leaderboardState = {
+                currentGameMode: 'challenge',
+                currentDifficulty: 'easy',
+                currentPage: 1,
+                pageSize: parseInt((document.getElementById('leaderboard-limit') || { value: 10 }).value) || 10,
+                totalPages: 1,
+                totalCount: 0,
+                sortBy: 'score'
+            };
+            
+            // 加载数据
+            await loadLeaderboardForCurrentState();
+            
+            // 绑定事件（先移除旧监听器）
+            bindLeaderboardEvents();
+            
+        } catch (error) {
+            console.error('显示排行榜失败:', error);
+            showMessage(getTranslation('loadingStats', '加载统计信息中...'), 'error');
+        }
+    }
+    
+    async function loadLeaderboardForCurrentState() {
+        var container = document.getElementById('leaderboard-content');
+        if (!container) return;
+        
+        var gameMode = leaderboardState.currentGameMode;
+        var difficulty = leaderboardState.currentDifficulty;
+        var page = leaderboardState.currentPage;
+        var pageSize = leaderboardState.pageSize;
+        var sortBy = leaderboardState.sortBy;
+        
+        var leaderboardType = gameMode + '_' + difficulty;
+        var offset = (page - 1) * pageSize;
+        
+        var data = await loadLeaderboardData(leaderboardType, sortBy, pageSize, offset);
+        
+        // 获取用户最佳成绩
+        var userBest = null;
+        if (currentUser && !offlineMode) {
+            userBest = await loadUserBestInCombination(gameMode, difficulty);
+        }
+        
+        // 更新标题
+        var gameModeName = gameMode === 'challenge' ? 
+            getTranslation('leaderboardChallengeMode', '⚡ 激情90秒') : 
+            getTranslation('leaderboardStandardMode', '📚 挑战30');
+        
+        var difficultyKey = difficulty === 'easy' ? 'easyMode' : 
+                          difficulty === 'medium' ? 'standardMode' : 'challengeMode';
+        var difficultyName = getTranslation(difficultyKey, '');
+        
+        var titleElement = document.getElementById('leaderboard-dynamic-title');
+        if (titleElement) {
+            titleElement.textContent = gameModeName + ' · ' + difficultyName;
+        }
+        
+        // 生成HTML
+        var html = '<div style="padding: 10px;">' + generateLeaderboardTable(data, sortBy) + '</div>';
+        container.innerHTML = html;
+        
+        // 更新分页状态
+        updatePagination();
+        
+        // 更新用户最佳卡片
+        updateMyBestCard(userBest);
+        
+        // 更新登录提示
+        updateLoginPrompt();
+        
+        // 更新离线提示
+        updateOfflinePrompt();
+    }
+    
+    function generateLeaderboardTable(data, sortBy) {
+        if (!data || data.length === 0) {
+            return '<div class="leaderboard-empty">' + getTranslation('noData', '暂无数据') + '</div>';
+        }
+        
+        var rows = '';
+        for (var i = 0; i < data.length; i++) {
+            var item = data[i];
+            var isCurrentUser = currentUser && item.user_id === currentUser.id;
+            var globalRank = (leaderboardState.currentPage - 1) * leaderboardState.pageSize + i + 1;
+            var rankClass = globalRank === 1 ? 'first' : globalRank === 2 ? 'second' : globalRank === 3 ? 'third' : '';
+            var userClass = isCurrentUser ? 'current-user' : '';
+            
+            var medal = '';
+            if (globalRank === 1) medal = '🥇';
+            else if (globalRank === 2) medal = '🥈';
+            else if (globalRank === 3) medal = '🥉';
+            else medal = globalRank + '.';
+            
+            rows += `
+                <tr class="${rankClass} ${userClass}">
+                    <td>${medal}</td>
+                    <td>${item.username || (item.email ? item.email.split('@')[0] : '匿名')}</td>
+                    <td>${item.score}</td>
+                    <td>${item.accuracy}%</td>
+                    <td>${item.time_used}s</td>
+                    <td>${new Date(item.created_at).toLocaleDateString()}</td>
+                </tr>
+            `;
+        }
+        
+        var rankText = getTranslation('rank', '排名');
+        var playerText = getTranslation('player', '玩家');
+        var scoreText = getTranslation('score', '得分');
+        var accuracyText = getTranslation('accuracy', '准确率');
+        var timeText = getTranslation('time', '用时');
+        var dateText = getTranslation('date', '日期');
+        
+        return `
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>${rankText}</th>
+                        <th>${playerText}</th>
+                        <th>${scoreText}</th>
+                        <th>${accuracyText}</th>
+                        <th>${timeText}</th>
+                        <th>${dateText}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        `;
+    }
+    
+    function updatePagination() {
+        if (!paginationElements) {
+            paginationElements = {
+                prevBtn: document.getElementById('page-prev'),
+                nextBtn: document.getElementById('page-next'),
+                page1: document.getElementById('page-1'),
+                page2: document.getElementById('page-2'),
+                page3: document.getElementById('page-3')
+            };
+        }
+        
+        var prevBtn = paginationElements.prevBtn;
+        var nextBtn = paginationElements.nextBtn;
+        var page1 = paginationElements.page1;
+        var page2 = paginationElements.page2;
+        var page3 = paginationElements.page3;
+        
+        if (!prevBtn || !nextBtn || !page1 || !page2 || !page3) return;
+        
+        var currentPage = leaderboardState.currentPage;
+        var totalPages = leaderboardState.totalPages;
+        
+        // 更新上一页/下一页状态
+        prevBtn.disabled = currentPage <= 1;
+        prevBtn.classList.toggle('disabled', currentPage <= 1);
+        
+        nextBtn.disabled = currentPage >= totalPages;
+        nextBtn.classList.toggle('disabled', currentPage >= totalPages);
+        
+        // 更新页码显示
+        page1.textContent = '1';
+        page2.textContent = totalPages > 1 ? '2' : '-';
+        page3.textContent = totalPages > 2 ? '3' : '-';
+        
+        page1.classList.toggle('active', currentPage === 1);
+        page2.classList.toggle('active', currentPage === 2);
+        page3.classList.toggle('active', currentPage === 3);
+        
+        page2.disabled = totalPages < 2;
+        page3.disabled = totalPages < 3;
+    }
+    
+    function updateMyBestCard(userBest) {
+        var card = document.getElementById('my-best-card');
+        if (!card) return;
+        
+        if (userBest && currentUser) {
+            var scoreEl = document.getElementById('my-best-score');
+            var accuracyEl = document.getElementById('my-best-accuracy');
+            var timeEl = document.getElementById('my-best-time');
+            
+            if (scoreEl) scoreEl.textContent = (userBest.bestScore && userBest.bestScore.score) || 0;
+            if (accuracyEl) accuracyEl.textContent = ((userBest.bestAccuracy && userBest.bestAccuracy.accuracy) || 0) + '%';
+            if (timeEl) timeEl.textContent = ((userBest.bestTime && userBest.bestTime.time_used) || 0) + 's';
+            
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    }
+    
+    function updateLoginPrompt() {
+        var prompt = document.getElementById('login-prompt');
+        if (!prompt) return;
+        
+        if (!currentUser && !offlineMode) {
+            prompt.style.display = 'block';
+        } else {
+            prompt.style.display = 'none';
+        }
+    }
+    
+    function updateOfflinePrompt() {
+        var prompt = document.getElementById('leaderboard-offline');
+        if (!prompt) return;
+        
+        if (offlineMode) {
+            prompt.style.display = 'block';
+        } else {
+            prompt.style.display = 'none';
+        }
+    }
+    
+    function bindLeaderboardEvents() {
+        // 游戏模式选项卡
+        var challengeModeBtn = document.getElementById('tab-challenge-mode');
+        if (challengeModeBtn) {
+            challengeModeBtn.removeEventListener('click', handleChallengeModeClick);
+            challengeModeBtn.addEventListener('click', handleChallengeModeClick);
+        }
+        
+        var standardModeBtn = document.getElementById('tab-standard-mode');
+        if (standardModeBtn) {
+            standardModeBtn.removeEventListener('click', handleStandardModeClick);
+            standardModeBtn.addEventListener('click', handleStandardModeClick);
+        }
+        
+        // 难度选项卡
+        var easyBtn = document.getElementById('tab-easy');
+        if (easyBtn) {
+            easyBtn.removeEventListener('click', handleEasyClick);
+            easyBtn.addEventListener('click', handleEasyClick);
+        }
+        
+        var mediumBtn = document.getElementById('tab-medium');
+        if (mediumBtn) {
+            mediumBtn.removeEventListener('click', handleMediumClick);
+            mediumBtn.addEventListener('click', handleMediumClick);
+        }
+        
+        var hardBtn = document.getElementById('tab-hard');
+        if (hardBtn) {
+            hardBtn.removeEventListener('click', handleHardClick);
+            hardBtn.addEventListener('click', handleHardClick);
+        }
+        
+        // 刷新按钮
+        var refreshBtn = document.getElementById('sync-leaderboard-btn');
+        if (refreshBtn) {
+            refreshBtn.removeEventListener('click', handleRefreshClick);
+            refreshBtn.addEventListener('click', handleRefreshClick);
+        }
+        
+        // 显示数量选择
+        var limitSelect = document.getElementById('leaderboard-limit');
+        if (limitSelect) {
+            limitSelect.removeEventListener('change', handleLimitChange);
+            limitSelect.addEventListener('change', handleLimitChange);
+        }
+        
+        // 分页按钮
+        var prevBtn = document.getElementById('page-prev');
+        if (prevBtn) {
+            prevBtn.removeEventListener('click', handlePrevClick);
+            prevBtn.addEventListener('click', handlePrevClick);
+        }
+        
+        var nextBtn = document.getElementById('page-next');
+        if (nextBtn) {
+            nextBtn.removeEventListener('click', handleNextClick);
+            nextBtn.addEventListener('click', handleNextClick);
+        }
+        
+        var page1Btn = document.getElementById('page-1');
+        if (page1Btn) {
+            page1Btn.removeEventListener('click', handlePage1Click);
+            page1Btn.addEventListener('click', handlePage1Click);
+        }
+        
+        var page2Btn = document.getElementById('page-2');
+        if (page2Btn) {
+            page2Btn.removeEventListener('click', handlePage2Click);
+            page2Btn.addEventListener('click', handlePage2Click);
+        }
+        
+        var page3Btn = document.getElementById('page-3');
+        if (page3Btn) {
+            page3Btn.removeEventListener('click', handlePage3Click);
+            page3Btn.addEventListener('click', handlePage3Click);
+        }
+    }
+    
+    function handleChallengeModeClick() {
+        leaderboardState.currentGameMode = 'challenge';
+        leaderboardState.currentPage = 1;
+        loadLeaderboardForCurrentState();
+    }
+    
+    function handleStandardModeClick() {
+        leaderboardState.currentGameMode = 'standard';
+        leaderboardState.currentPage = 1;
+        loadLeaderboardForCurrentState();
+    }
+    
+    function handleEasyClick() {
+        leaderboardState.currentDifficulty = 'easy';
+        leaderboardState.currentPage = 1;
+        loadLeaderboardForCurrentState();
+    }
+    
+    function handleMediumClick() {
+        leaderboardState.currentDifficulty = 'medium';
+        leaderboardState.currentPage = 1;
+        loadLeaderboardForCurrentState();
+    }
+    
+    function handleHardClick() {
+        leaderboardState.currentDifficulty = 'hard';
+        leaderboardState.currentPage = 1;
+        loadLeaderboardForCurrentState();
+    }
+    
+    function handleRefreshClick() {
+        loadLeaderboardForCurrentState();
+        showMessage(getTranslation('syncSuccess', '✅ 同步成功'), 'success');
+    }
+    
+    function handleLimitChange(e) {
+        leaderboardState.pageSize = parseInt(e.target.value);
+        leaderboardState.currentPage = 1;
+        loadLeaderboardForCurrentState();
+    }
+    
+    function handlePrevClick() {
+        if (leaderboardState.currentPage > 1) {
+            leaderboardState.currentPage--;
+            loadLeaderboardForCurrentState();
+        }
+    }
+    
+    function handleNextClick() {
+        if (leaderboardState.currentPage < leaderboardState.totalPages) {
+            leaderboardState.currentPage++;
+            loadLeaderboardForCurrentState();
+        }
+    }
+    
+    function handlePage1Click() {
+        leaderboardState.currentPage = 1;
+        loadLeaderboardForCurrentState();
+    }
+    
+    function handlePage2Click() {
+        if (leaderboardState.totalPages >= 2) {
+            leaderboardState.currentPage = 2;
+            loadLeaderboardForCurrentState();
+        }
+    }
+    
+    function handlePage3Click() {
+        if (leaderboardState.totalPages >= 3) {
+            leaderboardState.currentPage = 3;
+            loadLeaderboardForCurrentState();
         }
     }
     
@@ -4300,21 +4999,21 @@ const MathGame = (function() {
                 return;
             }
             
-            const { data, error } = await supabase
+            var result = await supabase
                 .from('game_scores')
                 .select('*')
                 .eq('user_id', currentUser.id)
                 .order('created_at', { ascending: false })
                 .limit(100);
             
-            if (error) {
-                console.error('加载用户成绩失败:', error);
+            if (result.error) {
+                console.error('加载用户成绩失败:', result.error);
                 return;
             }
             
-            if (data && data.length > 0) {
-                localStorage.setItem(`mathGameScores_${currentUser.id}`, JSON.stringify({
-                    scores: data,
+            if (result.data && result.data.length > 0) {
+                localStorage.setItem('mathGameScores_' + currentUser.id, JSON.stringify({
+                    scores: result.data,
                     timestamp: Date.now()
                 }));
             }
@@ -4323,242 +5022,22 @@ const MathGame = (function() {
         }
     }
     
-    async function showLeaderboard() {
-        try {
-            const leaderboardContent = document.getElementById('leaderboard-content');
-            const leaderboardModal = document.getElementById('leaderboard-modal');
-            const leaderboardTitle = document.getElementById('leaderboard-title');
-            
-            if (!leaderboardContent || !leaderboardModal) return;
-            
-            if (leaderboardTitle) leaderboardTitle.textContent = translations[currentLanguage].leaderboardTitle;
-            
-            leaderboardContent.innerHTML = `<div style="text-align:center;padding:30px;">${translations[currentLanguage].loadingStats}</div>`;
-            leaderboardModal.style.display = 'flex';
-            
-            if (isSuperAdmin) {
-                await showNationalLeaderboard(leaderboardContent);
-            } else {
-                await showSchoolLeaderboard(leaderboardContent);
-            }
-            
-        } catch (error) {
-            console.error('显示排行榜失败:', error);
-            showMessage(translations[currentLanguage].loadingStats, 'error');
-        }
-    }
-    
-    async function showNationalLeaderboard(container) {
-        try {
-            const { data: stats } = await supabase
-                .from('admin_dashboard_stats')
-                .select('*')
-                .single();
-            
-            const { data: nationalData } = await supabase
-                .rpc('get_leaderboard', {
-                    p_leaderboard_type: 'national',
-                    p_mode: 'challenge',
-                    p_limit: 50
-                });
-            
-            const html = `
-                <div style="padding: 20px;">
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px;">
-                            <div style="font-size: 2em;">🏫</div>
-                            <div style="font-size: 1.5em; font-weight: bold;">${stats?.total_schools || 0}</div>
-                            <div style="opacity: 0.9;">合作学校</div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #ff8c5a 0%, #ff6b4a 100%); color: white; padding: 20px; border-radius: 15px;">
-                            <div style="font-size: 2em;">👥</div>
-                            <div style="font-size: 1.5em; font-weight: bold;">${stats?.total_players || 0}</div>
-                            <div style="opacity: 0.9;">总玩家数</div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 20px; border-radius: 15px;">
-                            <div style="font-size: 2em;">🎮</div>
-                            <div style="font-size: 1.5em; font-weight: bold;">${stats?.total_games || 0}</div>
-                            <div style="opacity: 0.9;">总游戏局数</div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; padding: 20px; border-radius: 15px;">
-                            <div style="font-size: 2em;">🎯</div>
-                            <div style="font-size: 1.5em; font-weight: bold;">${stats?.avg_accuracy || 0}%</div>
-                            <div style="opacity: 0.9;">平均正确率</div>
-                        </div>
-                    </div>
-                    
-                    <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                        <h4 style="display: flex; align-items: center; margin-top: 0; margin-bottom: 20px;">
-                            <span style="background: #4CAF50; color: white; width: 32px; height: 32px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🏆</span>
-                            全国总排行榜（所有学校）
-                        </h4>
-                        
-                        <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead>
-                                    <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
-                                        <th style="padding: 12px; text-align: left;">排名</th>
-                                        <th style="padding: 12px; text-align: left;">玩家</th>
-                                        <th style="padding: 12px; text-align: left;">学校</th>
-                                        <th style="padding: 12px; text-align: left;">班级</th>
-                                        <th style="padding: 12px; text-align: left;">得分</th>
-                                        <th style="padding: 12px; text-align: left;">正确率</th>
-                                        <th style="padding: 12px; text-align: left;">用时</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${nationalData?.leaderboard?.map((item, index) => `
-                                        <tr style="border-bottom: 1px solid #f0f0f0;">
-                                            <td style="padding: 12px;">
-                                                <span style="font-weight: bold; color: ${index < 3 ? ['#FFD700', '#C0C0C0', '#CD7F32'][index] : '#666'};">
-                                                    ${index < 3 ? ['🥇', '🥈', '🥉'][index] : `${index+1}.`}
-                                                </span>
-                                            </td>
-                                            <td style="padding: 12px; font-weight: bold;">${item.username}</td>
-                                            <td style="padding: 12px;">${item.school_name}</td>
-                                            <td style="padding: 12px;">${item.class_name || '-'}</td>
-                                            <td style="padding: 12px; color: #4CAF50; font-weight: bold;">${item.score}</td>
-                                            <td style="padding: 12px;">${item.accuracy}%</td>
-                                            <td style="padding: 12px;">${item.time_used}s</td>
-                                        </tr>
-                                    `).join('') || '<tr><td colspan="7" style="text-align:center;padding:30px;">暂无数据</td></tr>'}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 20px; text-align: right; color: #666; font-size: 0.85em;">
-                        更新时间: ${new Date().toLocaleString()}
-                    </div>
-                </div>
-            `;
-            
-            container.innerHTML = html;
-        } catch (error) {
-            console.error('加载全国排行榜失败:', error);
-            container.innerHTML = `<div style="text-align:center;padding:30px;color:#ff4444;">加载失败: ${error.message}</div>`;
-        }
-    }
-    
-    async function showSchoolLeaderboard(container) {
-        let easyScore = [], easyAccuracy = [], easySpeed = [];
-        let standardScore = [], standardAccuracy = [], standardSpeed = [];
-        let challengeScore = [], challengeAccuracy = [], challengeSpeed = [];
-        
-        if (!offlineMode) {
-            [easyScore, easyAccuracy, easySpeed,
-             standardScore, standardAccuracy, standardSpeed,
-             challengeScore, challengeAccuracy, challengeSpeed] = await Promise.all([
-                loadLeaderboardData('easy', 'score', 10),
-                loadLeaderboardData('easy', 'accuracy', 10),
-                loadLeaderboardData('easy', 'time', 10),
-                loadLeaderboardData('standard', 'score', 10),
-                loadLeaderboardData('standard', 'accuracy', 10),
-                loadLeaderboardData('standard', 'time', 10),
-                loadLeaderboardData('challenge', 'score', 10),
-                loadLeaderboardData('challenge', 'accuracy', 10),
-                loadLeaderboardData('challenge', 'time', 10)
-            ]);
-        }
-        
-        let userEasy = null;
-        let userStandard = null;
-        let userChallenge = null;
-        
-        if (currentUser && !offlineMode) {
-            [userEasy, userStandard, userChallenge] = await Promise.all([
-                loadUserBestInMode('easy'),
-                loadUserBestInMode('standard'),
-                loadUserBestInMode('challenge')
-            ]);
-        }
-        
-        let html = `
-            <div style="padding: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
-                    <h3 style="color: #4CAF50; margin: 0; display: flex; align-items: center;">
-                        <span style="font-size: 2em; margin-right: 10px;">🏆</span>
-                        ${translations[currentLanguage].leaderboardTitle}
-                    </h3>
-                    <button id="sync-leaderboard-btn" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                        🔄 ${translations[currentLanguage].refresh}
-                    </button>
-                </div>
-                
-                <div style="margin-bottom: 40px;">
-                    <h4 style="display: flex; align-items: center; color: #8BC34A; border-bottom: 3px solid #8BC34A; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                        <span style="background: #8BC34A; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🟢</span>
-                        <span style="font-size: clamp(1.1em, 4vw, 1.3em);">${translations[currentLanguage].leaderboardEasy}</span>
-                        <span style="font-size: 0.8em; background: #8BC34A20; color: #8BC34A; padding: 4px 12px; border-radius: 20px;">
-                            ${currentLanguage === 'zh' ? '0-9' : '0-9'}
-                        </span>
-                    </h4>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" class="leaderboard-grid">
-                        ${generateLeaderboardCard('easy', 'score', easyScore, translations[currentLanguage].leaderboardEasyScore, '#8BC34A')}
-                        ${generateLeaderboardCard('easy', 'accuracy', easyAccuracy, translations[currentLanguage].leaderboardEasyAccuracy, '#8BC34A')}
-                        ${generateLeaderboardCard('easy', 'time', easySpeed, translations[currentLanguage].leaderboardEasySpeed, '#8BC34A')}
-                    </div>
-                </div>
-                
-                <div style="margin-bottom: 40px;">
-                    <h4 style="display: flex; align-items: center; color: #FF9800; border-bottom: 3px solid #FF9800; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                        <span style="background: #FF9800; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🟠</span>
-                        <span style="font-size: clamp(1.1em, 4vw, 1.3em);">${translations[currentLanguage].leaderboardStandard}</span>
-                        <span style="font-size: 0.8em; background: #FF980020; color: #FF9800; padding: 4px 12px; border-radius: 20px;">
-                            ${currentLanguage === 'zh' ? '30题' : '30 Qs'}
-                        </span>
-                    </h4>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" class="leaderboard-grid">
-                        ${generateLeaderboardCard('standard', 'score', standardScore, translations[currentLanguage].leaderboardStandardScore, '#FF9800')}
-                        ${generateLeaderboardCard('standard', 'accuracy', standardAccuracy, translations[currentLanguage].leaderboardStandardAccuracy, '#FF9800')}
-                        ${generateLeaderboardCard('standard', 'time', standardSpeed, translations[currentLanguage].leaderboardStandardSpeed, '#FF9800')}
-                    </div>
-                </div>
-                
-                <div style="margin-bottom: 40px;">
-                    <h4 style="display: flex; align-items: center; color: #f44336; border-bottom: 3px solid #f44336; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                        <span style="background: #f44336; color: white; width: 36px; height: 36px; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center;">🔴</span>
-                        <span style="font-size: clamp(1.1em, 4vw, 1.3em);">${translations[currentLanguage].leaderboardChallenge}</span>
-                        <span style="font-size: 0.8em; background: #f4433620; color: #f44336; padding: 4px 12px; border-radius: 20px;">
-                            ${currentLanguage === 'zh' ? '90秒' : '90s'}
-                        </span>
-                    </h4>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;" class="leaderboard-grid">
-                        ${generateLeaderboardCard('challenge', 'score', challengeScore, translations[currentLanguage].leaderboardChallengeScore, '#f44336')}
-                        ${generateLeaderboardCard('challenge', 'accuracy', challengeAccuracy, translations[currentLanguage].leaderboardChallengeAccuracy, '#f44336')}
-                        ${generateLeaderboardCard('challenge', 'time', challengeSpeed, translations[currentLanguage].leaderboardChallengeSpeed, '#f44336')}
-                    </div>
-                </div>
-                
-                ${currentUser ? generateUserBestSection(userEasy, userStandard, userChallenge) : generateLoginPrompt()}
-                ${offlineMode ? '<div style="margin-top: 20px; text-align: center; color: #666; padding: 15px; background: #f8f9fa; border-radius: 12px;">📴 ' + (currentLanguage === 'zh' ? '离线模式：排行榜数据不可用' : 'Offline mode: Leaderboard data unavailable') + '</div>' : ''}
-            </div>
-        `;
-        
-        container.innerHTML = html;
-        
-        document.getElementById('sync-leaderboard-btn')?.addEventListener('click', async () => {
-            showLeaderboard();
-            showMessage(translations[currentLanguage].syncSuccess, 'success');
-        });
-    }
-    
     function generateLeaderboardCard(mode, type, scores, title, color) {
-        const getValue = (score) => {
+        var getValue = function(score) {
             if (type === 'score') return score.score;
             if (type === 'accuracy') return score.accuracy + '%';
             if (type === 'time') return score.time_used + 's';
             return '';
         };
         
-        const getMedal = (index) => {
+        var getMedal = function(index) {
             if (index === 0) return '🥇';
             if (index === 1) return '🥈';
             if (index === 2) return '🥉';
-            return `${index + 1}.`;
+            return (index + 1) + '.';
         };
         
-        let cardHtml = `
+        var cardHtml = `
             <div style="background: white; border-radius: 16px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 5px solid ${color};">
                 <h5 style="display: flex; align-items: center; justify-content: space-between; margin-top: 0; margin-bottom: 15px; color: #333; flex-wrap: wrap; gap: 10px;">
                     <span style="font-weight: bold; font-size: clamp(0.9em, 3.5vw, 1.1em);">${title}</span>
@@ -4572,31 +5051,32 @@ const MathGame = (function() {
             cardHtml += `
                 <div style="text-align: center; padding: 25px 10px; background: #f8f9fa; border-radius: 12px;">
                     <div style="font-size: 2.5em; margin-bottom: 10px; opacity: 0.5;">🏆</div>
-                    <p style="color: #999; margin: 0; font-size: 0.9em;">${translations[currentLanguage].noData}</p>
+                    <p style="color: #999; margin: 0; font-size: 0.9em;">${getTranslation('noData', '暂无数据')}</p>
                 </div>
             `;
         } else {
-            cardHtml += `<div style="display: flex; flex-direction: column; gap: 10px;">`;
+            cardHtml += '<div style="display: flex; flex-direction: column; gap: 10px;">';
             
-            scores.slice(0, 5).forEach((score, index) => {
-                const isCurrentUser = currentUser && score.user_id === currentUser.id;
-                const medalColor = index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : 'transparent';
+            for (var i = 0; i < Math.min(scores.length, 5); i++) {
+                var score = scores[i];
+                var isCurrentUser = currentUser && score.user_id === currentUser.id;
+                var medalColor = i === 0 ? '#FFD700' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'transparent';
                 
                 cardHtml += `
                     <div style="display: flex; align-items: center; justify-content: space-between; 
                                 padding: 8px 12px; 
-                                background: ${isCurrentUser ? '#FFF9C4' : index % 2 === 0 ? '#fafafa' : 'white'};
+                                background: ${isCurrentUser ? '#FFF9C4' : i % 2 === 0 ? '#fafafa' : 'white'};
                                 border-radius: 10px;
                                 border-left: 4px solid ${medalColor};
                                 flex-wrap: wrap;
                                 gap: 8px;">
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                            <span style="font-weight: bold; color: ${index < 3 ? '#333' : '#999'}; min-width: 30px;">
-                                ${getMedal(index)}
+                            <span style="font-weight: bold; color: ${i < 3 ? '#333' : '#999'}; min-width: 30px;">
+                                ${getMedal(i)}
                             </span>
                             <span style="font-weight: ${isCurrentUser ? 'bold' : 'normal'}; color: ${isCurrentUser ? '#4CAF50' : '#333'}; font-size: clamp(0.8em, 3vw, 0.9em);">
-                                ${score.username || score.email?.split('@')[0] || '匿名'}
-                                ${isCurrentUser ? `<span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7em; margin-left: 8px;">${translations[currentLanguage].player}</span>` : ''}
+                                ${score.username || (score.email ? score.email.split('@')[0] : '匿名')}
+                                ${isCurrentUser ? '<span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7em; margin-left: 8px;">' + getTranslation('player', '玩家') + '</span>' : ''}
                             </span>
                         </div>
                         <span style="font-weight: bold; color: ${color}; background: ${color}10; padding: 4px 12px; border-radius: 20px; font-size: clamp(0.8em, 3vw, 0.9em);">
@@ -4604,25 +5084,34 @@ const MathGame = (function() {
                         </span>
                     </div>
                 `;
-            });
+            }
             
-            cardHtml += `</div>`;
+            cardHtml += '</div>';
         }
         
-        cardHtml += `</div>`;
+        cardHtml += '</div>';
         return cardHtml;
     }
     
     function generateUserBestSection(userEasy, userStandard, userChallenge) {
+        var myBestText = getTranslation('myBest', '我的最佳');
+        var scoreText = getTranslation('score', '得分');
+        var accuracyText = getTranslation('accuracy', '准确率');
+        var timeText = getTranslation('time', '用时');
+        var easyModeText = getTranslation('easyMode', '简单模式');
+        var standardModeText = getTranslation('standardMode', '标准模式');
+        var challengeModeText = getTranslation('challengeMode', '困难模式');
+        
         return `
             <div style="margin-top: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px; padding: clamp(20px, 5vw, 25px); box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                     <h4 style="margin: 0; color: white; display: flex; align-items: center; font-size: clamp(1.1em, 4vw, 1.3em);">
                         <span style="background: rgba(255,255,255,0.2); width: 45px; height: 45px; border-radius: 23px; display: inline-flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 1.3em;">👤</span>
-                        ${translations[currentLanguage].myBest}
+                        ${myBestText}
                     </h4>
                     <span style="background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-size: 0.9em;">
-                        ${currentUser?.user_metadata?.username || currentUser?.email?.split('@')[0] || translations[currentLanguage].player}
+                        ${(currentUser && currentUser.user_metadata && currentUser.user_metadata.username) || 
+                          (currentUser && currentUser.email ? currentUser.email.split('@')[0] : getTranslation('player', '玩家'))}
                     </span>
                 </div>
                 
@@ -4630,20 +5119,20 @@ const MathGame = (function() {
                     <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 18px; backdrop-filter: blur(5px);">
                         <div style="display: flex; align-items: center; margin-bottom: 15px;">
                             <span style="background: #8BC34A; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🟢</span>
-                            <span style="font-weight: bold;">${translations[currentLanguage].easyMode}</span>
+                            <span style="font-weight: bold;">${easyModeText}</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
                             <div>
-                                <div style="font-size: 0.8em; opacity: 0.9;">🏆 ${translations[currentLanguage].score}</div>
-                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userEasy?.bestScore?.score || 0}</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🏆 ${scoreText}</div>
+                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userEasy && userEasy.bestScore ? userEasy.bestScore.score : 0}</div>
                             </div>
                             <div>
-                                <div style="font-size: 0.8em; opacity: 0.9;">🎯 ${translations[currentLanguage].accuracy}</div>
-                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userEasy?.bestAccuracy?.accuracy || 0}%</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🎯 ${accuracyText}</div>
+                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userEasy && userEasy.bestAccuracy ? userEasy.bestAccuracy.accuracy : 0}%</div>
                             </div>
                             <div>
-                                <div style="font-size: 0.8em; opacity: 0.9;">⚡ ${translations[currentLanguage].time}</div>
-                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userEasy?.bestTime?.time_used || 0}s</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">⚡ ${timeText}</div>
+                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userEasy && userEasy.bestTime ? userEasy.bestTime.time_used : 0}s</div>
                             </div>
                         </div>
                     </div>
@@ -4651,20 +5140,20 @@ const MathGame = (function() {
                     <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 18px; backdrop-filter: blur(5px);">
                         <div style="display: flex; align-items: center; margin-bottom: 15px;">
                             <span style="background: #FF9800; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🟠</span>
-                            <span style="font-weight: bold;">${translations[currentLanguage].standardMode}</span>
+                            <span style="font-weight: bold;">${standardModeText}</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
                             <div>
-                                <div style="font-size: 0.8em; opacity: 0.9;">🏆 ${translations[currentLanguage].score}</div>
-                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userStandard?.bestScore?.score || 0}</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🏆 ${scoreText}</div>
+                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userStandard && userStandard.bestScore ? userStandard.bestScore.score : 0}</div>
                             </div>
                             <div>
-                                <div style="font-size: 0.8em; opacity: 0.9;">🎯 ${translations[currentLanguage].accuracy}</div>
-                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userStandard?.bestAccuracy?.accuracy || 0}%</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🎯 ${accuracyText}</div>
+                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userStandard && userStandard.bestAccuracy ? userStandard.bestAccuracy.accuracy : 0}%</div>
                             </div>
                             <div>
-                                <div style="font-size: 0.8em; opacity: 0.9;">⚡ ${translations[currentLanguage].time}</div>
-                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userStandard?.bestTime?.time_used || 0}s</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">⚡ ${timeText}</div>
+                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userStandard && userStandard.bestTime ? userStandard.bestTime.time_used : 0}s</div>
                             </div>
                         </div>
                     </div>
@@ -4672,20 +5161,20 @@ const MathGame = (function() {
                     <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 18px; backdrop-filter: blur(5px);">
                         <div style="display: flex; align-items: center; margin-bottom: 15px;">
                             <span style="background: #f44336; width: 30px; height: 30px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px;">🔴</span>
-                            <span style="font-weight: bold;">${translations[currentLanguage].challengeMode}</span>
+                            <span style="font-weight: bold;">${challengeModeText}</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
                             <div>
-                                <div style="font-size: 0.8em; opacity: 0.9;">🏆 ${translations[currentLanguage].score}</div>
-                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userChallenge?.bestScore?.score || 0}</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🏆 ${scoreText}</div>
+                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userChallenge && userChallenge.bestScore ? userChallenge.bestScore.score : 0}</div>
                             </div>
                             <div>
-                                <div style="font-size: 0.8em; opacity: 0.9;">🎯 ${translations[currentLanguage].accuracy}</div>
-                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userChallenge?.bestAccuracy?.accuracy || 0}%</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">🎯 ${accuracyText}</div>
+                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userChallenge && userChallenge.bestAccuracy ? userChallenge.bestAccuracy.accuracy : 0}%</div>
                             </div>
                             <div>
-                                <div style="font-size: 0.8em; opacity: 0.9;">⚡ ${translations[currentLanguage].time}</div>
-                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userChallenge?.bestTime?.time_used || 0}s</div>
+                                <div style="font-size: 0.8em; opacity: 0.9;">⚡ ${timeText}</div>
+                                <div style="font-size: clamp(1.2em, 4vw, 1.4em); font-weight: bold;">${userChallenge && userChallenge.bestTime ? userChallenge.bestTime.time_used : 0}s</div>
                             </div>
                         </div>
                     </div>
@@ -4694,8 +5183,8 @@ const MathGame = (function() {
                 <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
                     <span style="background: rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 20px; font-size: 0.85em;">
                         ${syncState.lastSyncTime && !offlineMode ? 
-                            `☁️ ${translations[currentLanguage].lastSync}: ${new Date(syncState.lastSyncTime).toLocaleTimeString()}` : 
-                            offlineMode ? `📴 ${translations[currentLanguage].offlineMode}` : `☁️ ${translations[currentLanguage].lastSync}: -`}
+                            '☁️ ' + getTranslation('lastSync', '上次同步') + ': ' + new Date(syncState.lastSyncTime).toLocaleTimeString() : 
+                            offlineMode ? '📴 ' + getTranslation('offlineMode', '离线模式') : '☁️ ' + getTranslation('lastSync', '上次同步') + ': -'}
                     </span>
                 </div>
             </div>
@@ -4706,10 +5195,10 @@ const MathGame = (function() {
         return `
             <div style="margin-top: 40px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); border-radius: 20px; padding: 30px; text-align: center; color: white;">
                 <div style="font-size: 3.5em; margin-bottom: 15px;">🔐</div>
-                <h4 style="margin: 0 0 10px 0; color: white; font-size: clamp(1.1em, 4vw, 1.3em);">${translations[currentLanguage].needLogin}</h4>
-                <p style="opacity: 0.9; margin-bottom: 20px;">${translations[currentLanguage].loginPrompt}</p>
-                <button onclick="MathGame.showAuthModal()" style="background: white; color: #495057; border: none; padding: 12px 35px; border-radius: 30px; font-size: clamp(0.9em, 3.5vw, 1.1em); font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease;">
-                    🔐 ${translations[currentLanguage].loginNow}
+                <h4 style="margin: 0 0 10px 0; color: white; font-size: clamp(1.1em, 4vw, 1.3em);">${getTranslation('needLogin', '请先登录后再申请教师账号')}</h4>
+                <p style="opacity: 0.9; margin-bottom: 20px;">${getTranslation('loginPrompt', '立即登录，与其他玩家一较高下！')}</p>
+                <button onclick="if(window.MathGame) window.MathGame.showAuthModal(); else setTimeout(function(){ if(window.MathGame) window.MathGame.showAuthModal(); }, 500);" style="background: white; color: #495057; border: none; padding: 12px 35px; border-radius: 30px; font-size: clamp(0.9em, 3.5vw, 1.1em); font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease;">
+                    🔐 ${getTranslation('loginNow', '立即登录')}
                 </button>
             </div>
         `;
@@ -4718,35 +5207,42 @@ const MathGame = (function() {
     // ==================== 历史记录显示 ====================
     function showHistory() {
         try {
-            const tbody = document.getElementById('history-table-body');
-            const historyModal = document.getElementById('history-modal');
-            const historyTitle = document.getElementById('history-title');
-            const clearHistoryBtn = document.getElementById('clear-history-btn');
+            var tbody = document.getElementById('history-table-body');
+            var historyModal = document.getElementById('history-modal');
+            var historyTitle = document.getElementById('history-title');
+            var clearHistoryBtn = document.getElementById('clear-history-btn');
             
             if (!tbody || !historyModal) return;
             
-            if (historyTitle) historyTitle.textContent = translations[currentLanguage].historyTitle;
-            if (clearHistoryBtn) clearHistoryBtn.innerHTML = `<span>${translations[currentLanguage].clearHistory}</span>`;
+            if (historyTitle) historyTitle.textContent = getTranslation('historyTitle', '📝 历史记录');
+            if (clearHistoryBtn) clearHistoryBtn.innerHTML = '<span>' + getTranslation('clearHistory', '清空本次记录') + '</span>';
             
             tbody.innerHTML = '';
             
             if (gameHistory.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;">${translations[currentLanguage].noData}</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">' + getTranslation('noData', '暂无数据') + '</td></tr>';
             } else {
-                gameHistory.slice(-15).forEach((record, index) => {
-                    const row = document.createElement('tr');
+                var start = Math.max(0, gameHistory.length - 15);
+                for (var i = start; i < gameHistory.length; i++) {
+                    var record = gameHistory[i];
+                    var index = i - start + 1;
+                    var row = document.createElement('tr');
+                    var resultText = record.isCorrect ? 
+                        (currentLanguage === 'zh' ? '✓ 正确' : '✓ Correct') : 
+                        (currentLanguage === 'zh' ? '✗ 错误' : '✗ Wrong');
+                    
                     row.innerHTML = `
-                        <td>${index + 1}</td>
+                        <td>${index}</td>
                         <td>${record.target}</td>
                         <td>${record.num1}</td>
                         <td>${record.num2}</td>
                         <td style="color: ${record.isCorrect ? '#4CAF50' : '#ff4444'}; font-weight: bold;">
-                            ${record.isCorrect ? (currentLanguage === 'zh' ? '✓ 正确' : '✓ Correct') : (currentLanguage === 'zh' ? '✗ 错误' : '✗ Wrong')}
+                            ${resultText}
                         </td>
                         <td>${new Date(record.timestamp).toLocaleTimeString()}</td>
                     `;
                     tbody.appendChild(row);
-                });
+                }
             }
             
             historyModal.style.display = 'flex';
@@ -4760,25 +5256,27 @@ const MathGame = (function() {
         try {
             loadWrongQuestions();
             
-            const container = document.getElementById('wrong-questions-list');
-            const wrongbookModal = document.getElementById('wrongbook-modal');
-            const wrongbookTitle = document.getElementById('wrongbook-title');
-            const syncBtn = document.getElementById('sync-wrong-questions-btn');
-            const clearBtn = document.getElementById('clear-wrong-questions-btn');
+            var container = document.getElementById('wrong-questions-list');
+            var wrongbookModal = document.getElementById('wrongbook-modal');
+            var wrongbookTitle = document.getElementById('wrongbook-title');
+            var syncBtn = document.getElementById('sync-wrong-questions-btn');
+            var clearBtn = document.getElementById('clear-wrong-questions-btn');
             
             if (!container || !wrongbookModal) return;
             
-            if (wrongbookTitle) wrongbookTitle.textContent = translations[currentLanguage].wrongbookTitle;
-            if (syncBtn) syncBtn.innerHTML = `<span>${translations[currentLanguage].syncWrongQuestions}</span>`;
-            if (clearBtn) clearBtn.innerHTML = `<span>${translations[currentLanguage].clearWrongQuestions}</span>`;
+            if (wrongbookTitle) wrongbookTitle.textContent = getTranslation('wrongbookTitle', '📖 错题本');
+            if (syncBtn) syncBtn.innerHTML = '<span>' + getTranslation('syncWrongQuestions', '☁️ 同步错题到云端') + '</span>';
+            if (clearBtn) clearBtn.innerHTML = '<span>' + getTranslation('clearWrongQuestions', '🗑️ 清空本地错题') + '</span>';
             
             container.innerHTML = '';
             
             if (wrongQuestions.length === 0) {
-                container.innerHTML = `<div style="text-align:center;padding:20px;color:#666;">${translations[currentLanguage].noData}</div>`;
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">' + getTranslation('noData', '暂无数据') + '</div>';
             } else {
-                wrongQuestions.slice(0, 20).forEach((question) => {
-                    const item = document.createElement('div');
+                var limit = Math.min(wrongQuestions.length, 20);
+                for (var i = 0; i < limit; i++) {
+                    var question = wrongQuestions[i];
+                    var item = document.createElement('div');
                     item.className = 'wrong-question-item';
                     item.style.cssText = `
                         display: flex;
@@ -4792,20 +5290,20 @@ const MathGame = (function() {
                     item.innerHTML = `
                         <div>
                             <strong style="color: #333;">${question.num1} + ${question.num2} = ${question.wrongSum}</strong><br>
-                            <small style="color: #ff4444;">${translations[currentLanguage].wrongAnswer} (${translations[currentLanguage].shouldBe} ${question.correctSum})</small><br>
-                            <small style="color: #666;">${translations[currentLanguage].errors}: ${question.count}</small>
+                            <small style="color: #ff4444;">${getTranslation('wrongAnswer', '错误答案')} (${getTranslation('shouldBe', '应为')} ${question.correctSum})</small><br>
+                            <small style="color: #666;">${getTranslation('errors', '错误次数')}: ${question.count}</small>
                         </div>
                         <div>
                             <small style="color: #666;">${new Date(question.timestamp).toLocaleDateString()}</small>
                         </div>
                     `;
                     container.appendChild(item);
-                });
+                }
                 
                 if (wrongQuestions.length > 20) {
-                    const more = document.createElement('div');
+                    var more = document.createElement('div');
                     more.style.cssText = 'text-align:center;padding:15px;color:#666;';
-                    more.textContent = translations[currentLanguage].moreQuestions.replace('{count}', wrongQuestions.length - 20);
+                    more.textContent = getTranslation('moreQuestions', '还有 {count} 条错题').replace('{count}', wrongQuestions.length - 20);
                     container.appendChild(more);
                 }
             }
@@ -4820,28 +5318,31 @@ const MathGame = (function() {
     function showProfile() {
         try {
             if (!currentUser) {
-                showMessage(translations[currentLanguage].needLogin, 'info');
+                showMessage(getTranslation('needLogin', '请先登录后再申请教师账号'), 'info');
                 showAuthModal();
                 return;
             }
             
-            const profileModal = document.getElementById('profile-modal');
-            const profileTitle = document.getElementById('profile-title');
-            const syncStatusElement = document.getElementById('profile-sync-status');
+            var profileModal = document.getElementById('profile-modal');
+            var profileTitle = document.getElementById('profile-title');
+            var syncStatusElement = document.getElementById('profile-sync-status');
             
             if (!profileModal) return;
             
-            if (profileTitle) profileTitle.textContent = translations[currentLanguage].profileTitle;
+            if (profileTitle) profileTitle.textContent = getTranslation('profileTitle', '👤 个人资料');
             
             profileModal.style.display = 'flex';
             
-            const email = currentUser.email || '';
-            const firstLetter = email.charAt(0).toUpperCase() || '?';
-            document.getElementById('profile-avatar').textContent = firstLetter;
-            document.getElementById('profile-email').textContent = email;
+            var email = currentUser.email || '';
+            var firstLetter = email.charAt(0).toUpperCase() || '?';
+            var avatarEl = document.getElementById('profile-avatar');
+            if (avatarEl) avatarEl.textContent = firstLetter;
             
-            const userRole = currentUser.user_metadata?.role || 'student';
-            let roleText = '';
+            var emailEl = document.getElementById('profile-email');
+            if (emailEl) emailEl.textContent = email;
+            
+            var userRole = (currentUser.user_metadata && currentUser.user_metadata.role) || 'student';
+            var roleText = '';
             if (isSuperAdmin) {
                 roleText = '👑 ' + (currentLanguage === 'zh' ? '超级管理员' : 'Super Admin');
             } else if (isSchoolAdmin) {
@@ -4851,30 +5352,45 @@ const MathGame = (function() {
             } else {
                 roleText = '👨‍🎓 ' + (currentLanguage === 'zh' ? '学生' : 'Student');
             }
-            document.getElementById('profile-role').textContent = roleText;
+            var roleEl = document.getElementById('profile-role');
+            if (roleEl) roleEl.textContent = roleText;
             
-            loadUserStats().then(stats => {
+            loadUserStats().then(function(stats) {
                 if (stats) {
-                    document.getElementById('profile-game-count').textContent = stats.totalGames;
-                    document.getElementById('profile-high-score').textContent = stats.bestScore;
-                    document.getElementById('profile-avg-accuracy').textContent = stats.totalAttempts > 0 
-                        ? Math.round((stats.totalCorrect / stats.totalAttempts) * 100) + '%' 
-                        : '0%';
+                    var gameCountEl = document.getElementById('profile-game-count');
+                    var highScoreEl = document.getElementById('profile-high-score');
+                    var avgAccuracyEl = document.getElementById('profile-avg-accuracy');
+                    
+                    if (gameCountEl) gameCountEl.textContent = stats.totalGames;
+                    if (highScoreEl) highScoreEl.textContent = stats.bestScore;
+                    if (avgAccuracyEl) {
+                        var avgAcc = stats.totalAttempts > 0 
+                            ? Math.round((stats.totalCorrect / stats.totalAttempts) * 100) + '%' 
+                            : '0%';
+                        avgAccuracyEl.textContent = avgAcc;
+                    }
                 } else {
-                    document.getElementById('profile-game-count').textContent = '0';
-                    document.getElementById('profile-high-score').textContent = '0';
-                    document.getElementById('profile-avg-accuracy').textContent = '0%';
+                    var gameCountEl = document.getElementById('profile-game-count');
+                    var highScoreEl = document.getElementById('profile-high-score');
+                    var avgAccuracyEl = document.getElementById('profile-avg-accuracy');
+                    
+                    if (gameCountEl) gameCountEl.textContent = '0';
+                    if (highScoreEl) highScoreEl.textContent = '0';
+                    if (avgAccuracyEl) avgAccuracyEl.textContent = '0%';
                 }
             });
             
-            const joinDate = new Date(currentUser.created_at);
-            document.getElementById('profile-join-date').textContent = joinDate.toLocaleDateString(currentLanguage === 'zh' ? 'zh-CN' : 'en-US');
+            var joinDate = new Date(currentUser.created_at);
+            var joinDateEl = document.getElementById('profile-join-date');
+            if (joinDateEl) {
+                joinDateEl.textContent = joinDate.toLocaleDateString(currentLanguage === 'zh' ? 'zh-CN' : 'en-US');
+            }
             
             if (syncStatusElement) {
-                const lastSync = syncState.lastSyncTime && !offlineMode
+                var lastSync = syncState.lastSyncTime && !offlineMode
                     ? new Date(syncState.lastSyncTime).toLocaleString() 
-                    : (offlineMode ? translations[currentLanguage].offlineMode : (currentLanguage === 'zh' ? '从未同步' : 'Never'));
-                syncStatusElement.innerHTML = `☁️ ${translations[currentLanguage].lastSync}: ${lastSync}`;
+                    : (offlineMode ? getTranslation('offlineMode', '离线模式') : (currentLanguage === 'zh' ? '从未同步' : 'Never'));
+                syncStatusElement.innerHTML = '☁️ ' + getTranslation('lastSync', '上次同步') + ': ' + lastSync;
             }
         } catch (error) {
             console.error('显示个人资料失败:', error);
@@ -4890,15 +5406,15 @@ const MathGame = (function() {
     }
     
     function updateHintButton() {
-        const hintBtn = document.getElementById('hint-btn');
+        var hintBtn = document.getElementById('hint-btn');
         if (!hintBtn) return;
         
         if (hintCooldown > 0) {
-            hintBtn.innerHTML = `<span>💡 ${hintCooldown}${currentLanguage === 'zh' ? '秒' : 's'}</span>`;
+            hintBtn.innerHTML = '<span>💡 ' + hintCooldown + (currentLanguage === 'zh' ? '秒' : 's') + '</span>';
             hintBtn.disabled = true;
             hintBtn.style.opacity = '0.7';
         } else {
-            hintBtn.innerHTML = `<span>${translations[currentLanguage].hintButton}</span>`;
+            hintBtn.innerHTML = '<span>' + getTranslation('hintButton', '💡 提示') + '</span>';
             hintBtn.disabled = false;
             hintBtn.style.opacity = '1';
         }
@@ -4906,7 +5422,7 @@ const MathGame = (function() {
     
     function showHint() {
         if (hintCooldown > 0) {
-            showMessage(currentLanguage === 'zh' ? `提示冷却中，还剩${hintCooldown}秒` : `Hint cooldown, ${hintCooldown}s remaining`, 'info');
+            showMessage((currentLanguage === 'zh' ? '提示冷却中，还剩' : 'Hint cooldown, ') + hintCooldown + (currentLanguage === 'zh' ? '秒' : 's remaining'), 'info');
             return;
         }
         
@@ -4916,16 +5432,16 @@ const MathGame = (function() {
     }
     
     function restartGame() {
-        const gameOverElement = document.getElementById('game-over');
+        var gameOverElement = document.getElementById('game-over');
         if (gameOverElement) gameOverElement.style.display = 'none';
         
-        const modeSelection = document.querySelector('.mode-selection');
-        const gameSetting = document.querySelector('.game-setting');
-        const gameInfo = document.getElementById('game-info');
-        const progressContainer = document.getElementById('progress-container');
-        const targetContainer = document.getElementById('target-container');
-        const gameControls = document.getElementById('game-controls');
-        const gameGrid = document.getElementById('game-grid');
+        var modeSelection = document.querySelector('.mode-selection');
+        var gameSetting = document.querySelector('.game-setting');
+        var gameInfo = document.getElementById('game-info');
+        var progressContainer = document.getElementById('progress-container');
+        var targetContainer = document.getElementById('target-container');
+        var gameControls = document.getElementById('game-controls');
+        var gameGrid = document.getElementById('game-grid');
         
         if (modeSelection) modeSelection.style.display = 'grid';
         if (gameSetting) gameSetting.style.display = 'block';
@@ -4935,7 +5451,7 @@ const MathGame = (function() {
         if (gameControls) gameControls.style.display = 'none';
         if (gameGrid) gameGrid.style.display = 'none';
         
-        const playerNameInput = document.getElementById('player-name');
+        var playerNameInput = document.getElementById('player-name');
         if (playerNameInput) playerNameInput.value = '';
         
         resetGame();
@@ -4944,30 +5460,32 @@ const MathGame = (function() {
     async function saveScore() {
         try {
             if (!currentUser && !offlineMode) {
-                showMessage(translations[currentLanguage].needLogin, 'error');
+                showMessage(getTranslation('needLogin', '请先登录后再申请教师账号'), 'error');
                 showAuthModal();
                 return;
             }
             
-            const nameInput = document.getElementById('player-name');
-            let playerName = nameInput ? nameInput.value.trim() : '';
+            var nameInput = document.getElementById('player-name');
+            var playerName = nameInput ? nameInput.value.trim() : '';
             
             if (!playerName) {
-                playerName = currentUser?.user_metadata?.username || currentUser?.email?.split('@')[0] || (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
+                playerName = (currentUser && currentUser.user_metadata && currentUser.user_metadata.username) || 
+                            (currentUser && currentUser.email ? currentUser.email.split('@')[0] : '') ||
+                            (currentLanguage === 'zh' ? '匿名玩家' : 'Anonymous Player');
             }
             
-            const elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
-            const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
+            var elapsedTime = startTime ? Math.floor((new Date() - startTime) / 1000) : 0;
+            var accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
             
-            const success = await saveGameScoreToCloud(score, completedQuestions, accuracy, elapsedTime);
+            var success = await saveGameScoreToCloud(score, completedQuestions, accuracy, elapsedTime);
             
             if (success) {
-                showMessage(translations[currentLanguage].syncSuccess, 'success');
+                showMessage(getTranslation('syncSuccess', '✅ 同步成功'), 'success');
             } else {
                 showMessage(currentLanguage === 'zh' ? '⚠️ 成绩已保存到本地' : '⚠️ Score saved locally', 'warning');
             }
             
-            const gameOverElement = document.getElementById('game-over');
+            var gameOverElement = document.getElementById('game-over');
             if (gameOverElement) gameOverElement.style.display = 'none';
             
             setTimeout(restartGame, 500);
@@ -4982,7 +5500,7 @@ const MathGame = (function() {
         try {
             if (document.getElementById('math-game-responsive-styles')) return;
             
-            const style = document.createElement('style');
+            var style = document.createElement('style');
             style.id = 'math-game-responsive-styles';
             style.textContent = `
                 * {
@@ -5403,18 +5921,18 @@ const MathGame = (function() {
     }
     
     function checkCompatibility() {
-        const issues = [];
+        var issues = [];
         
         try {
             localStorage.setItem('test', 'test');
             localStorage.removeItem('test');
         } catch (e) {
             issues.push('localStorage');
-            const memoryStorage = {};
+            var memoryStorage = {};
             window.localStorage = {
-                getItem: (key) => memoryStorage[key] || null,
-                setItem: (key, value) => { memoryStorage[key] = value; },
-                removeItem: (key) => { delete memoryStorage[key]; }
+                getItem: function(key) { return memoryStorage[key] || null; },
+                setItem: function(key, value) { memoryStorage[key] = value; },
+                removeItem: function(key) { delete memoryStorage[key]; }
             };
         }
         
@@ -5435,18 +5953,23 @@ const MathGame = (function() {
         
         if (!window.Promise) {
             issues.push('Promise');
-            window.Promise = class {
-                constructor(executor) {
-                    this.callbacks = [];
-                    executor(
-                        (value) => setTimeout(() => this.resolve(value), 0),
-                        (reason) => setTimeout(() => this.reject(reason), 0)
-                    );
+            window.Promise = function(executor) {
+                this.callbacks = [];
+                var self = this;
+                executor(
+                    function(value) { setTimeout(function() { self.resolve(value); }, 0); },
+                    function(reason) { setTimeout(function() { self.reject(reason); }, 0); }
+                );
+            };
+            window.Promise.prototype.then = function(callback) { this.callbacks.push(callback); return this; };
+            window.Promise.prototype.catch = function(callback) { this.errorCallback = callback; return this; };
+            window.Promise.prototype.resolve = function(value) { 
+                for (var i = 0; i < this.callbacks.length; i++) {
+                    this.callbacks[i](value);
                 }
-                then(callback) { this.callbacks.push(callback); return this; }
-                catch(callback) { this.errorCallback = callback; return this; }
-                resolve(value) { this.callbacks.forEach(cb => cb(value)); }
-                reject(reason) { this.errorCallback?.(reason); }
+            };
+            window.Promise.prototype.reject = function(reason) { 
+                if (this.errorCallback) this.errorCallback(reason);
             };
         }
         
@@ -5454,8 +5977,8 @@ const MathGame = (function() {
             console.warn('⚠️ 兼容性问题:', issues.join(', '));
             showMessage(
                 currentLanguage === 'zh' 
-                    ? `📴 您的浏览器不支持: ${issues.join(', ')}，已启用降级模式` 
-                    : `📴 Your browser does not support: ${issues.join(', ')}, fallback mode enabled`,
+                    ? '📴 您的浏览器不支持: ' + issues.join(', ') + '，已启用降级模式' 
+                    : '📴 Your browser does not support: ' + issues.join(', ') + ', fallback mode enabled',
                 'warning',
                 5000
             );
@@ -5472,9 +5995,9 @@ const MathGame = (function() {
             checkCompatibility();
             injectResponsiveStyles();
             
-            let savedLang = 'zh';
+            var savedLang = 'zh';
             try {
-                savedLang = localStorage?.getItem('mathGameLanguage') || 'zh';
+                savedLang = localStorage.getItem('mathGameLanguage') || 'zh';
             } catch (e) {
                 console.warn('无法读取localStorage:', e);
             }
@@ -5502,18 +6025,18 @@ const MathGame = (function() {
             
             selectMode('standard');
             
-            setTimeout(() => {
-                const loadingOverlay = document.getElementById('loading-overlay');
+            setTimeout(function() {
+                var loadingOverlay = document.getElementById('loading-overlay');
                 if (loadingOverlay) {
                     loadingOverlay.classList.add('hide-loading');
-                    setTimeout(() => {
-                        loadingOverlay.style.display = 'none';
+                    setTimeout(function() {
+                        if (loadingOverlay) loadingOverlay.style.display = 'none';
                     }, 500);
                 }
             }, 1500);
             
             console.log('🎮 数学加法消消乐 - 初始化完成！', offlineMode ? '(离线模式)' : '(在线模式)');
-            console.log('👤 当前用户角色:', { isSuperAdmin, isSchoolAdmin, isTeacher, isAdminUser });
+            console.log('👤 当前用户角色:', { isSuperAdmin: isSuperAdmin, isSchoolAdmin: isSchoolAdmin, isTeacher: isTeacher, isAdminUser: isAdminUser });
             
             if (offlineMode) {
                 showMessage(
@@ -5528,12 +6051,12 @@ const MathGame = (function() {
             console.error('❌ 初始化失败:', error);
             
             try {
-                const loadingOverlay = document.getElementById('loading-overlay');
+                var loadingOverlay = document.getElementById('loading-overlay');
                 if (loadingOverlay) {
                     loadingOverlay.style.display = 'none';
                 }
                 
-                const gameContainer = document.querySelector('.main-content');
+                var gameContainer = document.querySelector('.main-content');
                 if (gameContainer) {
                     gameContainer.innerHTML = `
                         <div style="text-align: center; padding: 40px 20px;">
@@ -5567,13 +6090,16 @@ const MathGame = (function() {
     // ==================== 绑定事件监听器 ====================
     function bindEventListeners() {
         try {
-            document.getElementById('language-btn')?.addEventListener('click', () => {
-                const newLang = currentLanguage === 'zh' ? 'en' : 'zh';
-                setLanguage(newLang);
-                showMessage(translations[newLang].switchedToChinese || translations[newLang].switchedToEnglish, 'info');
-            });
+            var langBtn = document.getElementById('language-btn');
+            if (langBtn) {
+                langBtn.addEventListener('click', function() {
+                    var newLang = currentLanguage === 'zh' ? 'en' : 'zh';
+                    setLanguage(newLang);
+                    showMessage(getTranslation('switchedToChinese') || getTranslation('switchedToEnglish'), 'info');
+                });
+            }
             
-            const sideBarButtons = [
+            var sideBarButtons = [
                 { id: 'history-btn', handler: showHistory },
                 { id: 'statistics-btn', handler: showStatistics },
                 { id: 'achievements-btn', handler: showAchievements },
@@ -5584,9 +6110,9 @@ const MathGame = (function() {
                 { id: 'admin-tools-btn', handler: showAdminTools },
                 { id: 'teacher-application-btn', handler: showTeacherApplication },
                 { id: 'logout-btn', handler: logout },
-                { id: 'sync-status-btn', handler: () => {
+                { id: 'sync-status-btn', handler: function() {
                     showMessage(
-                        offlineMode ? translations[currentLanguage].offlineMode :
+                        offlineMode ? getTranslation('offlineMode', '离线模式') :
                         syncState.pendingChanges 
                             ? (currentLanguage === 'zh' ? '有待同步的数据' : 'Pending changes')
                             : (currentLanguage === 'zh' ? '已同步' : 'Synced'), 
@@ -5595,38 +6121,65 @@ const MathGame = (function() {
                 }}
             ];
             
-            sideBarButtons.forEach(({ id, handler }) => {
-                document.getElementById(id)?.addEventListener('click', handler);
-            });
+            for (var i = 0; i < sideBarButtons.length; i++) {
+                var btn = sideBarButtons[i];
+                var element = document.getElementById(btn.id);
+                if (element) {
+                    element.addEventListener('click', btn.handler);
+                } else {
+                    console.warn('按钮未找到: ' + btn.id);
+                }
+            }
             
-            const modeButtons = [
+            var modeButtons = [
                 { id: 'mode-standard', mode: 'standard' },
                 { id: 'mode-challenge', mode: 'challenge' },
                 { id: 'mode-practice', mode: 'practice' },
                 { id: 'mode-custom', mode: 'custom' }
             ];
             
-            modeButtons.forEach(({ id, mode }) => {
-                document.getElementById(id)?.addEventListener('click', () => selectMode(mode));
-            });
-            
-            document.getElementById('start-btn')?.addEventListener('click', startGame);
-            document.getElementById('hint-btn')?.addEventListener('click', showHint);
-            document.getElementById('refresh-btn')?.addEventListener('click', refreshNumbers);
-            document.getElementById('endgame-btn')?.addEventListener('click', () => endGame('giveup'));
-            
-            document.getElementById('close-auth-modal')?.addEventListener('click', closeAuthModal);
-            document.getElementById('auth-submit-btn')?.addEventListener('click', handleAuth);
-            document.getElementById('auth-switch-link')?.addEventListener('click', toggleAuthMode);
-            
-            document.getElementById('auth-role')?.addEventListener('change', function() {
-                const teacherRegisterFields = document.getElementById('teacher-register-fields');
-                if (teacherRegisterFields) {
-                    teacherRegisterFields.style.display = this.value === 'teacher' ? 'block' : 'none';
+            for (var i = 0; i < modeButtons.length; i++) {
+                var btn = modeButtons[i];
+                var element = document.getElementById(btn.id);
+                if (element) {
+                    element.addEventListener('click', function(m) {
+                        return function() { selectMode(m); };
+                    }(btn.mode));
                 }
-            });
+            }
             
-            const modalCloseButtons = [
+            var startBtn = document.getElementById('start-btn');
+            if (startBtn) startBtn.addEventListener('click', startGame);
+            
+            var hintBtn = document.getElementById('hint-btn');
+            if (hintBtn) hintBtn.addEventListener('click', showHint);
+            
+            var refreshBtn = document.getElementById('refresh-btn');
+            if (refreshBtn) refreshBtn.addEventListener('click', refreshNumbers);
+            
+            var endgameBtn = document.getElementById('endgame-btn');
+            if (endgameBtn) endgameBtn.addEventListener('click', function() { endGame('giveup'); });
+            
+            var closeAuthBtn = document.getElementById('close-auth-modal');
+            if (closeAuthBtn) closeAuthBtn.addEventListener('click', closeAuthModal);
+            
+            var authSubmitBtn = document.getElementById('auth-submit-btn');
+            if (authSubmitBtn) authSubmitBtn.addEventListener('click', handleAuth);
+            
+            var authSwitchLink = document.getElementById('auth-switch-link');
+            if (authSwitchLink) authSwitchLink.addEventListener('click', toggleAuthMode);
+            
+            var authRole = document.getElementById('auth-role');
+            if (authRole) {
+                authRole.addEventListener('change', function() {
+                    var teacherRegisterFields = document.getElementById('teacher-register-fields');
+                    if (teacherRegisterFields) {
+                        teacherRegisterFields.style.display = this.value === 'teacher' ? 'block' : 'none';
+                    }
+                });
+            }
+            
+            var modalCloseButtons = [
                 { id: 'close-history-modal', modal: 'history-modal' },
                 { id: 'close-statistics-modal', modal: 'statistics-modal' },
                 { id: 'close-achievements-modal', modal: 'achievements-modal' },
@@ -5638,44 +6191,66 @@ const MathGame = (function() {
                 { id: 'close-game-over', modal: 'game-over', handler: restartGame }
             ];
             
-            modalCloseButtons.forEach(({ id, modal, handler }) => {
-                document.getElementById(id)?.addEventListener('click', () => {
-                    const modalElement = document.getElementById(modal);
-                    if (modalElement) modalElement.style.display = 'none';
-                    if (handler) handler();
+            for (var i = 0; i < modalCloseButtons.length; i++) {
+                var btn = modalCloseButtons[i];
+                var element = document.getElementById(btn.id);
+                if (element) {
+                    element.addEventListener('click', function(b) {
+                        return function() {
+                            var modalElement = document.getElementById(b.modal);
+                            if (modalElement) modalElement.style.display = 'none';
+                            if (b.handler) b.handler();
+                        };
+                    }(btn));
+                }
+            }
+            
+            var saveScoreBtn = document.getElementById('save-score-btn');
+            if (saveScoreBtn) saveScoreBtn.addEventListener('click', saveScore);
+            
+            var playAgainBtn = document.getElementById('play-again-btn');
+            if (playAgainBtn) playAgainBtn.addEventListener('click', restartGame);
+            
+            var viewLeaderboardBtn = document.getElementById('view-leaderboard-btn');
+            if (viewLeaderboardBtn) viewLeaderboardBtn.addEventListener('click', showLeaderboard);
+            
+            var viewStatisticsBtn = document.getElementById('view-statistics-btn');
+            if (viewStatisticsBtn) viewStatisticsBtn.addEventListener('click', showStatistics);
+            
+            var clearHistoryBtn = document.getElementById('clear-history-btn');
+            if (clearHistoryBtn) {
+                clearHistoryBtn.addEventListener('click', function() {
+                    if (confirm(getTranslation('confirmClearHistory', '确定要清空本次游戏的历史记录吗？'))) {
+                        gameHistory = [];
+                        showHistory();
+                        showMessage(getTranslation('historyCleared', '历史记录已清空'), 'info');
+                    }
                 });
-            });
+            }
             
-            document.getElementById('save-score-btn')?.addEventListener('click', saveScore);
-            document.getElementById('play-again-btn')?.addEventListener('click', restartGame);
-            document.getElementById('view-leaderboard-btn')?.addEventListener('click', showLeaderboard);
-            document.getElementById('view-statistics-btn')?.addEventListener('click', showStatistics);
-            
-            document.getElementById('clear-history-btn')?.addEventListener('click', () => {
-                if (confirm(translations[currentLanguage].confirmClearHistory)) {
-                    gameHistory = [];
-                    showHistory();
-                    showMessage(translations[currentLanguage].historyCleared, 'info');
-                }
-            });
-            
-            document.getElementById('sync-wrong-questions-btn')?.addEventListener('click', async () => {
-                if (offlineMode) {
-                    showMessage(currentLanguage === 'zh' ? '离线模式无法同步' : 'Cannot sync in offline mode', 'warning');
-                    return;
-                }
-                await syncAllWrongQuestionsToCloud();
-                showWrongBook();
-            });
-            
-            document.getElementById('clear-wrong-questions-btn')?.addEventListener('click', () => {
-                if (confirm(translations[currentLanguage].confirmClearWrongQuestions)) {
-                    wrongQuestions = [];
-                    saveWrongQuestions();
+            var syncWrongBtn = document.getElementById('sync-wrong-questions-btn');
+            if (syncWrongBtn) {
+                syncWrongBtn.addEventListener('click', async function() {
+                    if (offlineMode) {
+                        showMessage(currentLanguage === 'zh' ? '离线模式无法同步' : 'Cannot sync in offline mode', 'warning');
+                        return;
+                    }
+                    await syncAllWrongQuestionsToCloud();
                     showWrongBook();
-                    showMessage(translations[currentLanguage].wrongQuestionsCleared, 'info');
-                }
-            });
+                });
+            }
+            
+            var clearWrongBtn = document.getElementById('clear-wrong-questions-btn');
+            if (clearWrongBtn) {
+                clearWrongBtn.addEventListener('click', function() {
+                    if (confirm(getTranslation('confirmClearWrongQuestions', '确定要清空本地错题吗？（云端错题不受影响）'))) {
+                        wrongQuestions = [];
+                        saveWrongQuestions();
+                        showWrongBook();
+                        showMessage(getTranslation('wrongQuestionsCleared', '本地错题已清空'), 'info');
+                    }
+                });
+            }
             
         } catch (error) {
             console.error('绑定事件监听器失败:', error);
@@ -5684,50 +6259,60 @@ const MathGame = (function() {
     
     // ==================== 公共接口 ====================
     return {
-        init,
-        selectMode,
-        startGame,
-        showHint,
-        refreshNumbers,
-        endGame: (reason) => endGame(reason),
-        restartGame,
-        showHistory,
-        showStatistics,
-        showAchievements,
-        showWrongBook,
-        showLeaderboard,
-        showProfile,
-        showTeacherTools,
-        showAdminTools,
-        showTeacherApplication,
-        logout,
-        closeAuthModal,
-        handleAuth,
-        toggleAuthMode,
-        saveScore,
-        showAuthModal,
-        performFullSync,
-        getSyncStatus: () => syncState,
-        isOfflineMode: () => offlineMode,
-        getRoles: () => ({
-            isSuperAdmin,
-            isSchoolAdmin,
-            isTeacher,
-            isAdminUser
-        })
+        init: init,
+        selectMode: selectMode,
+        startGame: startGame,
+        showHint: showHint,
+        refreshNumbers: refreshNumbers,
+        endGame: function(reason) { endGame(reason); },
+        restartGame: restartGame,
+        showHistory: showHistory,
+        showStatistics: showStatistics,
+        showAchievements: showAchievements,
+        showWrongBook: showWrongBook,
+        showLeaderboard: showLeaderboard,
+        showProfile: showProfile,
+        showTeacherTools: showTeacherTools,
+        showAdminTools: showAdminTools,
+        showTeacherApplication: showTeacherApplication,
+        logout: logout,
+        closeAuthModal: closeAuthModal,
+        handleAuth: handleAuth,
+        toggleAuthMode: toggleAuthMode,
+        saveScore: saveScore,
+        showAuthModal: showAuthModal,
+        performFullSync: performFullSync,
+        getSyncStatus: function() { return syncState; },
+        isOfflineMode: function() { return offlineMode; },
+        getRoles: function() {
+            return {
+                isSuperAdmin: isSuperAdmin,
+                isSchoolAdmin: isSchoolAdmin,
+                isTeacher: isTeacher,
+                isAdminUser: isAdminUser
+            };
+        }
     };
 })();
 
 // ==================== 启动游戏 ====================
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            MathGame.init();
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            if (window.MathGame) {
+                window.MathGame.init();
+            } else {
+                console.error('MathGame对象未定义');
+            }
         }, 100);
     });
 } else {
-    setTimeout(() => {
-        MathGame.init();
+    setTimeout(function() {
+        if (window.MathGame) {
+            window.MathGame.init();
+        } else {
+            console.error('MathGame对象未定义');
+        }
     }, 100);
 }
 
