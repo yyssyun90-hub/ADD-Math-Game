@@ -1,4 +1,4 @@
-/* style.css - 超可爱糖果色 · 加法消消乐 · 鲜艳活泼儿童版 */
+/* style.css - 超可爱糖果色 · 加法消消乐 · 中英文完美适配版 */
 * {
     margin: 0;
     padding: 0;
@@ -24,7 +24,7 @@ body {
     100% { background-position: 0% 50%; }
 }
 
-/* 漂浮彩色小星星 - 更多更亮 */
+/* 漂浮彩色小星星 */
 body::before {
     content: "⭐✨🌟💫⭐✨🌟💫";
     position: fixed;
@@ -53,7 +53,7 @@ body::before {
     }
 }
 
-/* ---------- 彩色语言切换按钮 ---------- */
+/* ---------- 语言切换按钮 ---------- */
 .language-switch {
     position: fixed;
     top: 12px;
@@ -93,7 +93,7 @@ body::before {
 
 /* ---------- 超彩色侧边栏 ---------- */
 .sidebar {
-    width: 260px;
+    width: 280px;
     background: rgba(255, 240, 245, 0.95);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -114,9 +114,9 @@ body::before {
     transform: translateY(-2px);
 }
 
-/* 侧边栏按钮 - 每个不同颜色 */
+/* 侧边栏按钮 */
 .sidebar-btn {
-    padding: 16px 10px;
+    padding: 16px 12px;
     border: 4px solid #ffffff;
     border-radius: 60px;
     color: #2d1f1f;
@@ -131,22 +131,24 @@ body::before {
     gap: 10px;
     box-shadow: 0 8px 0 #b45f2e, 0 6px 12px rgba(0, 0, 0, 0.2);
     width: 100%;
-    min-height: 60px;
+    min-height: 64px;
     text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
     letter-spacing: 0.5px;
     word-break: break-word;
     line-height: 1.3;
+    white-space: normal;
+    hyphens: auto;
 }
 
 /* 每个按钮不同的彩虹色 */
-.sidebar-btn:nth-child(1) { background: linear-gradient(145deg, #ff6b6b, #ff4757); } /* 红 */
-.sidebar-btn:nth-child(2) { background: linear-gradient(145deg, #ffb347, #ff8c42); } /* 橙 */
-.sidebar-btn:nth-child(3) { background: linear-gradient(145deg, #ffd93d, #f9ca24); } /* 黄 */
-.sidebar-btn:nth-child(4) { background: linear-gradient(145deg, #6ab04c, #4c9a2a); } /* 绿 */
-.sidebar-btn:nth-child(5) { background: linear-gradient(145deg, #54a0ff, #2e86de); } /* 蓝 */
-.sidebar-btn:nth-child(6) { background: linear-gradient(145deg, #9980fa, #5758bb); } /* 紫 */
-.sidebar-btn:nth-child(7) { background: linear-gradient(145deg, #f368e0, #ff9ff3); } /* 粉 */
-.sidebar-btn:nth-child(8) { background: linear-gradient(145deg, #00d2d3, #01a3a4); } /* 青 */
+.sidebar-btn:nth-child(1) { background: linear-gradient(145deg, #ff6b6b, #ff4757); }
+.sidebar-btn:nth-child(2) { background: linear-gradient(145deg, #ffb347, #ff8c42); }
+.sidebar-btn:nth-child(3) { background: linear-gradient(145deg, #ffd93d, #f9ca24); }
+.sidebar-btn:nth-child(4) { background: linear-gradient(145deg, #6ab04c, #4c9a2a); }
+.sidebar-btn:nth-child(5) { background: linear-gradient(145deg, #54a0ff, #2e86de); }
+.sidebar-btn:nth-child(6) { background: linear-gradient(145deg, #9980fa, #5758bb); }
+.sidebar-btn:nth-child(7) { background: linear-gradient(145deg, #f368e0, #ff9ff3); }
+.sidebar-btn:nth-child(8) { background: linear-gradient(145deg, #00d2d3, #01a3a4); }
 
 .sidebar-btn:hover {
     transform: translateY(-6px) scale(1.03);
@@ -157,6 +159,18 @@ body::before {
 .sidebar-btn:active {
     transform: translateY(4px);
     box-shadow: 0 4px 0 #b45f2e;
+}
+
+/* 英文特定优化 */
+[lang="en"] .sidebar-btn {
+    font-size: 1em;
+    padding: 16px 8px;
+    min-height: 70px;
+}
+
+[lang="en"] .sidebar-btn i,
+[lang="en"] .sidebar-btn svg {
+    font-size: 1.2em;
 }
 
 /* 足迹装饰 */
@@ -219,6 +233,11 @@ h1 {
     font-weight: 700;
 }
 
+[lang="en"] .subtitle {
+    font-size: 1.2em;
+    padding: 8px 22px;
+}
+
 /* ---------- 彩色用户信息 ---------- */
 .user-info {
     display: flex;
@@ -255,6 +274,10 @@ h1 {
     color: #2d1f1f;
     font-weight: 800;
     font-size: 1.2em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
 }
 
 /* 桌面端 */
@@ -299,14 +322,19 @@ h1 {
 /* 3. 标准桌面 (1024px - 1199px) */
 @media (min-width: 1024px) and (max-width: 1199px) {
     .sidebar {
-        width: 240px;
+        width: 260px;
         padding: 20px 10px;
     }
     
     .sidebar-btn {
         padding: 14px 8px;
         font-size: 1em;
-        min-height: 58px;
+        min-height: 62px;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        font-size: 0.95em;
+        min-height: 68px;
     }
     
     .user-info {
@@ -323,7 +351,7 @@ h1 {
 /* 4. iPad Pro 横屏 */
 @media (min-width: 1024px) and (max-width: 1024px) and (min-height: 1366px) {
     .sidebar {
-        width: 230px;
+        width: 240px;
     }
 }
 
@@ -345,13 +373,18 @@ h1 {
     
     .sidebar-btn {
         width: calc(25% - 10px);
-        min-width: 130px;
+        min-width: 140px;
         padding: 16px 8px;
         font-size: 1em;
-        min-height: 75px;
+        min-height: 80px;
         flex-direction: column;
         gap: 4px;
         box-shadow: 0 6px 0 #b45f2e;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        min-width: 150px;
+        font-size: 0.9em;
     }
     
     .sidebar-btn i, 
@@ -387,12 +420,18 @@ h1 {
     
     .sidebar-btn {
         width: calc(33.33% - 10px);
-        min-width: 110px;
+        min-width: 120px;
         padding: 16px 6px;
         font-size: 0.95em;
-        min-height: 80px;
+        min-height: 85px;
         flex-direction: column;
         gap: 4px;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        min-width: 130px;
+        font-size: 0.85em;
+        padding: 14px 4px;
     }
     
     .sidebar-btn i, 
@@ -442,7 +481,7 @@ h1 {
 /* 7. iPad Mini 竖屏 */
 @media (min-width: 760px) and (max-width: 768px) and (min-height: 1024px) {
     .sidebar-btn {
-        min-height: 85px;
+        min-height: 90px;
     }
 }
 
@@ -464,13 +503,19 @@ h1 {
     
     .sidebar-btn {
         width: calc(33.33% - 8px);
-        min-width: 90px;
+        min-width: 100px;
         padding: 14px 5px;
         font-size: 0.9em;
-        min-height: 75px;
+        min-height: 80px;
         flex-direction: column;
         gap: 3px;
         box-shadow: 0 5px 0 #b45f2e;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        min-width: 110px;
+        font-size: 0.8em;
+        padding: 12px 3px;
     }
     
     .sidebar-btn i, 
@@ -485,6 +530,11 @@ h1 {
     .subtitle {
         font-size: 1.1em;
         padding: 6px 18px;
+    }
+    
+    [lang="en"] .subtitle {
+        font-size: 1em;
+        padding: 5px 15px;
     }
     
     .container {
@@ -570,17 +620,25 @@ h1 {
     .sidebar-btn {
         width: 100%;
         flex-direction: row;
-        min-height: 60px;
+        min-height: 64px;
         padding: 14px 12px;
         font-size: 1.1em;
         gap: 10px;
         box-shadow: 0 6px 0 #b45f2e;
+        justify-content: flex-start;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        font-size: 1em;
+        min-height: 68px;
+        padding: 12px 10px;
+        justify-content: center;
     }
     
     .sidebar-btn i, 
     .sidebar-btn svg {
         font-size: 1.4em;
-        margin-bottom: 0;
+        min-width: 24px;
     }
     
     h1 {
@@ -592,6 +650,11 @@ h1 {
         padding: 6px 16px;
     }
     
+    [lang="en"] .subtitle {
+        font-size: 0.9em;
+        padding: 5px 14px;
+    }
+    
     .user-info {
         padding: 5px 14px;
     }
@@ -600,6 +663,11 @@ h1 {
         width: 38px;
         height: 38px;
         font-size: 1.4em;
+    }
+    
+    .user-name {
+        max-width: 120px;
+        font-size: 1em;
     }
     
     .container {
@@ -615,10 +683,20 @@ h1 {
     
     .mode-btn {
         padding: 18px 10px;
+        min-height: 90px;
+    }
+    
+    [lang="en"] .mode-btn {
+        min-height: 100px;
+        padding: 16px 8px;
     }
     
     .mode-btn .mode-title {
         font-size: 1.3em;
+    }
+    
+    [lang="en"] .mode-btn .mode-title {
+        font-size: 1.1em;
     }
     
     .game-setting {
@@ -754,11 +832,17 @@ h1 {
     }
     
     .sidebar-btn {
-        min-height: 54px;
+        min-height: 60px;
         padding: 12px 8px;
         font-size: 1em;
         gap: 8px;
         box-shadow: 0 4px 0 #b45f2e;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        font-size: 0.9em;
+        min-height: 64px;
+        padding: 10px 6px;
     }
     
     .sidebar-btn i, 
@@ -775,6 +859,11 @@ h1 {
         padding: 5px 14px;
     }
     
+    [lang="en"] .subtitle {
+        font-size: 0.8em;
+        padding: 4px 12px;
+    }
+    
     .user-info {
         padding: 4px 12px;
     }
@@ -785,6 +874,11 @@ h1 {
         font-size: 1.3em;
     }
     
+    .user-name {
+        max-width: 100px;
+        font-size: 0.9em;
+    }
+    
     .container {
         padding: 16px 12px;
         border-radius: 35px;
@@ -792,10 +886,20 @@ h1 {
     
     .mode-btn {
         padding: 16px 8px;
+        min-height: 85px;
+    }
+    
+    [lang="en"] .mode-btn {
+        min-height: 95px;
+        padding: 14px 6px;
     }
     
     .mode-btn .mode-title {
         font-size: 1.2em;
+    }
+    
+    [lang="en"] .mode-btn .mode-title {
+        font-size: 1em;
     }
     
     .game-setting {
@@ -874,10 +978,15 @@ h1 {
     }
     
     .sidebar-btn {
-        min-height: 50px;
+        min-height: 56px;
         padding: 10px 6px;
         font-size: 0.9em;
         gap: 6px;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        font-size: 0.8em;
+        min-height: 60px;
     }
     
     h1 {
@@ -887,6 +996,11 @@ h1 {
     .subtitle {
         font-size: 0.8em;
         padding: 4px 12px;
+    }
+    
+    [lang="en"] .subtitle {
+        font-size: 0.7em;
+        padding: 3px 10px;
     }
     
     .container {
@@ -951,12 +1065,21 @@ h1 {
     font-weight: 800;
     color: #2d1f1f;
     box-shadow: 0 10px 0 #d49b3b, 0 8px 20px rgba(200, 120, 0, 0.3);
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-.mode-btn:nth-child(1) { background: linear-gradient(145deg, #ffb3b3, #ff9f9f); } /* 红 */
-.mode-btn:nth-child(2) { background: linear-gradient(145deg, #ffd1a4, #ffb982); } /* 橙 */
-.mode-btn:nth-child(3) { background: linear-gradient(145deg, #fff0a5, #ffe57f); } /* 黄 */
-.mode-btn:nth-child(4) { background: linear-gradient(145deg, #b8e0b8, #9fd19f); } /* 绿 */
+[lang="en"] .mode-btn {
+    padding: 18px 6px;
+    min-height: 110px;
+}
+
+.mode-btn:nth-child(1) { background: linear-gradient(145deg, #ffb3b3, #ff9f9f); }
+.mode-btn:nth-child(2) { background: linear-gradient(145deg, #ffd1a4, #ffb982); }
+.mode-btn:nth-child(3) { background: linear-gradient(145deg, #fff0a5, #ffe57f); }
+.mode-btn:nth-child(4) { background: linear-gradient(145deg, #b8e0b8, #9fd19f); }
 
 .mode-btn:hover {
     transform: translateY(-8px) scale(1.03);
@@ -975,6 +1098,11 @@ h1 {
     font-weight: 800;
     margin-bottom: 4px;
     color: #2d1f1f;
+    word-break: break-word;
+}
+
+[lang="en"] .mode-btn .mode-title {
+    font-size: 1.1em;
 }
 
 /* 模式描述 */
@@ -986,13 +1114,19 @@ h1 {
     overflow: hidden;
     transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.2s ease;
     margin-top: 0;
+    word-break: break-word;
 }
 
 .mode-btn:hover .mode-desc,
 .mode-btn.active .mode-desc {
-    max-height: 50px;
+    max-height: 60px;
     opacity: 1;
     margin-top: 8px;
+}
+
+[lang="en"] .mode-btn:hover .mode-desc,
+[lang="en"] .mode-btn.active .mode-desc {
+    max-height: 80px;
 }
 
 @media (max-width: 767px) {
@@ -1001,6 +1135,11 @@ h1 {
         opacity: 1;
         margin-top: 5px;
         font-size: 0.8em;
+    }
+    
+    [lang="en"] .mode-desc {
+        max-height: 60px;
+        font-size: 0.75em;
     }
 }
 
@@ -1035,7 +1174,7 @@ h1 {
     box-shadow: 0 4px 0 #ff8c00;
 }
 
-/* 输入框 - 更可爱 */
+/* 输入框 */
 .setting-group input,
 .form-group input,
 .input-group input,
@@ -1134,7 +1273,7 @@ h1 {
     text-shadow: 3px 3px 0 rgba(255, 255, 200, 0.8);
 }
 
-/* ---------- 目标和 - 超醒目 ---------- */
+/* ---------- 目标和 ---------- */
 .target-container {
     background: linear-gradient(145deg, #fffacd, #ffe4b5);
     border: 8px solid #ffffe0;
@@ -1193,7 +1332,7 @@ h1 {
     box-shadow: inset 0 0 0 5px #ffffe0, 0 12px 0 #ff8c00, 0 20px 30px rgba(255, 140, 0, 0.3);
 }
 
-/* 数字卡片 - 彩色缤纷 */
+/* 数字卡片 */
 .number-card {
     border: 5px solid #ffffff;
     border-radius: 30px;
@@ -1217,16 +1356,16 @@ h1 {
 }
 
 /* 每个卡片不同颜色 */
-.number-card:nth-child(1) { background: radial-gradient(circle at 30% 30%, #ffb3ba, #ff9aa2); } /* 粉红 */
-.number-card:nth-child(2) { background: radial-gradient(circle at 30% 30%, #ffdfba, #ffc8a2); } /* 蜜桃 */
-.number-card:nth-child(3) { background: radial-gradient(circle at 30% 30%, #ffffba, #ffff9f); } /* 淡黄 */
-.number-card:nth-child(4) { background: radial-gradient(circle at 30% 30%, #baffc9, #9fdfb0); } /* 薄荷 */
-.number-card:nth-child(5) { background: radial-gradient(circle at 30% 30%, #a0e7ff, #85d9ff); } /* 天空 */
-.number-card:nth-child(6) { background: radial-gradient(circle at 30% 30%, #d4b8ff, #c2a3ff); } /* 薰衣草 */
-.number-card:nth-child(7) { background: radial-gradient(circle at 30% 30%, #ffb8e6, #ff9ed5); } /* 粉紫 */
-.number-card:nth-child(8) { background: radial-gradient(circle at 30% 30%, #b8ecd9, #9fe0c5); } /* 海蓝 */
-.number-card:nth-child(9) { background: radial-gradient(circle at 30% 30%, #ffe0b8, #ffd09f); } /* 杏色 */
-.number-card:nth-child(10) { background: radial-gradient(circle at 30% 30%, #e6c3a0, #d9b085); } /* 拿铁 */
+.number-card:nth-child(1) { background: radial-gradient(circle at 30% 30%, #ffb3ba, #ff9aa2); }
+.number-card:nth-child(2) { background: radial-gradient(circle at 30% 30%, #ffdfba, #ffc8a2); }
+.number-card:nth-child(3) { background: radial-gradient(circle at 30% 30%, #ffffba, #ffff9f); }
+.number-card:nth-child(4) { background: radial-gradient(circle at 30% 30%, #baffc9, #9fdfb0); }
+.number-card:nth-child(5) { background: radial-gradient(circle at 30% 30%, #a0e7ff, #85d9ff); }
+.number-card:nth-child(6) { background: radial-gradient(circle at 30% 30%, #d4b8ff, #c2a3ff); }
+.number-card:nth-child(7) { background: radial-gradient(circle at 30% 30%, #ffb8e6, #ff9ed5); }
+.number-card:nth-child(8) { background: radial-gradient(circle at 30% 30%, #b8ecd9, #9fe0c5); }
+.number-card:nth-child(9) { background: radial-gradient(circle at 30% 30%, #ffe0b8, #ffd09f); }
+.number-card:nth-child(10) { background: radial-gradient(circle at 30% 30%, #e6c3a0, #d9b085); }
 
 .number-card:hover {
     transform: translateY(-8px) scale(1.05);
@@ -1494,6 +1633,12 @@ h1 {
     text-align: center !important;
 }
 
+.input-group input:focus {
+    outline: none !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 0 #b87d2e, 0 0 0 4px #ffff00 !important;
+}
+
 /* ---------- 进度条 ---------- */
 .progress-container {
     width: 100%;
@@ -1566,6 +1711,9 @@ h1 {
     border: 5px solid #ffffe0;
 }
 
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
 /* ---------- 成就系统 ---------- */
 .achievements-grid {
     display: grid;
@@ -1611,6 +1759,7 @@ h1 {
     font-size: 1.2em; 
     margin: 8px 0;
     color: #2d1f1f;
+    word-break: break-word;
 }
 
 /* 成就描述 */
@@ -1619,6 +1768,7 @@ h1 {
     color: #5a3e3e; 
     line-height: 1.4;
     font-weight: 500;
+    word-break: break-word;
 }
 
 @media (min-width: 768px) {
@@ -1662,6 +1812,12 @@ h1 {
     transition: width 0.3s ease;
 }
 
+.achievement-progress-text {
+    font-size: 0.8em;
+    font-weight: 600;
+    color: #8a7a6a;
+}
+
 /* ---------- 错题本 ---------- */
 .wrong-questions-list {
     max-height: 400px;
@@ -1687,6 +1843,11 @@ h1 {
     color: #2d1f1f;
     flex-wrap: wrap;
     gap: 10px;
+}
+
+.wrong-question-item small {
+    color: #8a7676;
+    font-weight: 500;
 }
 
 /* ---------- 个人资料 ---------- */
@@ -1729,6 +1890,19 @@ h1 {
     text-align: center;
 }
 
+.profile-stat-label { 
+    font-size: 0.9em; 
+    color: #756161; 
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.profile-stat-value { 
+    font-size: 1.6em; 
+    font-weight: 800; 
+    color: #4a3a3a; 
+}
+
 /* ---------- 登录/注册 ---------- */
 .auth-form {
     display: flex;
@@ -1769,6 +1943,46 @@ h1 {
     border-radius: 60px;
     border: 4px solid #ffd700;
     box-shadow: 0 6px 0 #ffa500;
+}
+
+.auth-switch a {
+    color: #a07a7a;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.auth-error { 
+    color: #b55a5a; 
+    font-weight: 600; 
+    background: #ffe8e8; 
+    padding: 10px 20px; 
+    border-radius: 40px;
+    border: 2px solid #ffc5c5;
+    text-align: center;
+}
+
+/* ---------- 教师工具卡片 ---------- */
+.teacher-card {
+    background: rgba(255, 250, 245, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 3px dashed #d9b5d9;
+    border-radius: 40px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 6px 0 #c5a0c5;
+}
+
+.account-card {
+    background: #f8f5ff;
+    border: 3px solid #d9b5d9;
+    border-radius: 35px;
+    padding: 15px;
+    margin-bottom: 12px;
+    color: #2d1f1f;
+    font-weight: 600;
+    box-shadow: 0 4px 0 #b595b5;
 }
 
 /* ---------- 排行榜 ---------- */
@@ -1874,10 +2088,18 @@ h1 {
     body {
         background: white;
         animation: none;
+        display: block;
     }
     
     .container {
         box-shadow: none;
         border: 1px solid #ccc;
+        background: white;
+        backdrop-filter: none;
+    }
+    
+    .main-content {
+        margin: 0;
+        padding: 20px;
     }
 }
