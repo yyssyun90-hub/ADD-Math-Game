@@ -7,8 +7,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
     
-    <!-- 加载样式 -->
-    <link rel="stylesheet" href="/style.css">
+    <!-- 加载样式 - 使用相对路径 -->
+    <link rel="stylesheet" href="style.css">
     
     <!-- 加载中样式 -->
     <style>
@@ -90,12 +90,12 @@
     
     <!-- 左侧功能栏 -->
     <div class="sidebar">
-        <button class="sidebar-btn" id="history-btn"><span data-i18n="history">📝 历史记录</span></button>
-        <button class="sidebar-btn secondary" id="statistics-btn"><span data-i18n="statistics">📊 统计</span></button>
-        <button class="sidebar-btn achievement" id="achievements-btn"><span data-i18n="achievements">⭐ 成就</span></button>
-        <button class="sidebar-btn wrong" id="wrongbook-btn"><span data-i18n="wrongBook">📖 错题本</span></button>
-        <button class="sidebar-btn" id="leaderboard-btn"><span data-i18n="leaderboard">🏆 排行榜</span></button>
-        <button class="sidebar-btn profile" id="profile-btn"><span data-i18n="profile">👤 个人资料</span></button>
+        <button class="sidebar-btn" id="history-btn"><span>📝 历史记录</span></button>
+        <button class="sidebar-btn secondary" id="statistics-btn"><span>📊 统计</span></button>
+        <button class="sidebar-btn achievement" id="achievements-btn"><span>⭐ 成就</span></button>
+        <button class="sidebar-btn wrong" id="wrongbook-btn"><span>📖 错题本</span></button>
+        <button class="sidebar-btn" id="leaderboard-btn"><span>🏆 排行榜</span></button>
+        <button class="sidebar-btn profile" id="profile-btn"><span>👤 个人资料</span></button>
         <button class="sidebar-btn teacher" id="teacher-tools-btn" style="display: none;"><span>👨‍🏫 教师工具</span></button>
         <button class="sidebar-btn admin" id="admin-tools-btn" style="display: none;"><span>👑 管理工具</span></button>
         <button class="sidebar-btn" id="teacher-application-btn" style="display: none;"><span>👨‍🏫 教师申请</span></button>
@@ -105,14 +105,14 @@
     <!-- 主游戏区 -->
     <div class="main-content">
         <div class="header">
-            <h1 data-i18n="gameTitle">🧮 数学加法消消乐</h1>
-            <p class="subtitle" data-i18n="gameSubtitle">教学优化版 | 云端同步 | 实时排行榜</p>
+            <h1>🧮 数学加法消消乐</h1>
+            <p class="subtitle">教学优化版 | 云端同步 | 实时排行榜</p>
             
             <div class="user-info" id="user-info" style="display: none;">
                 <div class="user-avatar" id="user-avatar">?</div>
                 <span class="user-name" id="user-name">用户</span>
                 <button class="btn" id="logout-btn" style="padding: 8px 15px; font-size: 0.9em;">
-                    <span data-i18n="logout">退出</span>
+                    <span>退出</span>
                 </button>
             </div>
         </div>
@@ -121,41 +121,41 @@
             <!-- 游戏模式选择 -->
             <div class="mode-selection">
                 <div class="mode-btn active" data-mode="standard" id="mode-standard">
-                    <div class="mode-title" data-i18n="modeStandard">📚 挑战30</div>
-                    <div class="mode-desc" data-i18n="modeStandardDesc">完成30题，比拼用时</div>
+                    <div class="mode-title">📚 挑战30</div>
+                    <div class="mode-desc">完成30题，比拼用时</div>
                 </div>
                 <div class="mode-btn" data-mode="challenge" id="mode-challenge">
-                    <div class="mode-title" data-i18n="modeChallenge">⚡ 激情90秒</div>
-                    <div class="mode-desc" data-i18n="modeChallengeDesc">90秒时间，比拼题数</div>
+                    <div class="mode-title">⚡ 激情90秒</div>
+                    <div class="mode-desc">90秒时间，比拼题数</div>
                 </div>
                 <div class="mode-btn" data-mode="practice" id="mode-practice">
-                    <div class="mode-title" data-i18n="modePractice">🎯 练习模式</div>
-                    <div class="mode-desc" data-i18n="modePracticeDesc">无时间限制，专心学习</div>
+                    <div class="mode-title">🎯 练习模式</div>
+                    <div class="mode-desc">无时间限制，专心学习</div>
                 </div>
                 <div class="mode-btn" data-mode="custom" id="mode-custom">
-                    <div class="mode-title" data-i18n="modeCustom">⚙️ 自定义</div>
-                    <div class="mode-desc" data-i18n="modeCustomDesc">自设参数，灵活练习</div>
+                    <div class="mode-title">⚙️ 自定义</div>
+                    <div class="mode-desc">自设参数，灵活练习</div>
                 </div>
             </div>
             
             <!-- 游戏设置 -->
             <div class="game-setting">
                 <div class="setting-group">
-                    <label data-i18n="numberRange">数字范围:</label>
+                    <label>数字范围:</label>
                     <select id="number-range" class="range-select">
-                        <option value="0-9" data-i18n="rangeEasy">0-9 (简单)</option>
-                        <option value="0-14" selected data-i18n="rangeStandard">0-14 (标准)</option>
-                        <option value="5-18" data-i18n="rangeChallenge">5-18 (挑战)</option>
+                        <option value="0-9">0-9 (简单)</option>
+                        <option value="0-14" selected>0-14 (标准)</option>
+                        <option value="5-18">5-18 (挑战)</option>
                     </select>
                     <button class="btn" id="start-btn">
-                        <span data-i18n="startGame">🚀 开始游戏</span>
+                        <span>🚀 开始游戏</span>
                     </button>
                 </div>
                 
                 <div class="setting-group" id="custom-settings" style="display: none;">
-                    <label data-i18n="questionCount">题目数量:</label>
+                    <label>题目数量:</label>
                     <input type="number" id="custom-questions" min="10" max="50" value="20">
-                    <label data-i18n="timeLimit">时间限制(秒):</label>
+                    <label>时间限制(秒):</label>
                     <input type="number" id="custom-time" min="10" max="300" value="60">
                 </div>
             </div>
@@ -163,19 +163,19 @@
             <!-- 游戏信息 -->
             <div class="game-header" id="game-info" style="display: none;">
                 <div class="info-item">
-                    <div class="info-label" data-i18n="scoreLabel">得分</div>
+                    <div class="info-label">得分</div>
                     <div class="info-value" id="score">0</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label" data-i18n="completedLabel">完成题数</div>
+                    <div class="info-label">完成题数</div>
                     <div class="info-value" id="completed">0/30</div>
                 </div>
                 <div class="info-item" id="time-container">
-                    <div class="info-label" data-i18n="timeLeft">剩余时间</div>
+                    <div class="info-label">剩余时间</div>
                     <div class="info-value" id="time">90</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label" data-i18n="accuracyLabel">正确率</div>
+                    <div class="info-label">正确率</div>
                     <div class="info-value" id="accuracy">100%</div>
                 </div>
             </div>
@@ -188,7 +188,7 @@
             <!-- 目标和 -->
             <div class="target-container" id="target-container" style="display: none;">
                 <div class="target-text">
-                    <span class="target-label" data-i18n="targetSum">目标和:</span>
+                    <span class="target-label">目标和:</span>
                     <div class="target-number" id="target-sum">10</div>
                 </div>
             </div>
@@ -199,13 +199,13 @@
             <!-- 游戏控制按钮 -->
             <div class="controls" id="game-controls" style="display: none;">
                 <button class="btn" id="hint-btn">
-                    <span data-i18n="hintButton">💡 提示</span>
+                    <span>💡 提示</span>
                 </button>
                 <button class="btn" id="refresh-btn">
-                    <span data-i18n="refreshButton">🔄 刷新</span>
+                    <span>🔄 刷新</span>
                 </button>
                 <button class="btn" id="endgame-btn">
-                    <span data-i18n="endGameButton">⏹️ 结束</span>
+                    <span>⏹️ 结束</span>
                 </button>
             </div>
         </div>
@@ -217,7 +217,7 @@
     <div class="modal" id="auth-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="auth-title"><span data-i18n="loginTitle">🔐 用户登录</span></h2>
+                <h2 class="modal-title" id="auth-title">🔐 用户登录</h2>
                 <button class="close-btn" id="close-auth-modal">×</button>
             </div>
             <div class="auth-form">
@@ -232,17 +232,17 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label data-i18n="emailLabel">邮箱地址:</label>
-                    <input type="email" id="auth-email" data-i18n="emailPlaceholder" placeholder="请输入邮箱地址">
+                    <label>邮箱地址:</label>
+                    <input type="email" id="auth-email" placeholder="请输入邮箱地址">
                 </div>
                 <div class="form-group">
-                    <label data-i18n="passwordLabel">密码:</label>
-                    <input type="password" id="auth-password" data-i18n="passwordPlaceholder" placeholder="请输入密码">
+                    <label>密码:</label>
+                    <input type="password" id="auth-password" placeholder="请输入密码">
                 </div>
                 <div id="auth-username-group" style="display: none;">
                     <div class="form-group">
-                        <label data-i18n="usernameLabel">用户名:</label>
-                        <input type="text" id="auth-username" data-i18n="usernamePlaceholder" placeholder="请输入用户名（可选）">
+                        <label>用户名:</label>
+                        <input type="text" id="auth-username" placeholder="请输入用户名（可选）">
                     </div>
                 </div>
                 <div class="form-group" style="display: none;" id="role-select-group">
@@ -252,11 +252,11 @@
                         <option value="teacher">教师</option>
                     </select>
                 </div>
-                <button class="btn btn-primary" id="auth-submit-btn"><span data-i18n="loginButton">登录</span></button>
+                <button class="btn btn-primary" id="auth-submit-btn"><span>登录</span></button>
                 <div class="auth-error" id="auth-error"></div>
                 <div class="auth-switch">
-                    <span id="auth-switch-text" data-i18n="noAccount">还没有账号？</span>
-                    <a id="auth-switch-link"><span data-i18n="registerNow">立即注册</span></a>
+                    <span id="auth-switch-text">还没有账号？</span>
+                    <a id="auth-switch-link">立即注册</a>
                 </div>
             </div>
         </div>
@@ -266,26 +266,26 @@
     <div class="modal" id="history-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" data-i18n="historyTitle">📝 历史记录</h2>
+                <h2 class="modal-title">📝 历史记录</h2>
                 <button class="close-btn" id="close-history-modal">×</button>
             </div>
             <div class="table-responsive">
                 <table class="history-table">
                     <thead>
                         <tr>
-                            <th data-i18n="tableNumber">#</th>
-                            <th data-i18n="tableTarget">目标</th>
-                            <th data-i18n="tableNum1">数字1</th>
-                            <th data-i18n="tableNum2">数字2</th>
-                            <th data-i18n="tableResult">结果</th>
-                            <th data-i18n="tableTime">用时(秒)</th>
+                            <th>#</th>
+                            <th>目标</th>
+                            <th>数字1</th>
+                            <th>数字2</th>
+                            <th>结果</th>
+                            <th>用时(秒)</th>
                         </tr>
                     </thead>
                     <tbody id="history-table-body"></tbody>
                 </table>
             </div>
             <div class="controls" style="margin-top: 20px;">
-                <button class="btn" id="clear-history-btn"><span data-i18n="clearHistory">清空本次记录</span></button>
+                <button class="btn" id="clear-history-btn"><span>清空本次记录</span></button>
             </div>
         </div>
     </div>
@@ -294,11 +294,11 @@
     <div class="modal" id="statistics-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" data-i18n="statisticsTitle">📊 统计分析</h2>
+                <h2 class="modal-title">📊 统计分析</h2>
                 <button class="close-btn" id="close-statistics-modal">×</button>
             </div>
             <div id="statistics-content">
-                <div style="padding: 20px;"><p id="stats-text" data-i18n="loadingStats">加载统计信息中...</p></div>
+                <div style="padding: 20px;"><p id="stats-text">加载统计信息中...</p></div>
             </div>
         </div>
     </div>
@@ -307,7 +307,7 @@
     <div class="modal" id="achievements-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" data-i18n="achievementsTitle">⭐ 成就系统</h2>
+                <h2 class="modal-title">⭐ 成就系统</h2>
                 <button class="close-btn" id="close-achievements-modal">×</button>
             </div>
             <div class="achievements-grid" id="achievements-grid"></div>
@@ -318,26 +318,26 @@
     <div class="modal" id="wrongbook-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" data-i18n="wrongbookTitle">📖 错题本</h2>
+                <h2 class="modal-title">📖 错题本</h2>
                 <button class="close-btn" id="close-wrongbook-modal">×</button>
             </div>
             <div class="wrong-questions-list" id="wrong-questions-list"></div>
             <div class="controls" style="margin-top: 20px;">
                 <button class="btn" id="sync-wrong-questions-btn">
-                    <span data-i18n="syncWrongQuestions">☁️ 同步错题到云端</span>
+                    <span>☁️ 同步错题到云端</span>
                 </button>
                 <button class="btn" id="clear-wrong-questions-btn">
-                    <span data-i18n="clearWrongQuestions">🗑️ 清空本地错题</span>
+                    <span>🗑️ 清空本地错题</span>
                 </button>
             </div>
         </div>
     </div>
     
-    <!-- 排行榜弹窗 - 优化版 -->
+    <!-- 排行榜弹窗 -->
     <div class="modal" id="leaderboard-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" data-i18n="leaderboardTitle">🏆 排行榜</h2>
+                <h2 class="modal-title">🏆 排行榜</h2>
                 <button class="close-btn" id="close-leaderboard-modal">×</button>
             </div>
             
@@ -346,7 +346,7 @@
                 <h3 class="leaderboard-title">🏆 玩家排行</h3>
                 <div class="leaderboard-controls">
                     <div class="limit-selector">
-                        <label data-i18n="show">显示:</label>
+                        <label>显示:</label>
                         <select id="leaderboard-limit" class="limit-select">
                             <option value="5">5名</option>
                             <option value="10" selected>10名</option>
@@ -355,7 +355,7 @@
                         </select>
                     </div>
                     <button class="leaderboard-refresh-btn" id="sync-leaderboard-btn">
-                        🔄 <span data-i18n="refresh">刷新</span>
+                        🔄 刷新
                     </button>
                 </div>
             </div>
@@ -363,17 +363,17 @@
             <!-- 模式切换选项卡 -->
             <div class="tabs leaderboard-tabs">
                 <button class="tab-btn active" data-mode="easy" id="tab-easy">
-                    <span data-i18n="leaderboardEasy">🟢 简单模式</span>
+                    🟢 简单模式
                 </button>
                 <button class="tab-btn" data-mode="standard" id="tab-standard">
-                    <span data-i18n="leaderboardStandard">🟠 挑战30</span>
+                    🟠 挑战30
                 </button>
                 <button class="tab-btn" data-mode="challenge" id="tab-challenge">
-                    <span data-i18n="leaderboardChallenge">🔴 激情90秒</span>
+                    🔴 激情90秒
                 </button>
             </div>
             
-            <!-- 排行榜容器 -->
+            <!-- 排行榜容器 - 保持原ID供JS使用，移除多余class -->
             <div id="leaderboard-content"></div>
             
             <!-- 分页控件 -->
@@ -388,19 +388,19 @@
             <!-- 我的最佳成绩卡片 -->
             <div class="my-best-card" id="my-best-card" style="display: none;">
                 <div class="my-best-title">
-                    <span>👤</span> <span data-i18n="myBest">我的最佳</span>
+                    <span>👤</span> 我的最佳
                 </div>
                 <div class="my-best-grid">
                     <div class="my-best-item">
-                        <div class="my-best-label" data-i18n="bestScore">最佳得分</div>
+                        <div class="my-best-label">最佳得分</div>
                         <div class="my-best-value" id="my-best-score">0</div>
                     </div>
                     <div class="my-best-item">
-                        <div class="my-best-label" data-i18n="bestAccuracy">最佳正确率</div>
+                        <div class="my-best-label">最佳正确率</div>
                         <div class="my-best-value" id="my-best-accuracy">0%</div>
                     </div>
                     <div class="my-best-item">
-                        <div class="my-best-label" data-i18n="bestTime">最快用时</div>
+                        <div class="my-best-label">最快用时</div>
                         <div class="my-best-value" id="my-best-time">0s</div>
                     </div>
                 </div>
@@ -408,16 +408,16 @@
             
             <!-- 登录提示 -->
             <div class="leaderboard-login-prompt" id="login-prompt" style="display: none;">
-                <h4 data-i18n="needLogin">🔐 需要登录</h4>
-                <p data-i18n="loginPrompt">登录后查看个人排名</p>
+                <h4>🔐 需要登录</h4>
+                <p>登录后查看个人排名</p>
                 <button class="leaderboard-login-btn" onclick="MathGame.showAuthModal()">
-                    🔑 <span data-i18n="loginNow">立即登录</span>
+                    🔑 立即登录
                 </button>
             </div>
             
             <!-- 离线模式提示 -->
             <div class="leaderboard-offline" id="leaderboard-offline" style="display: none;">
-                📴 <span data-i18n="offlineMode">离线模式：排行榜数据不可用</span>
+                📴 离线模式：排行榜数据不可用
             </div>
         </div>
     </div>
@@ -426,7 +426,7 @@
     <div class="modal" id="profile-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" data-i18n="profileTitle">👤 个人资料</h2>
+                <h2 class="modal-title">👤 个人资料</h2>
                 <button class="close-btn" id="close-profile-modal">×</button>
             </div>
             <div class="profile-info">
@@ -435,19 +435,19 @@
                 <div id="profile-role" style="color: #666; margin-bottom: 10px;"></div>
                 <div class="profile-stats">
                     <div class="profile-stat">
-                        <div class="profile-stat-label" data-i18n="totalGames">游戏次数</div>
+                        <div class="profile-stat-label">游戏次数</div>
                         <div class="profile-stat-value" id="profile-game-count">0</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-label" data-i18n="bestScore">最佳得分</div>
+                        <div class="profile-stat-label">最佳得分</div>
                         <div class="profile-stat-value" id="profile-high-score">0</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-label" data-i18n="avgAccuracy">平均正确率</div>
+                        <div class="profile-stat-label">平均正确率</div>
                         <div class="profile-stat-value" id="profile-avg-accuracy">0%</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-label" data-i18n="joinDate">注册时间</div>
+                        <div class="profile-stat-label">注册时间</div>
                         <div class="profile-stat-value" id="profile-join-date">-</div>
                     </div>
                 </div>
@@ -479,7 +479,7 @@
                     <div class="form-group">
                         <label>📥 下载模板文件：</label>
                         <button class="btn" id="download-template-btn" style="background: #6c757d;">
-                            📥 <span data-i18n="downloadTemplate">下载模板</span>
+                            📥 下载模板
                         </button>
                     </div>
                     
@@ -489,17 +489,17 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>🔑 <span data-i18n="defaultPassword">默认密码</span>：</label>
+                        <label>🔑 默认密码：</label>
                         <input type="text" id="default-password" value="stu123456" placeholder="留空则使用 stu123456">
                     </div>
                     
                     <div class="form-group">
-                        <label>🏫 <span data-i18n="className">班级名称</span>：</label>
+                        <label>🏫 班级名称：</label>
                         <input type="text" id="class-name" placeholder="例如：三年一班">
                     </div>
                     
                     <button class="btn btn-primary" id="upload-excel-btn" style="margin-top: 20px;">
-                        📤 <span data-i18n="uploadExcel">开始批量注册</span>
+                        📤 开始批量注册
                     </button>
                     
                     <div id="upload-progress" style="margin-top: 20px; display: none;">
@@ -512,10 +512,10 @@
                     <div id="upload-result" style="margin-top: 20px; max-height: 300px; overflow-y: auto; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none;"></div>
                     
                     <div id="account-cards" style="margin-top: 20px; display: none;">
-                        <h4>📇 <span data-i18n="accountCards">生成的账号卡片</span></h4>
+                        <h4>📇 生成的账号卡片</h4>
                         <div id="account-cards-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 10px;"></div>
                         <button class="btn" id="print-cards-btn" style="margin-top: 15px; background: #2196F3;">
-                            🖨️ <span data-i18n="printCards">打印卡片</span>
+                            🖨️ 打印卡片
                         </button>
                     </div>
                 </div>
@@ -525,7 +525,7 @@
                     <h3 style="margin-bottom: 15px; color: #333;">✅ 教师审核</h3>
                     <div id="pending-teachers-list" style="max-height: 400px; overflow-y: auto; padding: 10px; background: #f8f9fa; border-radius: 8px;">
                         <div style="text-align: center; padding: 40px; color: #666;">
-                            <span data-i18n="noPendingApplications">暂无待审核的教师申请</span>
+                            暂无待审核的教师申请
                         </div>
                     </div>
                 </div>
@@ -534,7 +534,7 @@
                 <div id="class-management-tab" class="tab-content" style="display: none;">
                     <h3 style="margin-bottom: 15px; color: #333;">📚 班级管理</h3>
                     <div style="text-align: center; padding: 40px; color: #666;">
-                        <span data-i18n="comingSoon">功能开发中，敬请期待...</span>
+                        功能开发中，敬请期待...
                     </div>
                 </div>
             </div>
@@ -596,30 +596,30 @@
             <div class="result-title" id="result-title">🎉 游戏结束!</div>
             <div class="result-stats">
                 <div class="stat-item">
-                    <div class="stat-label" data-i18n="finalScore">最终得分</div>
+                    <div class="stat-label">最终得分</div>
                     <div class="stat-value" id="final-score">0</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label" data-i18n="finalCompleted">完成题数</div>
+                    <div class="stat-label">完成题数</div>
                     <div class="stat-value" id="final-completed">0</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label" data-i18n="finalTime">用时</div>
+                    <div class="stat-label">用时</div>
                     <div class="stat-value" id="final-time">0秒</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label" data-i18n="finalAccuracy">正确率</div>
+                    <div class="stat-label">正确率</div>
                     <div class="stat-value" id="final-accuracy">100%</div>
                 </div>
             </div>
             <div class="input-group">
-                <input type="text" id="player-name" data-i18n="playerNamePlaceholder" placeholder="请输入你的名字" maxlength="20">
-                <button class="btn" id="save-score-btn"><span data-i18n="saveScore">保存成绩</span></button>
+                <input type="text" id="player-name" placeholder="请输入你的名字" maxlength="20">
+                <button class="btn" id="save-score-btn"><span>保存成绩</span></button>
             </div>
             <div class="controls">
-                <button class="btn btn-primary" id="play-again-btn"><span data-i18n="playAgain">再玩一次</span></button>
-                <button class="btn" id="view-leaderboard-btn"><span data-i18n="viewLeaderboard">查看排行榜</span></button>
-                <button class="btn" id="view-statistics-btn"><span data-i18n="viewStatistics">查看统计</span></button>
+                <button class="btn btn-primary" id="play-again-btn"><span>再玩一次</span></button>
+                <button class="btn" id="view-leaderboard-btn"><span>查看排行榜</span></button>
+                <button class="btn" id="view-statistics-btn"><span>查看统计</span></button>
             </div>
         </div>
     </div>
@@ -627,8 +627,8 @@
     <!-- 匹配反馈 -->
     <div class="match-feedback" id="match-feedback"></div>
     
-    <!-- 加载JavaScript -->
-    <script src="/deepseek_javascript_20260214_55b278.js"></script>
+    <!-- 加载JavaScript - 使用相对路径，确保文件名正确 -->
+    <script src="app.js"></script>
     
     <!-- 确保页面加载完成后显示内容 -->
     <script>
