@@ -290,742 +290,7 @@ h1 {
     }
 }
 
-/* ========== 设备断点 ========== */
-
-/* 1. 超大型桌面 (≥1440px) */
-@media (min-width: 1440px) {
-    .container {
-        max-width: 1100px;
-    }
-    
-    .game-grid {
-        gap: 22px;
-        padding: 28px;
-    }
-    
-    .number-card {
-        font-size: 2.5em;
-    }
-}
-
-/* 2. 大型桌面 (1200px - 1439px) */
-@media (min-width: 1200px) and (max-width: 1439px) {
-    .container {
-        max-width: 1000px;
-    }
-    
-    .game-grid {
-        gap: 20px;
-    }
-}
-
-/* 3. 标准桌面 (1024px - 1199px) */
-@media (min-width: 1024px) and (max-width: 1199px) {
-    .sidebar {
-        width: 260px;
-        padding: 20px 10px;
-    }
-    
-    .sidebar-btn {
-        padding: 14px 8px;
-        font-size: 1em;
-        min-height: 62px;
-    }
-    
-    [lang="en"] .sidebar-btn {
-        font-size: 0.95em;
-        min-height: 68px;
-    }
-    
-    .user-info {
-        position: absolute;
-        top: 15px;
-        right: 20px;
-    }
-    
-    .game-grid {
-        gap: 18px;
-    }
-}
-
-/* 4. iPad Pro 横屏 */
-@media (min-width: 1024px) and (max-width: 1024px) and (min-height: 1366px) {
-    .sidebar {
-        width: 240px;
-    }
-}
-
-/* 5. 小型桌面/大型平板横屏 (992px - 1023px) */
-@media (min-width: 992px) and (max-width: 1023px) {
-    body {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: calc(100% - 30px);
-        margin: 10px 15px;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        padding: 18px 15px;
-        gap: 12px;
-    }
-    
-    .sidebar-btn {
-        width: calc(25% - 10px);
-        min-width: 140px;
-        padding: 16px 8px;
-        font-size: 1em;
-        min-height: 80px;
-        flex-direction: column;
-        gap: 4px;
-        box-shadow: 0 6px 0 #b45f2e;
-    }
-    
-    [lang="en"] .sidebar-btn {
-        min-width: 150px;
-        font-size: 0.9em;
-    }
-    
-    .sidebar-btn i, 
-    .sidebar-btn svg {
-        font-size: 1.5em;
-    }
-    
-    .user-info {
-        position: static;
-        margin: 0 auto 15px auto;
-    }
-    
-    .main-content {
-        padding: 10px 15px;
-    }
-}
-
-/* 6. iPad 横屏 (768px - 991px) */
-@media (min-width: 768px) and (max-width: 991px) {
-    body {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: calc(100% - 30px);
-        margin: 10px 15px;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        padding: 18px 12px;
-        gap: 12px;
-    }
-    
-    .sidebar-btn {
-        width: calc(33.33% - 10px);
-        min-width: 120px;
-        padding: 16px 6px;
-        font-size: 0.95em;
-        min-height: 85px;
-        flex-direction: column;
-        gap: 4px;
-    }
-    
-    [lang="en"] .sidebar-btn {
-        min-width: 130px;
-        font-size: 0.85em;
-        padding: 14px 4px;
-    }
-    
-    .sidebar-btn i, 
-    .sidebar-btn svg {
-        font-size: 1.5em;
-        margin-bottom: 4px;
-    }
-    
-    .user-info {
-        position: static;
-        margin: 0 auto 15px auto;
-    }
-    
-    h1 {
-        font-size: 2.8em;
-    }
-    
-    .container {
-        padding: 25px 20px;
-    }
-    
-    .mode-selection {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-    }
-    
-    .game-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        padding: 22px;
-    }
-    
-    .number-card {
-        font-size: 2.2em;
-        min-height: 85px;
-    }
-    
-    .game-header {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .achievements-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* 7. iPad Mini 竖屏 */
-@media (min-width: 760px) and (max-width: 768px) and (min-height: 1024px) {
-    .sidebar-btn {
-        min-height: 90px;
-    }
-}
-
-/* 8. 大型手机横屏/小平板竖屏 (576px - 767px) */
-@media (min-width: 576px) and (max-width: 767px) {
-    body {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: calc(100% - 24px);
-        margin: 8px 12px;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        padding: 16px 10px;
-        gap: 10px;
-    }
-    
-    .sidebar-btn {
-        width: calc(33.33% - 8px);
-        min-width: 100px;
-        padding: 14px 5px;
-        font-size: 0.9em;
-        min-height: 80px;
-        flex-direction: column;
-        gap: 3px;
-        box-shadow: 0 5px 0 #b45f2e;
-    }
-    
-    [lang="en"] .sidebar-btn {
-        min-width: 110px;
-        font-size: 0.8em;
-        padding: 12px 3px;
-    }
-    
-    .sidebar-btn i, 
-    .sidebar-btn svg {
-        font-size: 1.3em;
-    }
-    
-    h1 {
-        font-size: 2.4em;
-    }
-    
-    .subtitle {
-        font-size: 1.1em;
-        padding: 6px 18px;
-    }
-    
-    [lang="en"] .subtitle {
-        font-size: 1em;
-        padding: 5px 15px;
-    }
-    
-    .container {
-        padding: 20px 15px;
-    }
-    
-    .mode-selection {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-    
-    .game-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        padding: 18px;
-    }
-    
-    .number-card {
-        font-size: 1.9em;
-        min-height: 75px;
-    }
-    
-    .target-number {
-        width: 70px;
-        height: 70px;
-        font-size: 2.5em;
-    }
-    
-    .game-header {
-        padding: 14px 8px;
-    }
-    
-    .info-value {
-        font-size: 1.8em;
-    }
-    
-    .btn {
-        padding: 14px 22px;
-        font-size: 1.2em;
-        width: calc(50% - 8px);
-    }
-    
-    .achievements-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-    }
-    
-    .modal-content {
-        padding: 22px 18px;
-    }
-    
-    .modal-title {
-        font-size: 1.8em;
-    }
-}
-
-/* 9. 标准手机竖屏 (375px - 575px) */
-@media (min-width: 375px) and (max-width: 575px) {
-    body {
-        flex-direction: column;
-    }
-    
-    .language-switch {
-        top: 8px;
-        left: 8px;
-    }
-    
-    .language-btn {
-        padding: 6px 14px;
-        font-size: 0.9em;
-        border-width: 3px;
-        box-shadow: 0 4px 0 #8b008b;
-    }
-    
-    .sidebar {
-        width: calc(100% - 20px);
-        margin: 8px 10px;
-        flex-direction: column;
-        padding: 16px 12px;
-        gap: 12px;
-    }
-    
-    .sidebar-btn {
-        width: 100%;
-        flex-direction: row;
-        min-height: 64px;
-        padding: 14px 12px;
-        font-size: 1.1em;
-        gap: 10px;
-        box-shadow: 0 6px 0 #b45f2e;
-        justify-content: flex-start;
-    }
-    
-    [lang="en"] .sidebar-btn {
-        font-size: 1em;
-        min-height: 68px;
-        padding: 12px 10px;
-        justify-content: center;
-    }
-    
-    .sidebar-btn i, 
-    .sidebar-btn svg {
-        font-size: 1.4em;
-        min-width: 24px;
-    }
-    
-    h1 {
-        font-size: 2.2em;
-    }
-    
-    .subtitle {
-        font-size: 1em;
-        padding: 6px 16px;
-    }
-    
-    [lang="en"] .subtitle {
-        font-size: 0.9em;
-        padding: 5px 14px;
-    }
-    
-    .user-info {
-        padding: 5px 14px;
-    }
-    
-    .user-avatar {
-        width: 38px;
-        height: 38px;
-        font-size: 1.4em;
-    }
-    
-    .user-name {
-        max-width: 120px;
-        font-size: 1em;
-    }
-    
-    .container {
-        padding: 20px 15px;
-        border-radius: 40px;
-    }
-    
-    .mode-selection {
-        grid-template-columns: 1fr;
-        gap: 12px;
-        margin-bottom: 20px;
-    }
-    
-    .mode-btn {
-        padding: 18px 10px;
-        min-height: 90px;
-    }
-    
-    [lang="en"] .mode-btn {
-        min-height: 100px;
-        padding: 16px 8px;
-    }
-    
-    .mode-btn .mode-title {
-        font-size: 1.3em;
-    }
-    
-    [lang="en"] .mode-btn .mode-title {
-        font-size: 1.1em;
-    }
-    
-    .game-setting {
-        padding: 20px 18px;
-        margin-bottom: 20px;
-    }
-    
-    .setting-group {
-        gap: 15px;
-    }
-    
-    .setting-group label {
-        font-size: 1.1em;
-        padding: 8px 18px;
-    }
-    
-    .setting-group input {
-        padding: 12px 20px !important;
-        font-size: 1.1em !important;
-        width: 100%;
-    }
-    
-    .number-range {
-        justify-content: center;
-        gap: 10px;
-    }
-    
-    .range-btn {
-        padding: 8px 18px;
-        font-size: 1em;
-    }
-    
-    .game-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        padding: 16px;
-    }
-    
-    .number-card {
-        font-size: 2em;
-        min-height: 80px;
-        box-shadow: 0 5px 0 #e8d4c2;
-    }
-    
-    .target-container {
-        padding: 20px 18px;
-        margin: 20px 0;
-    }
-    
-    .target-number {
-        width: 75px;
-        height: 75px;
-        font-size: 2.8em;
-    }
-    
-    .game-header {
-        padding: 15px 10px;
-        margin-bottom: 20px;
-    }
-    
-    .info-label {
-        font-size: 0.9em;
-    }
-    
-    .info-value {
-        font-size: 1.8em;
-    }
-    
-    .controls {
-        gap: 15px;
-        margin: 20px 0 15px;
-    }
-    
-    .btn {
-        width: 100%;
-        padding: 16px 20px;
-        font-size: 1.3em;
-        justify-content: center;
-    }
-    
-    .achievements-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .achievement-card {
-        min-height: 200px;
-        padding: 20px 15px;
-    }
-    
-    .modal-content {
-        padding: 20px 18px;
-    }
-    
-    .modal-title {
-        font-size: 1.7em;
-    }
-    
-    .close-btn {
-        width: 42px;
-        height: 42px;
-        font-size: 1.7em;
-    }
-    
-    .history-table th,
-    .history-table td {
-        padding: 10px 8px;
-        font-size: 0.9em;
-    }
-}
-
-/* 10. iPhone SE / 小屏手机 (320px - 374px) */
-@media (min-width: 320px) and (max-width: 374px) {
-    body {
-        flex-direction: column;
-    }
-    
-    .language-switch {
-        top: 6px;
-        left: 6px;
-    }
-    
-    .language-btn {
-        padding: 5px 12px;
-        font-size: 0.8em;
-    }
-    
-    .sidebar {
-        width: calc(100% - 16px);
-        margin: 6px 8px;
-        padding: 14px 8px;
-        gap: 10px;
-    }
-    
-    .sidebar-btn {
-        min-height: 60px;
-        padding: 12px 8px;
-        font-size: 1em;
-        gap: 8px;
-        box-shadow: 0 4px 0 #b45f2e;
-    }
-    
-    [lang="en"] .sidebar-btn {
-        font-size: 0.9em;
-        min-height: 64px;
-        padding: 10px 6px;
-    }
-    
-    .sidebar-btn i, 
-    .sidebar-btn svg {
-        font-size: 1.3em;
-    }
-    
-    h1 {
-        font-size: 1.9em;
-    }
-    
-    .subtitle {
-        font-size: 0.9em;
-        padding: 5px 14px;
-    }
-    
-    [lang="en"] .subtitle {
-        font-size: 0.8em;
-        padding: 4px 12px;
-    }
-    
-    .user-info {
-        padding: 4px 12px;
-    }
-    
-    .user-avatar {
-        width: 34px;
-        height: 34px;
-        font-size: 1.3em;
-    }
-    
-    .user-name {
-        max-width: 100px;
-        font-size: 0.9em;
-    }
-    
-    .container {
-        padding: 16px 12px;
-        border-radius: 35px;
-    }
-    
-    .mode-btn {
-        padding: 16px 8px;
-        min-height: 85px;
-    }
-    
-    [lang="en"] .mode-btn {
-        min-height: 95px;
-        padding: 14px 6px;
-    }
-    
-    .mode-btn .mode-title {
-        font-size: 1.2em;
-    }
-    
-    [lang="en"] .mode-btn .mode-title {
-        font-size: 1em;
-    }
-    
-    .game-setting {
-        padding: 16px 14px;
-    }
-    
-    .setting-group label {
-        font-size: 1em;
-        padding: 6px 14px;
-    }
-    
-    .setting-group input {
-        padding: 10px 16px !important;
-        font-size: 1em !important;
-    }
-    
-    .game-grid {
-        gap: 10px;
-        padding: 14px;
-    }
-    
-    .number-card {
-        font-size: 1.7em;
-        min-height: 70px;
-    }
-    
-    .target-number {
-        width: 65px;
-        height: 65px;
-        font-size: 2.3em;
-    }
-    
-    .info-value {
-        font-size: 1.6em;
-    }
-    
-    .btn {
-        padding: 14px 18px;
-        font-size: 1.2em;
-    }
-    
-    .modal-title {
-        font-size: 1.5em;
-    }
-    
-    .close-btn {
-        width: 38px;
-        height: 38px;
-        font-size: 1.5em;
-    }
-}
-
-/* 11. 超小屏 (≤319px) */
-@media (max-width: 319px) {
-    body {
-        flex-direction: column;
-    }
-    
-    .language-switch {
-        position: static;
-        text-align: center;
-        margin: 5px auto;
-    }
-    
-    .language-btn {
-        display: inline-flex;
-        padding: 5px 10px;
-        font-size: 0.8em;
-    }
-    
-    .sidebar {
-        width: calc(100% - 10px);
-        margin: 5px;
-        padding: 12px 6px;
-        gap: 8px;
-    }
-    
-    .sidebar-btn {
-        min-height: 56px;
-        padding: 10px 6px;
-        font-size: 0.9em;
-        gap: 6px;
-    }
-    
-    [lang="en"] .sidebar-btn {
-        font-size: 0.8em;
-        min-height: 60px;
-    }
-    
-    h1 {
-        font-size: 1.6em;
-    }
-    
-    .subtitle {
-        font-size: 0.8em;
-        padding: 4px 12px;
-    }
-    
-    [lang="en"] .subtitle {
-        font-size: 0.7em;
-        padding: 3px 10px;
-    }
-    
-    .container {
-        padding: 14px 10px;
-        border-radius: 30px;
-    }
-    
-    .game-grid {
-        gap: 8px;
-        padding: 12px;
-    }
-    
-    .number-card {
-        font-size: 1.5em;
-        min-height: 60px;
-    }
-    
-    .target-number {
-        width: 55px;
-        height: 55px;
-        font-size: 2em;
-    }
-}
-
-/* ---------- 主容器 ---------- */
+/* ========== 主容器 ========== */
 .container {
     position: relative;
     width: 100%;
@@ -1714,6 +979,351 @@ h1 {
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
+/* ========== 排行榜 - 优化版 ========== */
+
+/* 排行榜容器 - 唯一容器 */
+.leaderboard-container {
+    background: rgba(255, 255, 230, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 6px solid #ffd700;
+    border-radius: 60px;
+    padding: 25px;
+    box-shadow: 0 15px 0 #ffa500, 0 20px 30px rgba(255, 165, 0, 0.4);
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* 排行榜表格 - 唯一表格 */
+.leaderboard-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    margin: 0;
+    padding: 0;
+}
+
+/* 表格头部 */
+.leaderboard-table th {
+    background: #ffb347;
+    color: #2d1f1f;
+    font-size: 1.2em;
+    font-weight: 800;
+    padding: 15px 12px;
+    text-align: center;
+    border: 4px solid #ffffe0;
+    border-radius: 40px;
+    box-shadow: 0 5px 0 #b87d2e;
+    white-space: nowrap;
+}
+
+/* 表格单元格 */
+.leaderboard-table td {
+    background: #fffacd;
+    color: #2d1f1f;
+    font-size: 1.1em;
+    font-weight: 600;
+    padding: 14px 12px;
+    text-align: center;
+    border: 4px solid #ffd700;
+    border-radius: 40px;
+    box-shadow: 0 4px 0 #ffa500;
+    transition: all 0.2s ease;
+}
+
+/* 表格行悬停效果 */
+.leaderboard-table tr:hover td {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #ff8c00;
+    background: #fff5b5;
+}
+
+/* 排名前三名特殊样式 */
+.leaderboard-table tr:nth-child(1) td {
+    background: linear-gradient(145deg, #fff0b5, #ffe5a0);
+    border-color: #ffd700;
+    font-size: 1.2em;
+    font-weight: 800;
+}
+
+.leaderboard-table tr:nth-child(2) td {
+    background: linear-gradient(145deg, #f0f0f0, #e8e8e8);
+}
+
+.leaderboard-table tr:nth-child(3) td {
+    background: linear-gradient(145deg, #ffecd8, #ffe0c0);
+}
+
+/* 当前用户高亮 */
+.leaderboard-table tr.current-user td {
+    background: #fff9c4;
+    border-color: #ffa500;
+    box-shadow: 0 0 0 3px #ffff00;
+}
+
+/* 排名序号列 */
+.leaderboard-table td:first-child {
+    font-weight: 800;
+    color: #b45f2e;
+    width: 70px;
+}
+
+/* 玩家名称列 */
+.leaderboard-table td:nth-child(2) {
+    font-weight: 700;
+    text-align: left;
+    padding-left: 20px;
+}
+
+/* 分数列 */
+.leaderboard-table td:last-child {
+    font-weight: 800;
+    color: #ff4757;
+    width: 100px;
+}
+
+/* 排行榜头部 */
+.leaderboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.leaderboard-title {
+    font-size: 2em;
+    background: linear-gradient(145deg, #ff4d4d, #ff9f4b, #ffd93d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.leaderboard-title::before {
+    content: "🏆";
+    font-size: 1.2em;
+}
+
+/* 刷新按钮 */
+.leaderboard-refresh-btn {
+    background: #ffd700;
+    border: 4px solid white;
+    border-radius: 50px;
+    padding: 10px 20px;
+    font-weight: 700;
+    color: #2d1f1f;
+    box-shadow: 0 5px 0 #b87d2e;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1em;
+}
+
+.leaderboard-refresh-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 0 #b45f2e;
+}
+
+.leaderboard-refresh-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 3px 0 #b45f2e;
+}
+
+/* 显示数量选择器 */
+.limit-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.limit-selector label {
+    font-weight: 600;
+    color: #2d1f1f;
+}
+
+.limit-selector select {
+    padding: 8px 15px;
+    background: #fffacd;
+    border: 3px solid #ffd700;
+    border-radius: 40px;
+    font-weight: 600;
+    color: #2d1f1f;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #ffa500;
+}
+
+/* 分页控制器 */
+.leaderboard-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    background: #ffd700;
+    border: 3px solid white;
+    border-radius: 40px;
+    padding: 8px 16px;
+    font-weight: 700;
+    color: #2d1f1f;
+    box-shadow: 0 4px 0 #b87d2e;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    min-width: 40px;
+}
+
+.pagination-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #b45f2e;
+}
+
+.pagination-btn.active {
+    background: #ffa500;
+    border-color: #ffffe0;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 3px 0 #8a6e4e;
+}
+
+/* 没有数据时的提示 */
+.leaderboard-empty {
+    background: #fff5e5;
+    border: 6px dashed #ffa500;
+    border-radius: 60px;
+    padding: 40px 20px;
+    text-align: center;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #b45f2e;
+    margin: 20px 0;
+    width: 100%;
+}
+
+.leaderboard-empty::before {
+    content: "🏆 ";
+    font-size: 1.5em;
+}
+
+.leaderboard-empty::after {
+    content: " 🏆";
+    font-size: 1.5em;
+}
+
+/* 我的最佳成绩卡片 */
+.my-best-card {
+    background: linear-gradient(145deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 60px;
+    padding: 25px;
+    margin-top: 30px;
+    box-shadow: 0 15px 0 #4a3f8a, 0 20px 30px rgba(102, 126, 234, 0.4);
+}
+
+.my-best-title {
+    font-size: 1.5em;
+    font-weight: 800;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.my-best-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.my-best-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 40px;
+    padding: 20px;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.my-best-label {
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.my-best-value {
+    font-size: 1.8em;
+    font-weight: 800;
+}
+
+/* 登录提示卡片 */
+.leaderboard-login-prompt {
+    background: linear-gradient(145deg, #6c757d, #495057);
+    border-radius: 60px;
+    padding: 40px 30px;
+    text-align: center;
+    color: white;
+    margin-top: 30px;
+}
+
+.leaderboard-login-prompt h4 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+.leaderboard-login-prompt p {
+    opacity: 0.9;
+    margin-bottom: 20px;
+}
+
+.leaderboard-login-btn {
+    background: white;
+    color: #495057;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 50px;
+    font-size: 1.2em;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 0 #343a40;
+    transition: all 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.leaderboard-login-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 11px 0 #2a2e32;
+}
+
+.leaderboard-login-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 5px 0 #2a2e32;
+}
+
+/* 离线模式提示 */
+.leaderboard-offline {
+    margin-top: 20px;
+    text-align: center;
+    color: #666;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 40px;
+    border: 2px dashed #ffa500;
+}
+
 /* ---------- 成就系统 ---------- */
 .achievements-grid {
     display: grid;
@@ -1762,7 +1372,6 @@ h1 {
     word-break: break-word;
 }
 
-/* 成就描述 */
 .achievement-desc { 
     font-size: 0.9em; 
     color: #5a3e3e; 
@@ -1985,48 +1594,6 @@ h1 {
     box-shadow: 0 4px 0 #b595b5;
 }
 
-/* ---------- 排行榜 ---------- */
-.leaderboard-container {
-    background: rgba(255, 255, 230, 0.95);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 6px solid #ffd700;
-    border-radius: 60px;
-    padding: 25px;
-    box-shadow: 0 15px 0 #ffa500, 0 20px 30px rgba(255, 165, 0, 0.4);
-    margin-top: 25px;
-}
-
-.leaderboard-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 12px;
-}
-
-.leaderboard-table th {
-    background: #ffb347;
-    color: #2d1f1f;
-    font-size: 1.2em;
-    font-weight: 800;
-    padding: 15px 10px;
-    text-align: center;
-    border: 4px solid #ffffe0;
-    border-radius: 40px;
-    box-shadow: 0 5px 0 #b87d2e;
-}
-
-.leaderboard-table td {
-    background: #fffacd;
-    color: #2d1f1f;
-    font-size: 1.1em;
-    font-weight: 600;
-    padding: 12px 10px;
-    text-align: center;
-    border: 4px solid #ffd700;
-    border-radius: 40px;
-    box-shadow: 0 4px 0 #ffa500;
-}
-
 /* 触摸优化 */
 @media (hover: none) and (pointer: coarse) {
     .sidebar-btn:hover,
@@ -2035,7 +1602,8 @@ h1 {
     .btn:hover,
     .range-btn:hover,
     .tab-btn:hover,
-    .achievement-card:hover {
+    .achievement-card:hover,
+    .leaderboard-table tr:hover td {
         transform: none;
         box-shadow: inherit;
     }
@@ -2045,9 +1613,844 @@ h1 {
     .number-card:active,
     .btn:active,
     .range-btn:active,
-    .tab-btn:active {
+    .tab-btn:active,
+    .pagination-btn:active {
         transform: translateY(3px);
         box-shadow: 0 4px 0 #b45f2e;
+    }
+}
+
+/* ========== 响应式断点 ========== */
+
+/* 超大型桌面 (≥1440px) */
+@media (min-width: 1440px) {
+    .container {
+        max-width: 1100px;
+    }
+    
+    .game-grid {
+        gap: 22px;
+        padding: 28px;
+    }
+    
+    .number-card {
+        font-size: 2.5em;
+    }
+}
+
+/* 大型桌面 (1200px - 1439px) */
+@media (min-width: 1200px) and (max-width: 1439px) {
+    .container {
+        max-width: 1000px;
+    }
+    
+    .game-grid {
+        gap: 20px;
+    }
+}
+
+/* 标准桌面 (1024px - 1199px) */
+@media (min-width: 1024px) and (max-width: 1199px) {
+    .sidebar {
+        width: 260px;
+        padding: 20px 10px;
+    }
+    
+    .sidebar-btn {
+        padding: 14px 8px;
+        font-size: 1em;
+        min-height: 62px;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        font-size: 0.95em;
+        min-height: 68px;
+    }
+    
+    .user-info {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+    }
+    
+    .game-grid {
+        gap: 18px;
+    }
+}
+
+/* iPad Pro 横屏 */
+@media (min-width: 1024px) and (max-width: 1024px) and (min-height: 1366px) {
+    .sidebar {
+        width: 240px;
+    }
+}
+
+/* 小型桌面/大型平板横屏 (992px - 1023px) */
+@media (min-width: 992px) and (max-width: 1023px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: calc(100% - 30px);
+        margin: 10px 15px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 18px 15px;
+        gap: 12px;
+    }
+    
+    .sidebar-btn {
+        width: calc(25% - 10px);
+        min-width: 140px;
+        padding: 16px 8px;
+        font-size: 1em;
+        min-height: 80px;
+        flex-direction: column;
+        gap: 4px;
+        box-shadow: 0 6px 0 #b45f2e;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        min-width: 150px;
+        font-size: 0.9em;
+    }
+    
+    .sidebar-btn i, 
+    .sidebar-btn svg {
+        font-size: 1.5em;
+    }
+    
+    .user-info {
+        position: static;
+        margin: 0 auto 15px auto;
+    }
+    
+    .main-content {
+        padding: 10px 15px;
+    }
+}
+
+/* iPad 横屏 (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: calc(100% - 30px);
+        margin: 10px 15px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 18px 12px;
+        gap: 12px;
+    }
+    
+    .sidebar-btn {
+        width: calc(33.33% - 10px);
+        min-width: 120px;
+        padding: 16px 6px;
+        font-size: 0.95em;
+        min-height: 85px;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        min-width: 130px;
+        font-size: 0.85em;
+        padding: 14px 4px;
+    }
+    
+    .sidebar-btn i, 
+    .sidebar-btn svg {
+        font-size: 1.5em;
+        margin-bottom: 4px;
+    }
+    
+    .user-info {
+        position: static;
+        margin: 0 auto 15px auto;
+    }
+    
+    h1 {
+        font-size: 2.8em;
+    }
+    
+    .container {
+        padding: 25px 20px;
+    }
+    
+    .mode-selection {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .game-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        padding: 22px;
+    }
+    
+    .number-card {
+        font-size: 2.2em;
+        min-height: 85px;
+    }
+    
+    .game-header {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .achievements-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* 排行榜响应式 */
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 12px 8px;
+        font-size: 1em;
+    }
+    
+    .my-best-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+}
+
+/* iPad Mini 竖屏 */
+@media (min-width: 760px) and (max-width: 768px) and (min-height: 1024px) {
+    .sidebar-btn {
+        min-height: 90px;
+    }
+}
+
+/* 大型手机横屏/小平板竖屏 (576px - 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: calc(100% - 24px);
+        margin: 8px 12px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 16px 10px;
+        gap: 10px;
+    }
+    
+    .sidebar-btn {
+        width: calc(33.33% - 8px);
+        min-width: 100px;
+        padding: 14px 5px;
+        font-size: 0.9em;
+        min-height: 80px;
+        flex-direction: column;
+        gap: 3px;
+        box-shadow: 0 5px 0 #b45f2e;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        min-width: 110px;
+        font-size: 0.8em;
+        padding: 12px 3px;
+    }
+    
+    .sidebar-btn i, 
+    .sidebar-btn svg {
+        font-size: 1.3em;
+    }
+    
+    h1 {
+        font-size: 2.4em;
+    }
+    
+    .subtitle {
+        font-size: 1.1em;
+        padding: 6px 18px;
+    }
+    
+    [lang="en"] .subtitle {
+        font-size: 1em;
+        padding: 5px 15px;
+    }
+    
+    .container {
+        padding: 20px 15px;
+    }
+    
+    .mode-selection {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .game-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        padding: 18px;
+    }
+    
+    .number-card {
+        font-size: 1.9em;
+        min-height: 75px;
+    }
+    
+    .target-number {
+        width: 70px;
+        height: 70px;
+        font-size: 2.5em;
+    }
+    
+    .game-header {
+        padding: 14px 8px;
+    }
+    
+    .info-value {
+        font-size: 1.8em;
+    }
+    
+    .btn {
+        padding: 14px 22px;
+        font-size: 1.2em;
+        width: calc(50% - 8px);
+    }
+    
+    .achievements-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .modal-content {
+        padding: 22px 18px;
+    }
+    
+    .modal-title {
+        font-size: 1.8em;
+    }
+    
+    /* 排行榜响应式 */
+    .leaderboard-table td:first-child {
+        width: 50px;
+    }
+    
+    .my-best-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .leaderboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .limit-selector {
+        width: 100%;
+    }
+}
+
+/* 标准手机竖屏 (375px - 575px) */
+@media (min-width: 375px) and (max-width: 575px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .language-switch {
+        top: 8px;
+        left: 8px;
+    }
+    
+    .language-btn {
+        padding: 6px 14px;
+        font-size: 0.9em;
+        border-width: 3px;
+        box-shadow: 0 4px 0 #8b008b;
+    }
+    
+    .sidebar {
+        width: calc(100% - 20px);
+        margin: 8px 10px;
+        flex-direction: column;
+        padding: 16px 12px;
+        gap: 12px;
+    }
+    
+    .sidebar-btn {
+        width: 100%;
+        flex-direction: row;
+        min-height: 64px;
+        padding: 14px 12px;
+        font-size: 1.1em;
+        gap: 10px;
+        box-shadow: 0 6px 0 #b45f2e;
+        justify-content: flex-start;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        font-size: 1em;
+        min-height: 68px;
+        padding: 12px 10px;
+        justify-content: center;
+    }
+    
+    .sidebar-btn i, 
+    .sidebar-btn svg {
+        font-size: 1.4em;
+        min-width: 24px;
+    }
+    
+    h1 {
+        font-size: 2.2em;
+    }
+    
+    .subtitle {
+        font-size: 1em;
+        padding: 6px 16px;
+    }
+    
+    [lang="en"] .subtitle {
+        font-size: 0.9em;
+        padding: 5px 14px;
+    }
+    
+    .user-info {
+        padding: 5px 14px;
+    }
+    
+    .user-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 1.4em;
+    }
+    
+    .user-name {
+        max-width: 120px;
+        font-size: 1em;
+    }
+    
+    .container {
+        padding: 20px 15px;
+        border-radius: 40px;
+    }
+    
+    .mode-selection {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .mode-btn {
+        padding: 18px 10px;
+        min-height: 90px;
+    }
+    
+    [lang="en"] .mode-btn {
+        min-height: 100px;
+        padding: 16px 8px;
+    }
+    
+    .mode-btn .mode-title {
+        font-size: 1.3em;
+    }
+    
+    [lang="en"] .mode-btn .mode-title {
+        font-size: 1.1em;
+    }
+    
+    .game-setting {
+        padding: 20px 18px;
+        margin-bottom: 20px;
+    }
+    
+    .setting-group {
+        gap: 15px;
+    }
+    
+    .setting-group label {
+        font-size: 1.1em;
+        padding: 8px 18px;
+    }
+    
+    .setting-group input {
+        padding: 12px 20px !important;
+        font-size: 1.1em !important;
+        width: 100%;
+    }
+    
+    .number-range {
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .range-btn {
+        padding: 8px 18px;
+        font-size: 1em;
+    }
+    
+    .game-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 16px;
+    }
+    
+    .number-card {
+        font-size: 2em;
+        min-height: 80px;
+        box-shadow: 0 5px 0 #e8d4c2;
+    }
+    
+    .target-container {
+        padding: 20px 18px;
+        margin: 20px 0;
+    }
+    
+    .target-number {
+        width: 75px;
+        height: 75px;
+        font-size: 2.8em;
+    }
+    
+    .game-header {
+        padding: 15px 10px;
+        margin-bottom: 20px;
+    }
+    
+    .info-label {
+        font-size: 0.9em;
+    }
+    
+    .info-value {
+        font-size: 1.8em;
+    }
+    
+    .controls {
+        gap: 15px;
+        margin: 20px 0 15px;
+    }
+    
+    .btn {
+        width: 100%;
+        padding: 16px 20px;
+        font-size: 1.3em;
+        justify-content: center;
+    }
+    
+    .achievements-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .achievement-card {
+        min-height: 200px;
+        padding: 20px 15px;
+    }
+    
+    .modal-content {
+        padding: 20px 18px;
+    }
+    
+    .modal-title {
+        font-size: 1.7em;
+    }
+    
+    .close-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 1.7em;
+    }
+    
+    .history-table th,
+    .history-table td {
+        padding: 10px 8px;
+        font-size: 0.9em;
+    }
+    
+    /* 排行榜响应式 */
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 10px 5px;
+        font-size: 0.9em;
+    }
+    
+    .leaderboard-table td:nth-child(2) {
+        padding-left: 10px;
+    }
+    
+    .leaderboard-title {
+        font-size: 1.6em;
+    }
+    
+    .leaderboard-refresh-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .limit-selector {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .leaderboard-pagination {
+        gap: 5px;
+    }
+    
+    .pagination-btn {
+        padding: 6px 12px;
+        min-width: 36px;
+    }
+    
+    .my-best-item {
+        padding: 15px;
+    }
+    
+    .my-best-value {
+        font-size: 1.5em;
+    }
+    
+    .leaderboard-empty {
+        padding: 30px 15px;
+        font-size: 1.1em;
+    }
+}
+
+/* iPhone SE / 小屏手机 (320px - 374px) */
+@media (min-width: 320px) and (max-width: 374px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .language-switch {
+        top: 6px;
+        left: 6px;
+    }
+    
+    .language-btn {
+        padding: 5px 12px;
+        font-size: 0.8em;
+    }
+    
+    .sidebar {
+        width: calc(100% - 16px);
+        margin: 6px 8px;
+        padding: 14px 8px;
+        gap: 10px;
+    }
+    
+    .sidebar-btn {
+        min-height: 60px;
+        padding: 12px 8px;
+        font-size: 1em;
+        gap: 8px;
+        box-shadow: 0 4px 0 #b45f2e;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        font-size: 0.9em;
+        min-height: 64px;
+        padding: 10px 6px;
+    }
+    
+    .sidebar-btn i, 
+    .sidebar-btn svg {
+        font-size: 1.3em;
+    }
+    
+    h1 {
+        font-size: 1.9em;
+    }
+    
+    .subtitle {
+        font-size: 0.9em;
+        padding: 5px 14px;
+    }
+    
+    [lang="en"] .subtitle {
+        font-size: 0.8em;
+        padding: 4px 12px;
+    }
+    
+    .user-info {
+        padding: 4px 12px;
+    }
+    
+    .user-avatar {
+        width: 34px;
+        height: 34px;
+        font-size: 1.3em;
+    }
+    
+    .user-name {
+        max-width: 100px;
+        font-size: 0.9em;
+    }
+    
+    .container {
+        padding: 16px 12px;
+        border-radius: 35px;
+    }
+    
+    .mode-btn {
+        padding: 16px 8px;
+        min-height: 85px;
+    }
+    
+    [lang="en"] .mode-btn {
+        min-height: 95px;
+        padding: 14px 6px;
+    }
+    
+    .mode-btn .mode-title {
+        font-size: 1.2em;
+    }
+    
+    [lang="en"] .mode-btn .mode-title {
+        font-size: 1em;
+    }
+    
+    .game-setting {
+        padding: 16px 14px;
+    }
+    
+    .setting-group label {
+        font-size: 1em;
+        padding: 6px 14px;
+    }
+    
+    .setting-group input {
+        padding: 10px 16px !important;
+        font-size: 1em !important;
+    }
+    
+    .game-grid {
+        gap: 10px;
+        padding: 14px;
+    }
+    
+    .number-card {
+        font-size: 1.7em;
+        min-height: 70px;
+    }
+    
+    .target-number {
+        width: 65px;
+        height: 65px;
+        font-size: 2.3em;
+    }
+    
+    .info-value {
+        font-size: 1.6em;
+    }
+    
+    .btn {
+        padding: 14px 18px;
+        font-size: 1.2em;
+    }
+    
+    .modal-title {
+        font-size: 1.5em;
+    }
+    
+    .close-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 1.5em;
+    }
+    
+    /* 排行榜响应式 */
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 8px 4px;
+        font-size: 0.8em;
+    }
+    
+    .leaderboard-table td:first-child {
+        width: 40px;
+    }
+    
+    .leaderboard-title {
+        font-size: 1.4em;
+    }
+    
+    .pagination-btn {
+        padding: 5px 8px;
+        min-width: 30px;
+        font-size: 0.9em;
+    }
+}
+
+/* 超小屏 (≤319px) */
+@media (max-width: 319px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .language-switch {
+        position: static;
+        text-align: center;
+        margin: 5px auto;
+    }
+    
+    .language-btn {
+        display: inline-flex;
+        padding: 5px 10px;
+        font-size: 0.8em;
+    }
+    
+    .sidebar {
+        width: calc(100% - 10px);
+        margin: 5px;
+        padding: 12px 6px;
+        gap: 8px;
+    }
+    
+    .sidebar-btn {
+        min-height: 56px;
+        padding: 10px 6px;
+        font-size: 0.9em;
+        gap: 6px;
+    }
+    
+    [lang="en"] .sidebar-btn {
+        font-size: 0.8em;
+        min-height: 60px;
+    }
+    
+    h1 {
+        font-size: 1.6em;
+    }
+    
+    .subtitle {
+        font-size: 0.8em;
+        padding: 4px 12px;
+    }
+    
+    [lang="en"] .subtitle {
+        font-size: 0.7em;
+        padding: 3px 10px;
+    }
+    
+    .container {
+        padding: 14px 10px;
+        border-radius: 30px;
+    }
+    
+    .game-grid {
+        gap: 8px;
+        padding: 12px;
+    }
+    
+    .number-card {
+        font-size: 1.5em;
+        min-height: 60px;
+    }
+    
+    .target-number {
+        width: 55px;
+        height: 55px;
+        font-size: 2em;
     }
 }
 
