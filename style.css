@@ -981,7 +981,7 @@ h1 {
 
 /* ========== 排行榜 - 优化版 ========== */
 
-/* 排行榜容器 - 唯一容器 */
+/* 排行榜容器 */
 .leaderboard-container {
     background: rgba(255, 255, 230, 0.95);
     backdrop-filter: blur(8px);
@@ -994,7 +994,7 @@ h1 {
     width: 100%;
 }
 
-/* 排行榜表格 - 唯一表格 */
+/* 排行榜表格 */
 .leaderboard-table {
     width: 100%;
     border-collapse: separate;
