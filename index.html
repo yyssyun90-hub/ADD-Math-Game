@@ -7,8 +7,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
     
-    <!-- 加载样式 - 使用相对路径 -->
-    <link rel="stylesheet" href="style.css">
+    <!-- 加载样式 -->
+    <link rel="stylesheet" href="./style.css">
     
     <!-- 加载中样式 -->
     <style>
@@ -24,11 +24,14 @@
             align-items: center;
             z-index: 9999;
             transition: opacity 0.5s;
+            will-change: opacity;
+            pointer-events: auto;
         }
         
         .loading-content {
             text-align: center;
             color: white;
+            pointer-events: none;
         }
         
         .loading-spinner {
@@ -53,12 +56,27 @@
         body:not(.loaded) .main-content,
         body:not(.loaded) .sidebar {
             opacity: 0;
+            pointer-events: none;
         }
         
         body.loaded .main-content,
         body.loaded .sidebar {
             opacity: 1;
+            pointer-events: auto;
             transition: opacity 0.5s;
+        }
+        
+        /* 确保所有按钮都有正确的光标 */
+        .sidebar-btn, .btn, .tab-btn, .pagination-btn, .close-btn, .language-btn,
+        .leaderboard-refresh-btn, .leaderboard-login-btn, .range-btn {
+            cursor: pointer;
+        }
+        
+        /* 确保禁用状态的按钮样式正确 */
+        .btn:disabled, .pagination-btn:disabled, .range-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -341,9 +359,22 @@
                 <button class="close-btn" id="close-leaderboard-modal">×</button>
             </div>
             
+            <!-- 游戏模式选择选项卡 -->
+            <div class="tabs game-mode-tabs">
+                <button class="tab-btn active" data-game-mode="challenge" id="tab-challenge-mode">⚡ 激情90秒</button>
+                <button class="tab-btn" data-game-mode="standard" id="tab-standard-mode">📚 挑战30</button>
+            </div>
+            
+            <!-- 难度选择选项卡 -->
+            <div class="tabs difficulty-tabs" id="difficulty-tabs">
+                <button class="tab-btn active" data-difficulty="easy" id="tab-easy">🟢 简单模式</button>
+                <button class="tab-btn" data-difficulty="medium" id="tab-medium">🟠 标准模式</button>
+                <button class="tab-btn" data-difficulty="hard" id="tab-hard">🔴 困难模式</button>
+            </div>
+            
             <!-- 排行榜头部 -->
             <div class="leaderboard-header">
-                <h3 class="leaderboard-title">🏆 玩家排行</h3>
+                <h3 class="leaderboard-title" id="leaderboard-dynamic-title">⚡ 激情90秒 · 🟢 简单模式</h3>
                 <div class="leaderboard-controls">
                     <div class="limit-selector">
                         <label>显示:</label>
@@ -360,29 +391,16 @@
                 </div>
             </div>
             
-            <!-- 模式切换选项卡 -->
-            <div class="tabs leaderboard-tabs">
-                <button class="tab-btn active" data-mode="easy" id="tab-easy">
-                    🟢 简单模式
-                </button>
-                <button class="tab-btn" data-mode="standard" id="tab-standard">
-                    🟠 挑战30
-                </button>
-                <button class="tab-btn" data-mode="challenge" id="tab-challenge">
-                    🔴 激情90秒
-                </button>
-            </div>
-            
-            <!-- 排行榜容器 - 保持原ID供JS使用，移除多余class -->
+            <!-- 排行榜容器 -->
             <div id="leaderboard-content"></div>
             
             <!-- 分页控件 -->
             <div class="leaderboard-pagination" id="leaderboard-pagination">
-                <button class="pagination-btn" data-page="prev" disabled>←</button>
-                <button class="pagination-btn active" data-page="1">1</button>
-                <button class="pagination-btn" data-page="2">2</button>
-                <button class="pagination-btn" data-page="3">3</button>
-                <button class="pagination-btn" data-page="next" disabled>→</button>
+                <button class="pagination-btn" id="page-prev" data-page="prev" disabled>←</button>
+                <button class="pagination-btn active" id="page-1" data-page="1">1</button>
+                <button class="pagination-btn" id="page-2" data-page="2">2</button>
+                <button class="pagination-btn" id="page-3" data-page="3">3</button>
+                <button class="pagination-btn" id="page-next" data-page="next" disabled>→</button>
             </div>
             
             <!-- 我的最佳成绩卡片 -->
@@ -410,7 +428,7 @@
             <div class="leaderboard-login-prompt" id="login-prompt" style="display: none;">
                 <h4>🔐 需要登录</h4>
                 <p>登录后查看个人排名</p>
-                <button class="leaderboard-login-btn" onclick="MathGame.showAuthModal()">
+                <button class="leaderboard-login-btn" onclick="if(window.MathGame) MathGame.showAuthModal(); else setTimeout(function(){ if(window.MathGame) MathGame.showAuthModal(); }, 500);">
                     🔑 立即登录
                 </button>
             </div>
@@ -467,9 +485,9 @@
             <div style="padding: 20px;">
                 <!-- 选项卡 -->
                 <div class="tabs">
-                    <button class="tab-btn active" data-tab="batch-register">📦 批量注册</button>
-                    <button class="tab-btn" data-tab="teacher-approval">✅ 教师审核</button>
-                    <button class="tab-btn" data-tab="class-management">📚 班级管理</button>
+                    <button class="tab-btn active" data-tab="batch-register" id="tab-batch-register">📦 批量注册</button>
+                    <button class="tab-btn" data-tab="teacher-approval" id="tab-teacher-approval">✅ 教师审核</button>
+                    <button class="tab-btn" data-tab="class-management" id="tab-class-management">📚 班级管理</button>
                 </div>
                 
                 <!-- 批量注册标签页 -->
@@ -552,9 +570,9 @@
             <div style="padding: 20px;">
                 <!-- 选项卡 -->
                 <div class="tabs">
-                    <button class="tab-btn active" data-tab="system-stats">📊 系统统计</button>
-                    <button class="tab-btn" data-tab="teacher-management">👨‍🏫 教师管理</button>
-                    <button class="tab-btn" data-tab="system-logs">📋 系统日志</button>
+                    <button class="tab-btn active" data-tab="system-stats" id="tab-system-stats">📊 系统统计</button>
+                    <button class="tab-btn" data-tab="teacher-management" id="tab-teacher-management">👨‍🏫 教师管理</button>
+                    <button class="tab-btn" data-tab="system-logs" id="tab-system-logs">📋 系统日志</button>
                 </div>
                 
                 <!-- 系统统计标签页 -->
@@ -627,10 +645,10 @@
     <!-- 匹配反馈 -->
     <div class="match-feedback" id="match-feedback"></div>
     
-    <!-- 加载JavaScript - 使用相对路径，确保文件名正确 -->
-    <script src="app.js"></script>
+    <!-- 加载JavaScript -->
+    <script src="./app.js"></script>
     
-    <!-- 确保页面加载完成后显示内容 -->
+    <!-- 确保页面加载完成后初始化游戏 -->
     <script>
         window.addEventListener('load', function() {
             setTimeout(function() {
@@ -640,15 +658,31 @@
                 setTimeout(function() {
                     document.getElementById('loading-overlay').style.display = 'none';
                 }, 500);
+                
+                // 确保MathGame对象存在并初始化
+                if (window.MathGame && typeof window.MathGame.init === 'function') {
+                    window.MathGame.init();
+                } else {
+                    console.warn('MathGame对象未找到，将在1秒后重试');
+                    setTimeout(function() {
+                        if (window.MathGame && typeof window.MathGame.init === 'function') {
+                            window.MathGame.init();
+                        }
+                    }, 1000);
+                }
             }, 1000);
         });
         
+        // 强制加载超时
         setTimeout(function() {
-            document.getElementById('loading-overlay').classList.add('hide-loading');
-            document.body.classList.add('loaded');
-            setTimeout(function() {
-                document.getElementById('loading-overlay').style.display = 'none';
-            }, 500);
+            var overlay = document.getElementById('loading-overlay');
+            if (overlay && overlay.style.display !== 'none') {
+                overlay.classList.add('hide-loading');
+                document.body.classList.add('loaded');
+                setTimeout(function() {
+                    overlay.style.display = 'none';
+                }, 500);
+            }
         }, 10000);
     </script>
 </body>
