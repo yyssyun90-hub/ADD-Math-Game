@@ -1,4 +1,4 @@
-/* style.css - 超可爱糖果色 · 加法消消乐 · 中英文完美适配版 */
+/* style.css - 超可爱糖果色 · 加法消消乐 · 12次自查最终版 */
 * {
     margin: 0;
     padding: 0;
@@ -979,107 +979,36 @@ h1 {
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* ========== 排行榜 - 优化版 ========== */
+/* ========== 排行榜 ========== */
 
-/* 排行榜容器 */
-.leaderboard-container {
-    background: rgba(255, 255, 230, 0.95);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 6px solid #ffd700;
-    border-radius: 60px;
-    padding: 25px;
-    box-shadow: 0 15px 0 #ffa500, 0 20px 30px rgba(255, 165, 0, 0.4);
-    margin-top: 20px;
-    width: 100%;
+/* 游戏模式选项卡 */
+.game-mode-tabs {
+    margin-bottom: 15px;
 }
 
-/* 排行榜表格 */
-.leaderboard-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 12px;
-    margin: 0;
-    padding: 0;
-}
-
-/* 表格头部 */
-.leaderboard-table th {
-    background: #ffb347;
-    color: #2d1f1f;
+.game-mode-tabs .tab-btn {
+    background: #ffd700;
     font-size: 1.2em;
-    font-weight: 800;
-    padding: 15px 12px;
-    text-align: center;
-    border: 4px solid #ffffe0;
-    border-radius: 40px;
-    box-shadow: 0 5px 0 #b87d2e;
-    white-space: nowrap;
+    padding: 12px 25px;
 }
 
-/* 表格单元格 */
-.leaderboard-table td {
+.game-mode-tabs .tab-btn.active {
+    background: #ff8c00;
+}
+
+/* 难度选项卡 */
+.difficulty-tabs {
+    margin-bottom: 20px;
+}
+
+.difficulty-tabs .tab-btn {
     background: #fffacd;
-    color: #2d1f1f;
-    font-size: 1.1em;
-    font-weight: 600;
-    padding: 14px 12px;
-    text-align: center;
-    border: 4px solid #ffd700;
-    border-radius: 40px;
-    box-shadow: 0 4px 0 #ffa500;
-    transition: all 0.2s ease;
-}
-
-/* 表格行悬停效果 */
-.leaderboard-table tr:hover td {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #ff8c00;
-    background: #fff5b5;
-}
-
-/* 排名前三名特殊样式 */
-.leaderboard-table tr:nth-child(1) td {
-    background: linear-gradient(145deg, #fff0b5, #ffe5a0);
     border-color: #ffd700;
-    font-size: 1.2em;
-    font-weight: 800;
+    box-shadow: 0 5px 0 #d49b3b;
 }
 
-.leaderboard-table tr:nth-child(2) td {
-    background: linear-gradient(145deg, #f0f0f0, #e8e8e8);
-}
-
-.leaderboard-table tr:nth-child(3) td {
-    background: linear-gradient(145deg, #ffecd8, #ffe0c0);
-}
-
-/* 当前用户高亮 */
-.leaderboard-table tr.current-user td {
-    background: #fff9c4;
-    border-color: #ffa500;
-    box-shadow: 0 0 0 3px #ffff00;
-}
-
-/* 排名序号列 */
-.leaderboard-table td:first-child {
-    font-weight: 800;
-    color: #b45f2e;
-    width: 70px;
-}
-
-/* 玩家名称列 */
-.leaderboard-table td:nth-child(2) {
-    font-weight: 700;
-    text-align: left;
-    padding-left: 20px;
-}
-
-/* 分数列 */
-.leaderboard-table td:last-child {
-    font-weight: 800;
-    color: #ff4757;
-    width: 100px;
+.difficulty-tabs .tab-btn.active {
+    background: #ffd700;
 }
 
 /* 排行榜头部 */
@@ -1093,50 +1022,22 @@ h1 {
 }
 
 .leaderboard-title {
-    font-size: 2em;
-    background: linear-gradient(145deg, #ff4d4d, #ff9f4b, #ffd93d);
+    font-size: 1.8em;
+    background: linear-gradient(145deg, #ff4d4d, #ff9f4b);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     font-weight: 800;
+    margin: 0;
+}
+
+.leaderboard-controls {
     display: flex;
+    gap: 15px;
     align-items: center;
-    gap: 10px;
+    flex-wrap: wrap;
 }
 
-.leaderboard-title::before {
-    content: "🏆";
-    font-size: 1.2em;
-}
-
-/* 刷新按钮 */
-.leaderboard-refresh-btn {
-    background: #ffd700;
-    border: 4px solid white;
-    border-radius: 50px;
-    padding: 10px 20px;
-    font-weight: 700;
-    color: #2d1f1f;
-    box-shadow: 0 5px 0 #b87d2e;
-    cursor: pointer;
-    transition: all 0.1s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1em;
-}
-
-.leaderboard-refresh-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 0 #b45f2e;
-}
-
-.leaderboard-refresh-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 3px 0 #b45f2e;
-}
-
-/* 显示数量选择器 */
 .limit-selector {
     display: flex;
     align-items: center;
@@ -1159,11 +1060,115 @@ h1 {
     box-shadow: 0 3px 0 #ffa500;
 }
 
-/* 分页控制器 */
+.leaderboard-refresh-btn {
+    background: #ffd700;
+    border: 4px solid white;
+    border-radius: 50px;
+    padding: 8px 18px;
+    font-weight: 700;
+    color: #2d1f1f;
+    box-shadow: 0 5px 0 #b87d2e;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1em;
+}
+
+.leaderboard-refresh-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 0 #b45f2e;
+}
+
+.leaderboard-refresh-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 3px 0 #b45f2e;
+}
+
+/* 排行榜表格 */
+.leaderboard-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    margin: 0;
+    padding: 0;
+}
+
+.leaderboard-table th {
+    background: #ffb347;
+    color: #2d1f1f;
+    font-size: 1.1em;
+    font-weight: 800;
+    padding: 12px 10px;
+    text-align: center;
+    border: 4px solid #ffffe0;
+    border-radius: 40px;
+    box-shadow: 0 4px 0 #b87d2e;
+    white-space: nowrap;
+}
+
+.leaderboard-table td {
+    background: #fffacd;
+    color: #2d1f1f;
+    font-size: 1em;
+    font-weight: 600;
+    padding: 12px 10px;
+    text-align: center;
+    border: 4px solid #ffd700;
+    border-radius: 40px;
+    box-shadow: 0 3px 0 #ffa500;
+    transition: all 0.2s ease;
+}
+
+.leaderboard-table tr:hover td {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 #ff8c00;
+    background: #fff5b5;
+}
+
+.leaderboard-table tr:nth-child(1) td {
+    background: linear-gradient(145deg, #fff0b5, #ffe5a0);
+    font-weight: 800;
+}
+
+.leaderboard-table tr:nth-child(2) td {
+    background: linear-gradient(145deg, #f0f0f0, #e8e8e8);
+}
+
+.leaderboard-table tr:nth-child(3) td {
+    background: linear-gradient(145deg, #ffecd8, #ffe0c0);
+}
+
+.leaderboard-table tr.current-user td {
+    background: #fff9c4;
+    border-color: #ffa500;
+    box-shadow: 0 0 0 3px #ffff00;
+}
+
+.leaderboard-table td:first-child {
+    font-weight: 800;
+    color: #b45f2e;
+    width: 60px;
+}
+
+.leaderboard-table td:nth-child(2) {
+    font-weight: 700;
+    text-align: left;
+    padding-left: 15px;
+}
+
+.leaderboard-table td:last-child {
+    font-weight: 800;
+    color: #ff4757;
+    width: 80px;
+}
+
+/* 分页控件 */
 .leaderboard-pagination {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     margin-top: 20px;
     flex-wrap: wrap;
 }
@@ -1172,7 +1177,7 @@ h1 {
     background: #ffd700;
     border: 3px solid white;
     border-radius: 40px;
-    padding: 8px 16px;
+    padding: 8px 14px;
     font-weight: 700;
     color: #2d1f1f;
     box-shadow: 0 4px 0 #b87d2e;
@@ -1198,31 +1203,7 @@ h1 {
     box-shadow: 0 3px 0 #8a6e4e;
 }
 
-/* 没有数据时的提示 */
-.leaderboard-empty {
-    background: #fff5e5;
-    border: 6px dashed #ffa500;
-    border-radius: 60px;
-    padding: 40px 20px;
-    text-align: center;
-    font-size: 1.3em;
-    font-weight: 700;
-    color: #b45f2e;
-    margin: 20px 0;
-    width: 100%;
-}
-
-.leaderboard-empty::before {
-    content: "🏆 ";
-    font-size: 1.5em;
-}
-
-.leaderboard-empty::after {
-    content: " 🏆";
-    font-size: 1.5em;
-}
-
-/* 我的最佳成绩卡片 */
+/* 我的最佳卡片 */
 .my-best-card {
     background: linear-gradient(145deg, #667eea, #764ba2);
     color: white;
@@ -1267,7 +1248,7 @@ h1 {
     font-weight: 800;
 }
 
-/* 登录提示卡片 */
+/* 登录提示 */
 .leaderboard-login-prompt {
     background: linear-gradient(145deg, #6c757d, #495057);
     border-radius: 60px;
@@ -1322,6 +1303,30 @@ h1 {
     background: #f8f9fa;
     border-radius: 40px;
     border: 2px dashed #ffa500;
+}
+
+/* 没有数据时的提示 */
+.leaderboard-empty {
+    background: #fff5e5;
+    border: 6px dashed #ffa500;
+    border-radius: 60px;
+    padding: 40px 20px;
+    text-align: center;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #b45f2e;
+    margin: 20px 0;
+    width: 100%;
+}
+
+.leaderboard-empty::before {
+    content: "🏆 ";
+    font-size: 1.5em;
+}
+
+.leaderboard-empty::after {
+    content: " 🏆";
+    font-size: 1.5em;
 }
 
 /* ---------- 成就系统 ---------- */
@@ -1603,7 +1608,8 @@ h1 {
     .range-btn:hover,
     .tab-btn:hover,
     .achievement-card:hover,
-    .leaderboard-table tr:hover td {
+    .leaderboard-table tr:hover td,
+    .pagination-btn:hover {
         transform: none;
         box-shadow: inherit;
     }
@@ -1807,16 +1813,15 @@ h1 {
         grid-template-columns: repeat(2, 1fr);
     }
     
-    /* 排行榜响应式 */
     .leaderboard-table th,
     .leaderboard-table td {
-        padding: 12px 8px;
-        font-size: 1em;
+        padding: 10px 6px;
+        font-size: 0.95em;
     }
     
     .my-best-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
+        gap: 12px;
     }
 }
 
@@ -1932,14 +1937,13 @@ h1 {
         font-size: 1.8em;
     }
     
-    /* 排行榜响应式 */
     .leaderboard-table td:first-child {
-        width: 50px;
+        width: 45px;
     }
     
     .my-best-grid {
         grid-template-columns: 1fr;
-        gap: 15px;
+        gap: 12px;
     }
     
     .leaderboard-header {
@@ -2168,19 +2172,18 @@ h1 {
         font-size: 0.9em;
     }
     
-    /* 排行榜响应式 */
     .leaderboard-table th,
     .leaderboard-table td {
-        padding: 10px 5px;
-        font-size: 0.9em;
+        padding: 8px 4px;
+        font-size: 0.85em;
     }
     
     .leaderboard-table td:nth-child(2) {
-        padding-left: 10px;
+        padding-left: 8px;
     }
     
     .leaderboard-title {
-        font-size: 1.6em;
+        font-size: 1.4em;
     }
     
     .leaderboard-refresh-btn {
@@ -2198,8 +2201,9 @@ h1 {
     }
     
     .pagination-btn {
-        padding: 6px 12px;
-        min-width: 36px;
+        padding: 6px 10px;
+        min-width: 34px;
+        font-size: 0.9em;
     }
     
     .my-best-item {
@@ -2359,25 +2363,24 @@ h1 {
         font-size: 1.5em;
     }
     
-    /* 排行榜响应式 */
     .leaderboard-table th,
     .leaderboard-table td {
-        padding: 8px 4px;
-        font-size: 0.8em;
+        padding: 6px 3px;
+        font-size: 0.75em;
     }
     
     .leaderboard-table td:first-child {
-        width: 40px;
+        width: 35px;
     }
     
     .leaderboard-title {
-        font-size: 1.4em;
+        font-size: 1.2em;
     }
     
     .pagination-btn {
-        padding: 5px 8px;
-        min-width: 30px;
-        font-size: 0.9em;
+        padding: 4px 8px;
+        min-width: 28px;
+        font-size: 0.8em;
     }
 }
 
