@@ -97,7 +97,7 @@
         }
     </script>
     
-    <!-- ========== 语言切换按钮 ========== -->
+    <!-- ========== 语言切换按钮 - 修复版：添加 data-i18n ========== -->
     <div class="language-switch">
         <button class="language-btn" id="language-btn" aria-label="切换语言">
             <span id="language-icon">🌐</span>
@@ -227,8 +227,6 @@
             </div>
         </div>
     </div>
-    
-    <!-- ========== 弹窗区域 ========== -->
     
     <!-- 登录/注册弹窗 -->
     <div class="modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
@@ -644,25 +642,8 @@
     <!-- 匹配反馈 -->
     <div class="match-feedback" id="match-feedback" aria-live="polite" aria-atomic="true"></div>
     
-    <!-- ========== 加载JavaScript ========== -->
+    <!-- 加载JavaScript -->
     <script src="app.js" defer></script>
-    
-    <!-- JS加载失败处理 -->
-    <script>
-        window.addEventListener('error', function(e) {
-            if (e.target.tagName === 'SCRIPT' && e.target.src.includes('app.js')) {
-                console.error('JS文件加载失败');
-                var errorMsg = document.getElementById('loading-error');
-                if (!errorMsg) {
-                    errorMsg = document.createElement('div');
-                    errorMsg.id = 'loading-error';
-                    errorMsg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#ff4444;color:white;padding:20px;border-radius:10px;z-index:10000;text-align:center;';
-                    errorMsg.innerHTML = '游戏加载失败<br>请检查网络连接或刷新页面';
-                    document.body.appendChild(errorMsg);
-                }
-            }
-        }, true);
-    </script>
     
     <!-- 确保页面加载完成后初始化游戏 -->
     <script>
@@ -678,18 +659,8 @@
                     }, 500);
                 }
                 
-                // 检查MathGame对象
                 if (window.MathGame && typeof window.MathGame.init === 'function') {
                     window.MathGame.init();
-                } else {
-                    console.warn('MathGame对象未找到，将在2秒后重试');
-                    setTimeout(function() {
-                        if (window.MathGame && typeof window.MathGame.init === 'function') {
-                            window.MathGame.init();
-                        } else {
-                            console.error('MathGame对象仍然未找到');
-                        }
-                    }, 2000);
                 }
             }, 1000);
         });
