@@ -8,7 +8,6 @@
     window.addEventListener('error', function(e) {
         console.error('❌ 全局错误:', e.error || e.message);
         
-        // 避免无限循环
         if (document.getElementById('global-error-message')) return;
         
         const errorDiv = document.createElement('div');
@@ -65,7 +64,7 @@ var MathGame = (function() {
         CACHE_EXPIRY: 3600000,
         OFFLINE_MODE: false,
         USE_MOCK_DATA: false,
-        LEADERBOARD_CACHE_TIME: 300000 // 5分钟
+        LEADERBOARD_CACHE_TIME: 300000
     };
     
     // ==================== 多语言支持 ====================
@@ -79,7 +78,6 @@ var MathGame = (function() {
             wrongBook: "📖 错题本",
             leaderboard: "🏆 排行榜",
             profile: "👤 个人资料",
-            
             modeStandard: "📚 挑战30",
             modeStandardDesc: "完成30题，比拼用时",
             modeChallenge: "⚡ 激情90秒",
@@ -88,7 +86,6 @@ var MathGame = (function() {
             modePracticeDesc: "无时间限制，专心学习",
             modeCustom: "⚙️ 自定义",
             modeCustomDesc: "自设参数，灵活练习",
-            
             numberRange: "数字范围:",
             rangeEasy: "0-9 (简单)",
             rangeStandard: "0-14 (标准)",
@@ -97,7 +94,6 @@ var MathGame = (function() {
             startPractice: "🎯 开始练习",
             questionCount: "题目数量:",
             timeLimit: "时间限制(秒):",
-            
             scoreLabel: "得分",
             completedLabel: "完成题数",
             timeLeft: "剩余时间",
@@ -107,7 +103,6 @@ var MathGame = (function() {
             hintButton: "💡 提示",
             refreshButton: "🔄 刷新",
             endGameButton: "⏹️ 结束",
-            
             user: "用户",
             logout: "退出",
             loginTitle: "🔐 用户登录",
@@ -124,14 +119,12 @@ var MathGame = (function() {
             registerNow: "立即注册",
             hasAccount: "已有账号？",
             loginNow: "立即登录",
-            
             historyTitle: "📝 历史记录",
             statisticsTitle: "📊 统计分析",
             achievementsTitle: "⭐ 成就系统",
             wrongbookTitle: "📖 错题本",
             leaderboardTitle: "🏆 排行榜",
             profileTitle: "👤 个人资料",
-            
             tableNumber: "#",
             tableTarget: "目标",
             tableNum1: "数字1",
@@ -139,7 +132,6 @@ var MathGame = (function() {
             tableResult: "结果",
             tableTime: "用时(秒)",
             clearHistory: "清空本次记录",
-            
             cloudSync: "☁️ 云端同步",
             syncing: "🔄 同步中...",
             syncSuccess: "✅ 同步成功",
@@ -147,7 +139,6 @@ var MathGame = (function() {
             lastSync: "上次同步",
             syncNow: "立即同步",
             autoSync: "自动同步",
-            
             teacherApplication: "👨‍🏫 教师账号申请",
             applyForTeacher: "申请成为教师",
             schoolName: "学校名称",
@@ -168,7 +159,6 @@ var MathGame = (function() {
             alreadyApplied: "您已经提交过申请，请耐心等待审核",
             needLogin: "请先登录后再申请教师账号",
             cancel: "取消",
-            
             teacherTools: "👨‍🏫 教师工具",
             teacherToolsTitle: "👨‍🏫 教师管理控制台",
             batchRegister: "📦 批量注册学生账号",
@@ -203,7 +193,6 @@ var MathGame = (function() {
             noRejectedTeachers: "暂无已拒绝的申请",
             syncWrongQuestions: "☁️ 同步错题到云端",
             clearWrongQuestions: "🗑️ 清空本地错题",
-            
             adminTools: "👑 管理工具",
             adminToolsTitle: "👑 系统管理控制台",
             systemStats: "📊 系统统计",
@@ -234,7 +223,6 @@ var MathGame = (function() {
             siteAnnouncement: "📢 站点公告",
             announcementPlaceholder: "输入公告内容...",
             publishAnnouncement: "发布公告",
-            
             leaderboardEasy: "🟢 简单模式",
             leaderboardStandard: "🟠 标准模式",
             leaderboardChallenge: "🔴 困难模式",
@@ -261,7 +249,6 @@ var MathGame = (function() {
             noData: "暂无数据",
             myBest: "我的最佳",
             refresh: "刷新",
-            
             totalGames: "总游戏次数",
             totalQuestions: "总答题数",
             totalCorrect: "总正确数",
@@ -273,7 +260,6 @@ var MathGame = (function() {
             loadingStats: "加载统计信息中...",
             noHistoryStats: "暂无历史统计数据",
             statsDescription: "完成游戏并保存成绩后，统计数据将显示在这里",
-            
             finalScore: "最终得分",
             finalCompleted: "完成题数",
             finalTime: "用时",
@@ -287,7 +273,6 @@ var MathGame = (function() {
             gameTimeout: "⏰ 时间到！",
             gameGiveup: "🏁 游戏结束",
             gameEnd: "🎉 游戏结束!",
-            
             achievementProgress: "成就进度",
             level: "等级",
             completed: "已完成",
@@ -352,12 +337,10 @@ var MathGame = (function() {
             masterSilverDesc: "解锁5个白银级成就",
             masterGoldDesc: "解锁3个黄金级成就",
             masterPlatinumDesc: "解锁1个铂金级成就",
-            
             wrongAnswer: "错误答案",
             shouldBe: "应为",
             errors: "错误次数",
             moreQuestions: "还有 {count} 条错题",
-            
             confirm: "确定",
             close: "关闭",
             save: "保存",
@@ -369,15 +352,19 @@ var MathGame = (function() {
             switchedToChinese: "已切换到中文",
             switchedToEnglish: "已切换到英文",
             languageText: "English",
-            
             loginPrompt: "立即登录，与其他玩家一较高下！",
-            
             offlineMode: "📴 离线模式",
             connecting: "🔄 正在连接服务器...",
             connectionFailed: "❌ 连接失败，使用离线模式",
             retryConnection: "重试连接",
             usingMockData: "📁 使用演示数据",
-            laptopCompatibilityMode: "💻 笔记本兼容模式已启用"
+            laptopCompatibilityMode: "💻 笔记本兼容模式已启用",
+            cloudConnected: "☁️ 已连接云端",
+            cloudOffline: "📴 离线模式",
+            lastSyncTime: "上次同步",
+            syncNow: "立即同步",
+            connectionStatus: "连接状态",
+            retryNow: "重试连接"
         },
         en: {
             gameTitle: "🧮 Math Addition Match",
@@ -388,7 +375,6 @@ var MathGame = (function() {
             wrongBook: "📖 Wrong Questions",
             leaderboard: "🏆 Leaderboard",
             profile: "👤 Profile",
-            
             modeStandard: "📚 Challenge 30",
             modeStandardDesc: "Complete 30 questions, compete by time",
             modeChallenge: "⚡ Passion 90s",
@@ -397,7 +383,6 @@ var MathGame = (function() {
             modePracticeDesc: "No time limit, focus on learning",
             modeCustom: "⚙️ Custom Mode",
             modeCustomDesc: "Set your own parameters",
-            
             numberRange: "Number Range:",
             rangeEasy: "0-9 (Easy)",
             rangeStandard: "0-14 (Standard)",
@@ -406,7 +391,6 @@ var MathGame = (function() {
             startPractice: "🎯 Start Practice",
             questionCount: "Questions:",
             timeLimit: "Time Limit (seconds):",
-            
             scoreLabel: "Score",
             completedLabel: "Completed",
             timeLeft: "Time Left",
@@ -416,7 +400,6 @@ var MathGame = (function() {
             hintButton: "💡 Hint",
             refreshButton: "🔄 Refresh",
             endGameButton: "⏹️ End",
-            
             user: "User",
             logout: "Logout",
             loginTitle: "🔐 User Login",
@@ -433,14 +416,12 @@ var MathGame = (function() {
             registerNow: "Register Now",
             hasAccount: "Already have an account?",
             loginNow: "Login Now",
-            
             historyTitle: "📝 History Records",
             statisticsTitle: "📊 Statistics Analysis",
             achievementsTitle: "⭐ Achievement System",
             wrongbookTitle: "📖 Wrong Questions",
             leaderboardTitle: "🏆 Leaderboard",
             profileTitle: "👤 Profile",
-            
             tableNumber: "#",
             tableTarget: "Target",
             tableNum1: "Num1",
@@ -448,7 +429,6 @@ var MathGame = (function() {
             tableResult: "Result",
             tableTime: "Time(s)",
             clearHistory: "Clear Current History",
-            
             cloudSync: "☁️ Cloud Sync",
             syncing: "🔄 Syncing...",
             syncSuccess: "✅ Sync Successful",
@@ -456,7 +436,6 @@ var MathGame = (function() {
             lastSync: "Last Sync",
             syncNow: "Sync Now",
             autoSync: "Auto Sync",
-            
             teacherApplication: "👨‍🏫 Teacher Application",
             applyForTeacher: "Apply for Teacher",
             schoolName: "School Name",
@@ -477,7 +456,6 @@ var MathGame = (function() {
             alreadyApplied: "You have already submitted an application, please wait for review",
             needLogin: "Please login first to apply for teacher account",
             cancel: "Cancel",
-            
             teacherTools: "👨‍🏫 Teacher Tools",
             teacherToolsTitle: "👨‍🏫 Teacher Management Console",
             batchRegister: "📦 Batch Register Students",
@@ -512,7 +490,6 @@ var MathGame = (function() {
             noRejectedTeachers: "No rejected applications",
             syncWrongQuestions: "☁️ Sync Wrong Questions",
             clearWrongQuestions: "🗑️ Clear Local Wrong Questions",
-            
             adminTools: "👑 Admin Tools",
             adminToolsTitle: "👑 System Administration Console",
             systemStats: "📊 System Statistics",
@@ -543,7 +520,6 @@ var MathGame = (function() {
             siteAnnouncement: "📢 Site Announcement",
             announcementPlaceholder: "Enter announcement...",
             publishAnnouncement: "Publish Announcement",
-            
             leaderboardEasy: "🟢 Easy Mode",
             leaderboardStandard: "🟠 Standard Mode",
             leaderboardChallenge: "🔴 Hard Mode",
@@ -570,7 +546,6 @@ var MathGame = (function() {
             noData: "No Data",
             myBest: "My Best",
             refresh: "Refresh",
-            
             totalGames: "Total Games",
             totalQuestions: "Total Questions",
             totalCorrect: "Total Correct",
@@ -582,7 +557,6 @@ var MathGame = (function() {
             loadingStats: "Loading statistics...",
             noHistoryStats: "No historical statistics",
             statsDescription: "After completing games and saving scores, statistics will be shown here",
-            
             finalScore: "Final Score",
             finalCompleted: "Completed",
             finalTime: "Time Used",
@@ -596,7 +570,6 @@ var MathGame = (function() {
             gameTimeout: "⏰ Time's up!",
             gameGiveup: "🏁 Game Over",
             gameEnd: "🎉 Game Over!",
-            
             achievementProgress: "Achievement Progress",
             level: "Level",
             completed: "Completed",
@@ -661,12 +634,10 @@ var MathGame = (function() {
             masterSilverDesc: "Unlock 5 Silver achievements",
             masterGoldDesc: "Unlock 3 Gold achievements",
             masterPlatinumDesc: "Unlock 1 Platinum achievement",
-            
             wrongAnswer: "Wrong answer",
             shouldBe: "should be",
             errors: "Errors",
             moreQuestions: "... {count} more questions",
-            
             confirm: "Confirm",
             close: "Close",
             save: "Save",
@@ -678,15 +649,19 @@ var MathGame = (function() {
             switchedToChinese: "Switched to Chinese",
             switchedToEnglish: "Switched to English",
             languageText: "中文",
-            
             loginPrompt: "Login now and compete with other players!",
-            
             offlineMode: "📴 Offline Mode",
             connecting: "🔄 Connecting to server...",
             connectionFailed: "❌ Connection failed, using offline mode",
             retryConnection: "Retry Connection",
             usingMockData: "📁 Using Demo Data",
-            laptopCompatibilityMode: "💻 Laptop Compatibility Mode Enabled"
+            laptopCompatibilityMode: "💻 Laptop Compatibility Mode Enabled",
+            cloudConnected: "☁️ Connected to Cloud",
+            cloudOffline: "📴 Offline Mode",
+            lastSyncTime: "Last Sync",
+            syncNow: "Sync Now",
+            connectionStatus: "Connection Status",
+            retryNow: "Retry Connection"
         }
     };
     
@@ -737,7 +712,8 @@ var MathGame = (function() {
     // 缓存DOM元素
     var cachedElements = {
         pagination: null,
-        leaderboardTitle: null
+        leaderboardTitle: null,
+        connectionStatus: null
     };
     
     // ==================== 排行榜状态管理 ====================
@@ -912,6 +888,7 @@ var MathGame = (function() {
         return defaultValue || key;
     }
     
+    // ==================== 修复版 setLanguage 函数 ====================
     function setLanguage(lang) {
         try {
             if (lang !== 'zh' && lang !== 'en') return;
@@ -924,31 +901,79 @@ var MathGame = (function() {
             }
             
             var elements = document.querySelectorAll('[data-i18n]');
+            
             for (var i = 0; i < elements.length; i++) {
                 var element = elements[i];
                 var key = element.getAttribute('data-i18n');
                 var translation = getTranslation(key);
                 
-                if (translation) {
+                if (!translation) continue;
+                
+                // 处理不同类型的元素
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
                     if (element.hasAttribute('placeholder')) {
                         element.setAttribute('placeholder', translation);
+                    }
+                } else if (element.tagName === 'OPTION') {
+                    element.textContent = translation;
+                } else {
+                    // 对于普通元素，保留图标只替换文字
+                    var html = element.innerHTML;
+                    
+                    // 常见的图标列表
+                    var icons = ['📝', '📊', '⭐', '📖', '🏆', '👤', '👨‍🏫', '👑', '🚀', '💡', '🔄', '⏹️', '🔐', '🔑', '📚', '⚡', '🎯', '⚙️', '🧮', '📝', '📊', '⭐', '📖', '🏆', '👤', '☁️', '✅', '❌', '🔄', '📴', '🌐'];
+                    
+                    // 检查是否包含图标
+                    var hasIcon = false;
+                    var iconChar = '';
+                    
+                    for (var j = 0; j < icons.length; j++) {
+                        if (html.includes(icons[j])) {
+                            hasIcon = true;
+                            iconChar = icons[j];
+                            break;
+                        }
+                    }
+                    
+                    if (hasIcon) {
+                        // 保留图标，只替换后面的文字
+                        var parts = html.split(iconChar);
+                        if (parts.length > 1) {
+                            // 图标后面可能有空格
+                            var afterIcon = parts[1];
+                            if (afterIcon.startsWith(' ')) {
+                                element.innerHTML = iconChar + ' ' + translation;
+                            } else {
+                                element.innerHTML = iconChar + translation;
+                            }
+                        } else {
+                            element.innerHTML = iconChar + ' ' + translation;
+                        }
                     } else {
+                        // 没有图标，直接替换文本
                         element.textContent = translation;
                     }
                 }
             }
             
+            // 单独处理语言切换按钮
             var languageText = document.getElementById('language-text');
             if (languageText) {
                 languageText.textContent = getTranslation('languageText', 'English');
             }
             
+            // 更新模式显示名称
             updateModeDisplayNames();
             
+            // 更新游戏结束文字
+            updateGameOverText();
+            
+            // 如果用户已登录，更新用户信息
             if (currentUser) {
                 updateUserInfo();
             }
             
+            // 更新已打开的弹窗
             var openModals = {
                 'history-modal': showHistory,
                 'statistics-modal': showStatistics,
@@ -975,6 +1000,7 @@ var MathGame = (function() {
             }
             
             console.log('语言已切换到: ' + lang);
+            
         } catch (error) {
             console.error('设置语言失败:', error);
         }
@@ -1056,14 +1082,100 @@ var MathGame = (function() {
         return array;
     }
     
+    // ==================== 创建连接状态指示器 ====================
+    function createConnectionStatusIndicator() {
+        if (document.getElementById('connection-status-indicator')) return;
+        
+        var indicator = document.createElement('div');
+        indicator.id = 'connection-status-indicator';
+        indicator.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: ${offlineMode ? '#ff4444' : '#4CAF50'};
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        `;
+        
+        indicator.innerHTML = offlineMode ? 
+            '📴 ' + getTranslation('offlineMode', '离线模式') : 
+            '☁️ ' + getTranslation('cloudConnected', '已连接云端');
+        
+        indicator.title = offlineMode ? 
+            getTranslation('connectionFailed', '连接失败，使用离线模式') : 
+            (syncState.lastSyncTime ? 
+                getTranslation('lastSyncTime', '上次同步') + ': ' + new Date(syncState.lastSyncTime).toLocaleString() : 
+                getTranslation('cloudConnected', '已连接云端'));
+        
+        indicator.addEventListener('click', function() {
+            if (offlineMode) {
+                showMessage(getTranslation('retryConnection', '重试连接'), 'info');
+                retryConnection();
+            } else {
+                showMessage(
+                    syncState.lastSyncTime ? 
+                    getTranslation('lastSyncTime', '上次同步') + ': ' + new Date(syncState.lastSyncTime).toLocaleString() : 
+                    getTranslation('cloudConnected', '已连接云端'),
+                    'info'
+                );
+            }
+        });
+        
+        document.body.appendChild(indicator);
+        cachedElements.connectionStatus = indicator;
+    }
+    
+    function updateConnectionStatusIndicator() {
+        if (!cachedElements.connectionStatus) {
+            createConnectionStatusIndicator();
+            return;
+        }
+        
+        var indicator = cachedElements.connectionStatus;
+        indicator.style.background = offlineMode ? '#ff4444' : '#4CAF50';
+        indicator.innerHTML = offlineMode ? 
+            '📴 ' + getTranslation('offlineMode', '离线模式') : 
+            '☁️ ' + getTranslation('cloudConnected', '已连接云端');
+        
+        indicator.title = offlineMode ? 
+            getTranslation('connectionFailed', '连接失败，使用离线模式') + ' - ' + getTranslation('retryConnection', '点击重试') : 
+            (syncState.lastSyncTime ? 
+                getTranslation('lastSyncTime', '上次同步') + ': ' + new Date(syncState.lastSyncTime).toLocaleString() : 
+                getTranslation('cloudConnected', '已连接云端'));
+    }
+    
+    async function retryConnection() {
+        showMessage(getTranslation('connecting', '正在连接服务器...'), 'info', 3000);
+        
+        var oldOfflineMode = offlineMode;
+        offlineMode = false;
+        
+        var success = await initSupabase();
+        
+        if (success) {
+            showMessage(getTranslation('syncSuccess', '✅ 同步成功'), 'success');
+            updateConnectionStatusIndicator();
+            await checkAuth();
+        } else {
+            offlineMode = true;
+            showMessage(getTranslation('connectionFailed', '❌ 连接失败，使用离线模式'), 'error');
+            updateConnectionStatusIndicator();
+        }
+    }
+    
     // ==================== Supabase 初始化 ====================
     async function initSupabase() {
         console.log('🔄 初始化Supabase...');
-        
-        // 检查是否在Vercel环境中
-        if (window.location.hostname.includes('vercel.app')) {
-            console.log('✅ 检测到Vercel环境，尝试连接Supabase...');
-        }
         
         if (window.location.protocol === 'file:') {
             console.warn('⚠️ 在本地文件系统运行，启用离线模式');
@@ -1074,6 +1186,7 @@ var MathGame = (function() {
                 (currentLanguage === 'zh' ? '请在本地服务器中运行游戏' : 'Please run on a local server'), 
                 'warning', 5000
             );
+            updateConnectionStatusIndicator();
             return false;
         }
         
@@ -1110,7 +1223,6 @@ var MathGame = (function() {
                         }
                     });
                     
-                    // 测试连接
                     var testResult = await fetch(supabaseUrl + '/rest/v1/', {
                         method: 'HEAD',
                         headers: {
@@ -1127,12 +1239,10 @@ var MathGame = (function() {
                         isSupabaseReady = true;
                         offlineMode = false;
                         syncState.offlineMode = false;
+                        updateConnectionStatusIndicator();
                         return true;
-                    } else {
-                        console.warn('⚠️ Supabase连接测试失败');
                     }
                     
-                    // 尝试获取session
                     var result = await supabase.auth.getSession();
                     
                     if (!result.error) {
@@ -1140,6 +1250,7 @@ var MathGame = (function() {
                         isSupabaseReady = true;
                         offlineMode = false;
                         syncState.offlineMode = false;
+                        updateConnectionStatusIndicator();
                         return true;
                     } else {
                         console.warn('⚠️ 节点 ' + (i + 1) + ' 连接失败:', result.error.message);
@@ -1171,6 +1282,7 @@ var MathGame = (function() {
             6000
         );
         
+        updateConnectionStatusIndicator();
         return false;
     }
     
@@ -1182,7 +1294,7 @@ var MathGame = (function() {
             var result = await supabase.auth.getUser();
             
             if (result.error) {
-                console.error('获取用户失败:', result.error);
+                console.debug('用户未登录:', result.error.message);
                 return false;
             }
             
@@ -1220,7 +1332,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 角色检查函数 ====================
     async function checkUserRole() {
         if (!currentUser) {
             isAdminUser = false;
@@ -1278,11 +1389,6 @@ var MathGame = (function() {
             console.error('检查用户角色失败:', error);
             return false;
         }
-    }
-    
-    async function checkIfAdmin() {
-        await checkUserRole();
-        return isAdminUser;
     }
     
     async function login(email, password) {
@@ -1418,7 +1524,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== updateUserInfo 函数 ====================
     function updateUserInfo() {
         if (!currentUser) return;
         
@@ -1449,9 +1554,14 @@ var MathGame = (function() {
                 } else if (syncState.pendingChanges) {
                     syncStatusBtn.innerHTML = '☁️ ⚠️';
                     syncStatusBtn.title = currentLanguage === 'zh' ? '有待同步的数据' : 'Pending changes';
+                } else if (syncState.isSyncing) {
+                    syncStatusBtn.innerHTML = '🔄';
+                    syncStatusBtn.title = currentLanguage === 'zh' ? '同步中...' : 'Syncing...';
                 } else {
                     syncStatusBtn.innerHTML = '☁️ ✓';
-                    syncStatusBtn.title = currentLanguage === 'zh' ? '已同步' : 'Synced';
+                    syncStatusBtn.title = syncState.lastSyncTime ? 
+                        (currentLanguage === 'zh' ? '已同步 - 上次同步: ' : 'Synced - Last sync: ') + new Date(syncState.lastSyncTime).toLocaleString() : 
+                        (currentLanguage === 'zh' ? '已同步' : 'Synced');
                 }
             }
             
@@ -1486,20 +1596,11 @@ var MathGame = (function() {
                 }
             }
             
-            console.log('UI更新 - 权限状态:', {
-                isSuperAdmin: isSuperAdmin,
-                isSchoolAdmin: isSchoolAdmin,
-                isTeacher: isTeacher,
-                showTeacherTools: teacherToolsBtn ? teacherToolsBtn.style.display : null,
-                showAdminTools: adminToolsBtn ? adminToolsBtn.style.display : null
-            });
-            
         } catch (error) {
             console.error('更新用户信息失败:', error);
         }
     }
     
-    // ==================== 弹窗函数 ====================
     function showAuthModal() {
         try {
             var authModal = document.getElementById('auth-modal');
@@ -1851,7 +1952,7 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 修复版教师工具 ====================
+    // ==================== 教师工具 ====================
     async function showTeacherTools() {
         try {
             if (!currentUser) {
@@ -2193,351 +2294,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 修复版管理员工具 ====================
-    async function showAdminTools() {
-        try {
-            if (!currentUser) {
-                showMessage(getTranslation('needLogin', '请先登录后再申请教师账号'), 'error');
-                showAuthModal();
-                return;
-            }
-            
-            if (!isSuperAdmin) {
-                showMessage(
-                    currentLanguage === 'zh' 
-                        ? '只有超级管理员可以访问此功能' 
-                        : 'Only super administrators can access this feature',
-                    'error'
-                );
-                return;
-            }
-            
-            if (offlineMode) {
-                showMessage(
-                    currentLanguage === 'zh' 
-                        ? '📴 离线模式无法使用管理员工具' 
-                        : '📴 Admin tools unavailable in offline mode',
-                    'warning'
-                );
-                return;
-            }
-            
-            if (!isSupabaseReady || !supabase) {
-                showMessage(
-                    currentLanguage === 'zh' ? '云端服务未就绪' : 'Cloud service not ready',
-                    'error'
-                );
-                return;
-            }
-            
-            var adminToolsModal = document.getElementById('admin-tools-modal');
-            if (!adminToolsModal) return;
-            
-            var systemStats = {
-                totalUsers: 0,
-                totalTeachers: 0,
-                totalStudents: 0,
-                totalGames: 0,
-                totalQuestions: 0,
-                avgAccuracy: 0
-            };
-            
-            try {
-                var countResult = await supabase
-                    .from('game_scores')
-                    .select('user_id', { count: 'exact', head: true });
-                systemStats.totalUsers = countResult.count || 0;
-                
-                var gameStatsResult = await supabase
-                    .from('game_scores')
-                    .select('score, questions_completed, correct_count, total_attempts');
-                
-                if (gameStatsResult.data) {
-                    var gameStats = gameStatsResult.data;
-                    systemStats.totalGames = gameStats.length;
-                    
-                    var totalQuestions = 0;
-                    var totalCorrect = 0;
-                    var totalAttempts = 0;
-                    
-                    for (var i = 0; i < gameStats.length; i++) {
-                        totalQuestions += gameStats[i].questions_completed || 0;
-                        totalCorrect += gameStats[i].correct_count || 0;
-                        totalAttempts += gameStats[i].total_attempts || 0;
-                    }
-                    
-                    systemStats.totalQuestions = totalQuestions;
-                    systemStats.avgAccuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
-                }
-            } catch (e) {
-                console.error('加载系统统计失败:', e);
-            }
-            
-            var adminToolsHtml = `
-                <div style="padding: 25px; max-width: 1200px; margin: 0 auto;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
-                        <h3 style="color: #4CAF50; margin: 0; display: flex; align-items: center;">
-                            <span style="font-size: 2em; margin-right: 10px;">👑</span>
-                            ${getTranslation('adminToolsTitle', '👑 系统管理控制台')}
-                        </h3>
-                        <button id="close-admin-tools" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                            ✕ ${getTranslation('close', '关闭')}
-                        </button>
-                    </div>
-                    
-                    <div style="display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 25px; overflow-x: auto; gap: 10px;">
-                        <button class="tab-btn active" data-tab="system-stats" id="tab-system-stats" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid #4CAF50; font-weight: bold; color: #333; cursor: pointer; white-space: nowrap;">
-                            📊 ${getTranslation('systemStats', '系统统计')}
-                        </button>
-                        <button class="tab-btn" data-tab="teacher-management" id="tab-teacher-management" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
-                            👨‍🏫 ${getTranslation('teacherManagement', '教师管理')}
-                        </button>
-                        <button class="tab-btn" data-tab="system-logs" id="tab-system-logs" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
-                            📋 ${getTranslation('systemLogs', '系统日志')}
-                        </button>
-                        <button class="tab-btn" data-tab="data-management" id="tab-data-management" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
-                            💾 ${getTranslation('dataManagement', '数据管理')}
-                        </button>
-                        <button class="tab-btn" data-tab="system-settings" id="tab-system-settings" style="padding: 12px 24px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: bold; color: #666; cursor: pointer; white-space: nowrap;">
-                            ⚙️ ${getTranslation('systemSettings', '系统设置')}
-                        </button>
-                    </div>
-                    
-                    <div id="system-stats-tab" class="tab-content" style="display: block;">
-                        <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${getTranslation('systemStats', '系统统计')}</h4>
-                            
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
-                                    <div style="font-size: 2em; margin-bottom: 10px;">👥</div>
-                                    <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('totalUsers', '总用户数')}</div>
-                                    <div style="font-size: 2.5em; font-weight: bold;">${systemStats.totalUsers}</div>
-                                </div>
-                                <div style="background: linear-gradient(135deg, #6b8cff 0%, #4a6cf7 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
-                                    <div style="font-size: 2em; margin-bottom: 10px;">🎮</div>
-                                    <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('totalGames', '总游戏局数')}</div>
-                                    <div style="font-size: 2.5em; font-weight: bold;">${systemStats.totalGames}</div>
-                                </div>
-                                <div style="background: linear-gradient(135deg, #ff8c5a 0%, #ff6b4a 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
-                                    <div style="font-size: 2em; margin-bottom: 10px;">❓</div>
-                                    <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('totalQuestions', '总答题数')}</div>
-                                    <div style="font-size: 2.5em; font-weight: bold;">${systemStats.totalQuestions}</div>
-                                </div>
-                                <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
-                                    <div style="font-size: 2em; margin-bottom: 10px;">🎯</div>
-                                    <div style="font-size: 0.9em; opacity: 0.9;">${getTranslation('avgAccuracy', '平均正确率')}</div>
-                                    <div style="font-size: 2.5em; font-weight: bold;">${systemStats.avgAccuracy}%</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="teacher-management-tab" class="tab-content" style="display: none;">
-                        <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${getTranslation('teacherManagement', '教师管理')}</h4>
-                            <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
-                                <div style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;">👨‍🏫</div>
-                                <p style="color: #666; margin: 0;">${currentLanguage === 'zh' ? '教师管理功能开发中，敬请期待...' : 'Teacher management feature coming soon...'}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="system-logs-tab" class="tab-content" style="display: none;">
-                        <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${getTranslation('systemLogs', '系统日志')}</h4>
-                            <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
-                                <div style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;">📋</div>
-                                <p style="color: #666; margin: 0;">${currentLanguage === 'zh' ? '系统日志功能开发中，敬请期待...' : 'System logs feature coming soon...'}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="data-management-tab" class="tab-content" style="display: none;">
-                        <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${getTranslation('dataManagement', '数据管理')}</h4>
-                            <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
-                                <div style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;">💾</div>
-                                <p style="color: #666; margin: 0;">${currentLanguage === 'zh' ? '数据管理功能开发中，敬请期待...' : 'Data management feature coming soon...'}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="system-settings-tab" class="tab-content" style="display: none;">
-                        <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <h4 style="margin-top: 0; margin-bottom: 25px; color: #333;">${getTranslation('systemSettings', '系统设置')}</h4>
-                            <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px;">
-                                <div style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;">⚙️</div>
-                                <p style="color: #666; margin: 0;">${currentLanguage === 'zh' ? '系统设置功能开发中，敬请期待...' : 'System settings feature coming soon...'}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            adminToolsModal.innerHTML = adminToolsHtml;
-            adminToolsModal.style.display = 'flex';
-            
-            var adminTabs = adminToolsModal.querySelectorAll('.tab-btn');
-            for (var i = 0; i < adminTabs.length; i++) {
-                var tab = adminTabs[i];
-                tab.addEventListener('click', function() {
-                    for (var j = 0; j < adminTabs.length; j++) {
-                        var t = adminTabs[j];
-                        t.classList.remove('active');
-                        t.style.borderBottomColor = 'transparent';
-                        t.style.color = '#666';
-                    }
-                    
-                    this.classList.add('active');
-                    this.style.borderBottomColor = '#4CAF50';
-                    this.style.color = '#333';
-                    
-                    var tabId = this.id.replace('tab-', '');
-                    var contents = adminToolsModal.querySelectorAll('.tab-content');
-                    for (var k = 0; k < contents.length; k++) {
-                        contents[k].style.display = 'none';
-                    }
-                    var targetTab = document.getElementById(tabId + '-tab');
-                    if (targetTab) targetTab.style.display = 'block';
-                });
-            }
-            
-            adminToolsModal.querySelector('#close-admin-tools').addEventListener('click', function() {
-                adminToolsModal.style.display = 'none';
-            });
-            
-        } catch (error) {
-            console.error('显示管理员工具失败:', error);
-            showMessage(currentLanguage === 'zh' ? '加载管理员工具失败' : 'Failed to load admin tools', 'error');
-        }
-    }
-    
-    // ==================== 修复版批准教师申请 ====================
-    async function approveTeacherApplication(userId, email) {
-        try {
-            if (!isSuperAdmin && !isSchoolAdmin) {
-                showMessage(
-                    currentLanguage === 'zh' ? '只有超级管理员或学校管理员可以批准教师申请' : 'Only super administrators or school administrators can approve teacher applications',
-                    'error'
-                );
-                return;
-            }
-            
-            if (offlineMode) {
-                showMessage(
-                    currentLanguage === 'zh' ? '离线模式无法批准教师申请' : 'Cannot approve applications in offline mode',
-                    'warning'
-                );
-                return;
-            }
-            
-            if (!isSupabaseReady || !supabase) {
-                showMessage(
-                    currentLanguage === 'zh' ? '云端服务未就绪' : 'Cloud service not ready',
-                    'error'
-                );
-                return;
-            }
-            
-            var result = await supabase
-                .from('teacher_applications')
-                .update({
-                    status: 'approved',
-                    reviewed_at: new Date().toISOString(),
-                    reviewed_by: currentUser.id,
-                    admin_notes: '已批准（需手动更新用户角色）'
-                })
-                .eq('user_id', userId)
-                .eq('status', 'pending');
-            
-            if (result.error) {
-                console.error('更新申请状态失败:', result.error);
-                showMessage(
-                    currentLanguage === 'zh' ? '更新申请状态失败' : 'Failed to update application status',
-                    'error'
-                );
-                return;
-            }
-            
-            showMessage(
-                currentLanguage === 'zh' 
-                    ? '✅ 已标记申请为"已批准"。请登录 Supabase 后台，找到用户 ' + email + '，将 user_metadata.role 改为 "teacher"' 
-                    : '✅ Application marked as approved. Please login to Supabase dashboard, find user ' + email + ', and set user_metadata.role to "teacher"',
-                'success',
-                8000
-            );
-            
-        } catch (error) {
-            console.error('批准教师申请失败:', error);
-            showMessage(
-                currentLanguage === 'zh' ? '批准教师申请失败' : 'Failed to approve teacher application',
-                'error'
-            );
-        }
-    }
-    
-    // ==================== 修复版拒绝教师申请 ====================
-    async function rejectTeacherApplication(userId, email) {
-        try {
-            if (!isSuperAdmin && !isSchoolAdmin) {
-                showMessage(
-                    currentLanguage === 'zh' ? '只有超级管理员或学校管理员可以拒绝教师申请' : 'Only super administrators or school administrators can reject teacher applications',
-                    'error'
-                );
-                return;
-            }
-            
-            if (offlineMode) {
-                showMessage(
-                    currentLanguage === 'zh' ? '离线模式无法拒绝教师申请' : 'Cannot reject applications in offline mode',
-                    'warning'
-                );
-                return;
-            }
-            
-            if (!isSupabaseReady || !supabase) {
-                showMessage(
-                    currentLanguage === 'zh' ? '云端服务未就绪' : 'Cloud service not ready',
-                    'error'
-                );
-                return;
-            }
-            
-            var result = await supabase
-                .from('teacher_applications')
-                .update({
-                    status: 'rejected',
-                    reviewed_at: new Date().toISOString(),
-                    reviewed_by: currentUser.id,
-                    admin_notes: '已拒绝'
-                })
-                .eq('user_id', userId)
-                .eq('status', 'pending');
-            
-            if (result.error) {
-                console.error('更新申请状态失败:', result.error);
-                showMessage(
-                    currentLanguage === 'zh' ? '拒绝失败：' + result.error.message : 'Rejection failed: ' + result.error.message,
-                    'error'
-                );
-                return;
-            }
-            
-            showMessage(
-                currentLanguage === 'zh' ? '❌ 已拒绝教师申请: ' + email : '❌ Rejected teacher application: ' + email,
-                'success'
-            );
-            
-        } catch (error) {
-            console.error('拒绝教师申请失败:', error);
-            showMessage(
-                currentLanguage === 'zh' ? '拒绝教师申请失败' : 'Failed to reject teacher application',
-                'error'
-            );
-        }
-    }
-    
-    // ==================== 教师工具辅助函数 ====================
     async function downloadTemplate() {
         try {
             var csvContent = "email,姓名,班级,备注\n" +
@@ -2790,7 +2546,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 修复版打印账号卡片 ====================
     function printAccountCards() {
         try {
             var container = document.getElementById('account-cards-container');
@@ -2921,6 +2676,7 @@ var MathGame = (function() {
         
         try {
             syncState.isSyncing = true;
+            updateConnectionStatusIndicator();
             
             await syncAchievementsToCloud();
             await syncAllWrongQuestionsToCloud();
@@ -2932,13 +2688,16 @@ var MathGame = (function() {
             
             syncState.isSyncing = false;
             syncState.pendingChanges = false;
+            syncState.lastSyncTime = new Date().toISOString();
             saveSyncState();
             
+            updateConnectionStatusIndicator();
             addSyncHistory('full', 'success', '所有数据同步成功');
             return true;
         } catch (error) {
             console.error('完整同步失败:', error);
             syncState.isSyncing = false;
+            updateConnectionStatusIndicator();
             addSyncHistory('full', 'failed', error.message);
             return false;
         }
@@ -3868,7 +3627,6 @@ var MathGame = (function() {
         }, 500);
     }
     
-    // ==================== 游戏结束与成就更新 ====================
     async function endGame(reason) {
         if (!gameActive) return;
         
@@ -3940,7 +3698,6 @@ var MathGame = (function() {
         updateUserInfo();
     }
     
-    // ==================== 成绩云端存储 ====================
     async function saveGameScoreToCloud(gameScore, questionsCompleted, gameAccuracy, timeUsed) {
         try {
             var rangeInput = document.getElementById('number-range');
@@ -4022,7 +3779,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 获取排行榜类型 ====================
     function getLeaderboardType(gameMode, range) {
         var difficultyMap = {
             '0-9': 'easy',
@@ -4041,7 +3797,6 @@ var MathGame = (function() {
         return null;
     }
     
-    // ==================== 用户统计系统 ====================
     async function loadUserStats() {
         try {
             if (!currentUser || !isSupabaseReady || !supabase || offlineMode) {
@@ -4147,7 +3902,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 错题管理系统 ====================
     function loadWrongQuestions() {
         try {
             var saved = localStorage.getItem('mathGameWrongQuestions');
@@ -4372,7 +4126,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 统计功能 ====================
     async function showStatistics() {
         try {
             var statisticsContent = document.getElementById('statistics-content');
@@ -4544,7 +4297,6 @@ var MathGame = (function() {
         
         try {
             if (!isSupabaseReady || !supabase || offlineMode) {
-                // 离线模式返回本地缓存
                 var cached = localStorage.getItem('leaderboard_' + type + '_' + sortBy);
                 if (cached) {
                     try {
@@ -4572,12 +4324,10 @@ var MathGame = (function() {
                 query = query.order('time_used', { ascending: true });
             }
             
-            // 获取总数
             var countResult = await query;
             leaderboardState.totalCount = countResult.count || 0;
             leaderboardState.totalPages = Math.ceil(leaderboardState.totalCount / limit);
             
-            // 获取分页数据
             var result = await query
                 .range(offset, offset + limit - 1);
             
@@ -4586,7 +4336,6 @@ var MathGame = (function() {
                 return [];
             }
             
-            // 缓存数据
             if (result.data) {
                 try {
                     localStorage.setItem('leaderboard_' + type + '_' + sortBy, JSON.stringify({
@@ -4657,7 +4406,6 @@ var MathGame = (function() {
             leaderboardContent.innerHTML = '<div style="text-align:center;padding:30px;">' + getTranslation('loadingStats', '加载统计信息中...') + '</div>';
             leaderboardModal.style.display = 'flex';
             
-            // 重置排行榜状态
             leaderboardState = {
                 currentGameMode: 'challenge',
                 currentDifficulty: 'easy',
@@ -4668,10 +4416,8 @@ var MathGame = (function() {
                 sortBy: 'score'
             };
             
-            // 加载数据
             await loadLeaderboardForCurrentState();
             
-            // 绑定事件（先移除旧监听器）
             bindLeaderboardEvents();
             
         } catch (error) {
@@ -4695,13 +4441,11 @@ var MathGame = (function() {
         
         var data = await loadLeaderboardData(leaderboardType, sortBy, pageSize, offset);
         
-        // 获取用户最佳成绩
         var userBest = null;
         if (currentUser && !offlineMode) {
             userBest = await loadUserBestInCombination(gameMode, difficulty);
         }
         
-        // 更新标题
         var gameModeName = gameMode === 'challenge' ? 
             getTranslation('leaderboardChallengeMode', '⚡ 激情90秒') : 
             getTranslation('leaderboardStandardMode', '📚 挑战30');
@@ -4715,20 +4459,12 @@ var MathGame = (function() {
             titleElement.textContent = gameModeName + ' · ' + difficultyName;
         }
         
-        // 生成HTML
         var html = '<div style="padding: 10px;">' + generateLeaderboardTable(data, sortBy) + '</div>';
         container.innerHTML = html;
         
-        // 更新分页状态
         updatePagination();
-        
-        // 更新用户最佳卡片
         updateMyBestCard(userBest);
-        
-        // 更新登录提示
         updateLoginPrompt();
-        
-        // 更新离线提示
         updateOfflinePrompt();
     }
     
@@ -4811,14 +4547,12 @@ var MathGame = (function() {
         var currentPage = leaderboardState.currentPage;
         var totalPages = leaderboardState.totalPages;
         
-        // 更新上一页/下一页状态
         prevBtn.disabled = currentPage <= 1;
         prevBtn.classList.toggle('disabled', currentPage <= 1);
         
         nextBtn.disabled = currentPage >= totalPages;
         nextBtn.classList.toggle('disabled', currentPage >= totalPages);
         
-        // 更新页码显示
         page1.textContent = '1';
         page2.textContent = totalPages > 1 ? '2' : '-';
         page3.textContent = totalPages > 2 ? '3' : '-';
@@ -4873,7 +4607,6 @@ var MathGame = (function() {
     }
     
     function bindLeaderboardEvents() {
-        // 游戏模式选项卡
         var challengeModeBtn = document.getElementById('tab-challenge-mode');
         if (challengeModeBtn) {
             challengeModeBtn.removeEventListener('click', handleChallengeModeClick);
@@ -4886,7 +4619,6 @@ var MathGame = (function() {
             standardModeBtn.addEventListener('click', handleStandardModeClick);
         }
         
-        // 难度选项卡
         var easyBtn = document.getElementById('tab-easy');
         if (easyBtn) {
             easyBtn.removeEventListener('click', handleEasyClick);
@@ -4905,21 +4637,18 @@ var MathGame = (function() {
             hardBtn.addEventListener('click', handleHardClick);
         }
         
-        // 刷新按钮
         var refreshBtn = document.getElementById('sync-leaderboard-btn');
         if (refreshBtn) {
             refreshBtn.removeEventListener('click', handleRefreshClick);
             refreshBtn.addEventListener('click', handleRefreshClick);
         }
         
-        // 显示数量选择
         var limitSelect = document.getElementById('leaderboard-limit');
         if (limitSelect) {
             limitSelect.removeEventListener('change', handleLimitChange);
             limitSelect.addEventListener('change', handleLimitChange);
         }
         
-        // 分页按钮
         var prevBtn = document.getElementById('page-prev');
         if (prevBtn) {
             prevBtn.removeEventListener('click', handlePrevClick);
@@ -5236,7 +4965,6 @@ var MathGame = (function() {
         `;
     }
     
-    // ==================== 历史记录显示 ====================
     function showHistory() {
         try {
             var tbody = document.getElementById('history-table-body');
@@ -5283,7 +5011,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 修复版错题本显示 ====================
     function showWrongBook() {
         try {
             loadWrongQuestions();
@@ -5346,7 +5073,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 个人资料显示 ====================
     function showProfile() {
         try {
             if (!currentUser) {
@@ -5429,7 +5155,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 提示系统 ====================
     function updateHintCooldown() {
         if (hintCooldown > 0) {
             hintCooldown--;
@@ -5527,7 +5252,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 响应式样式注入 ====================
     function injectResponsiveStyles() {
         try {
             if (document.getElementById('math-game-responsive-styles')) return;
@@ -6019,7 +5743,6 @@ var MathGame = (function() {
         return issues.length === 0;
     }
     
-    // ==================== 初始化 ====================
     async function init() {
         console.log('🎮 数学加法消消乐 - 开始初始化...');
         
@@ -6038,6 +5761,8 @@ var MathGame = (function() {
             }
             setLanguage(currentLanguage);
             
+            createConnectionStatusIndicator();
+            
             await initSupabase();
             
             if (isSupabaseReady && supabase) {
@@ -6046,6 +5771,7 @@ var MathGame = (function() {
                 } catch (e) {
                     console.warn('认证检查失败，进入离线模式:', e);
                     offlineMode = true;
+                    updateConnectionStatusIndicator();
                 }
             }
             
@@ -6077,6 +5803,14 @@ var MathGame = (function() {
                         : '📴 You are using offline mode, game data will only be saved locally',
                     'warning',
                     5000
+                );
+            } else {
+                showMessage(
+                    currentLanguage === 'zh' 
+                        ? '☁️ 已成功连接到云端' 
+                        : '☁️ Connected to cloud successfully',
+                    'success',
+                    3000
                 );
             }
         } catch (error) {
@@ -6119,7 +5853,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 绑定事件监听器 ====================
     function bindEventListeners() {
         try {
             var langBtn = document.getElementById('language-btn');
@@ -6143,13 +5876,23 @@ var MathGame = (function() {
                 { id: 'teacher-application-btn', handler: showTeacherApplication },
                 { id: 'logout-btn', handler: logout },
                 { id: 'sync-status-btn', handler: function() {
-                    showMessage(
-                        offlineMode ? getTranslation('offlineMode', '离线模式') :
-                        syncState.pendingChanges 
-                            ? (currentLanguage === 'zh' ? '有待同步的数据' : 'Pending changes')
-                            : (currentLanguage === 'zh' ? '已同步' : 'Synced'), 
-                        'info'
-                    );
+                    if (offlineMode) {
+                        showMessage(
+                            getTranslation('offlineMode', '离线模式') + ' - ' + getTranslation('retryConnection', '点击重试'), 
+                            'info'
+                        );
+                        retryConnection();
+                    } else {
+                        showMessage(
+                            syncState.pendingChanges ? 
+                                (currentLanguage === 'zh' ? '有待同步的数据，点击同步' : 'Pending changes, click to sync') : 
+                                (currentLanguage === 'zh' ? '已同步' : 'Synced'), 
+                            'info'
+                        );
+                        if (syncState.pendingChanges) {
+                            performFullSync();
+                        }
+                    }
                 }}
             ];
             
@@ -6289,7 +6032,6 @@ var MathGame = (function() {
         }
     }
     
-    // ==================== 公共接口 ====================
     return {
         init: init,
         selectMode: selectMode,
@@ -6314,6 +6056,7 @@ var MathGame = (function() {
         saveScore: saveScore,
         showAuthModal: showAuthModal,
         performFullSync: performFullSync,
+        retryConnection: retryConnection,
         getSyncStatus: function() { return syncState; },
         isOfflineMode: function() { return offlineMode; },
         getRoles: function() {
@@ -6327,7 +6070,6 @@ var MathGame = (function() {
     };
 })();
 
-// ==================== 启动游戏 ====================
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() {
@@ -6335,7 +6077,6 @@ if (document.readyState === 'loading') {
                 window.MathGame.init();
             } else {
                 console.error('MathGame对象未定义');
-                // 显示友好的错误提示
                 var errorMsg = document.createElement('div');
                 errorMsg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#ff4444;color:white;padding:20px;border-radius:10px;z-index:10000;';
                 errorMsg.textContent = '游戏加载失败，请刷新页面或检查网络连接';
@@ -6349,7 +6090,6 @@ if (document.readyState === 'loading') {
             window.MathGame.init();
         } else {
             console.error('MathGame对象未定义');
-            // 显示友好的错误提示
             var errorMsg = document.createElement('div');
             errorMsg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#ff4444;color:white;padding:20px;border-radius:10px;z-index:10000;';
             errorMsg.textContent = '游戏加载失败，请刷新页面或检查网络连接';
