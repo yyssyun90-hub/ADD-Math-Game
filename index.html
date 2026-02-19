@@ -7,7 +7,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
     
-    <!-- 加载样式 -->
+    <!-- 预加载样式 -->
+    <link rel="preload" href="style.css" as="style">
     <link rel="stylesheet" href="style.css">
     
     <!-- 加载中样式 -->
@@ -96,7 +97,7 @@
         }
     </script>
     
-    <!-- ========== 语言切换按钮 - 修复版 ========== -->
+    <!-- ========== 语言切换按钮 ========== -->
     <div class="language-switch">
         <button class="language-btn" id="language-btn" aria-label="切换语言">
             <span id="language-icon">🌐</span>
@@ -643,19 +644,35 @@
     <!-- 匹配反馈 -->
     <div class="match-feedback" id="match-feedback" aria-live="polite" aria-atomic="true"></div>
     
-    <!-- 加载JavaScript - 使用defer优化加载 -->
-    <script src="app.js" defer></script>
+    <!-- ========== 关键修复：修正JS文件路径 ========== -->
+    <script src="deepseek_javascript_20260214_55b278.js" defer></script>
+    
+    <!-- 备用JS加载（如果主文件加载失败） -->
+    <script>
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'SCRIPT' && e.target.src.includes('deepseek')) {
+                console.error('主JS文件加载失败，尝试加载备用...');
+                var fallbackScript = document.createElement('script');
+                fallbackScript.src = 'app.js';
+                fallbackScript.defer = true;
+                document.body.appendChild(fallbackScript);
+            }
+        }, true);
+    </script>
     
     <!-- 确保页面加载完成后初始化游戏 -->
     <script>
         window.addEventListener('load', function() {
             setTimeout(function() {
-                document.getElementById('loading-overlay').classList.add('hide-loading');
-                document.body.classList.add('loaded');
-                
-                setTimeout(function() {
-                    document.getElementById('loading-overlay').style.display = 'none';
-                }, 500);
+                var overlay = document.getElementById('loading-overlay');
+                if (overlay) {
+                    overlay.classList.add('hide-loading');
+                    document.body.classList.add('loaded');
+                    
+                    setTimeout(function() {
+                        overlay.style.display = 'none';
+                    }, 500);
+                }
                 
                 if (window.MathGame && typeof window.MathGame.init === 'function') {
                     window.MathGame.init();
@@ -664,6 +681,9 @@
                     setTimeout(function() {
                         if (window.MathGame && typeof window.MathGame.init === 'function') {
                             window.MathGame.init();
+                        } else {
+                            console.error('MathGame对象仍然未找到，请检查JS文件');
+                            showMessage('游戏加载失败，请刷新页面', 'error');
                         }
                     }, 1000);
                 }
@@ -680,6 +700,17 @@
                 }, 500);
             }
         }, 10000);
+        
+        // 辅助函数
+        function showMessage(text, type) {
+            var msg = document.createElement('div');
+            msg.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:' + 
+                (type === 'error' ? '#ff4444' : '#2196F3') + 
+                ';color:white;padding:12px 24px;border-radius:30px;z-index:10000;';
+            msg.textContent = text;
+            document.body.appendChild(msg);
+            setTimeout(function() { msg.remove(); }, 3000);
+        }
     </script>
 </body>
 </html>
