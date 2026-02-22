@@ -1,1429 +1,1554 @@
 // ==================== app.js ====================
-// 数学加法消消乐 - Supabase 完整数据库架构
-// 适用于区域学校多租户教育系统
-// 版本: 4.0.0 (最终生产版)
-// 最后更新: 2026-02-21
-// 作者: MathGame Team
-// 许可证: MIT
+// 数学加法消消乐 - 区域学校多租户版
+// 版本: 5.0.0 (最终生产版)
+// 依赖: Supabase, 现代浏览器
+// ====================
 
-(function(global) {
+(function() {
     'use strict';
 
-    /**
-     * 数学加法消消乐 - Supabase 数据库架构
-     * 包含完整的表结构、索引、RLS策略、函数、触发器和初始化数据
-     */
-    const SUPABASE_SCHEMA = {
-        version: '4.0.0',
-        
-        /**
-         * 扩展和枚举类型定义
-         */
-        extensions: `
-            -- 创建必要扩展
-            CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-            CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-            CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
-            CREATE EXTENSION IF NOT EXISTS "btree_gin"; -- 支持复合索引
-        `,
+    // ==================== 全局配置 ====================
+    const CONFIG = {
+        SUPABASE_URLS: [
+            'https://ytoailyxejdgtpfwcdci.supabase.co'
+        ],
+        SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0b2FpbHl4ZWpkZ3RwZndjZGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NDE5NzQsImV4cCI6MjA4NTExNzk3NH0.DvvP8whiE3rW1bDh4qW2zOLTGsknfQ2Utt8wVOxZjV0',
+        SYNC_INTERVAL: 300000,
+        MAX_HISTORY: 100,
+        MAX_WRONG: 200,
+        GRID_SIZE: 10,
+        DEFAULT_QUESTIONS: 30,
+        DEFAULT_TIME: 90,
+        VERSION: '5.0.0'
+    };
 
-        enums: `
-            -- 用户角色枚举
-            DO $$ BEGIN
-                CREATE TYPE user_role AS ENUM ('super_admin', 'school_admin', 'teacher', 'student');
-            EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
-            
-            -- 用户状态枚举
-            DO $$ BEGIN
-                CREATE TYPE user_status AS ENUM ('active', 'inactive', 'graduated', 'transferred');
-            EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
-            
-            -- 游戏模式枚举
-            DO $$ BEGIN
-                CREATE TYPE game_mode AS ENUM ('standard', 'challenge', 'practice', 'custom');
-            EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
-            
-            -- 难度级别枚举
-            DO $$ BEGIN
-                CREATE TYPE difficulty_level AS ENUM ('easy', 'medium', 'hard');
-            EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
-            
-            -- 作业状态枚举
-            DO $$ BEGIN
-                CREATE TYPE assignment_status AS ENUM ('draft', 'published', 'ended', 'archived');
-            EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
-            
-            -- 通知优先级枚举
-            DO $$ BEGIN
-                CREATE TYPE notification_priority AS ENUM ('low', 'normal', 'high', 'urgent');
-            EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
-            
-            -- 排行榜类型枚举
-            DO $$ BEGIN
-                CREATE TYPE leaderboard_type AS ENUM ('school', 'grade', 'class', 'global');
-            EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
-            
-            -- 排行榜周期枚举
-            DO $$ BEGIN
-                CREATE TYPE leaderboard_period AS ENUM ('daily', 'weekly', 'monthly', 'yearly');
-            EXCEPTION WHEN duplicate_object THEN NULL;
-            END $$;
-        `,
-        
-        /**
-         * 核心函数定义
-         */
-        functions: `
-            -- 更新时间戳触发器函数
-            CREATE OR REPLACE FUNCTION update_updated_at_column()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                NEW.updated_at = CURRENT_TIMESTAMP;
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-            
-            -- 软删除检查函数
-            CREATE OR REPLACE FUNCTION check_not_deleted()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                IF OLD.is_deleted THEN
-                    RAISE EXCEPTION '记录已被删除';
-                END IF;
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-            
-            -- 更新班级学生数统计函数
-            CREATE OR REPLACE FUNCTION update_class_student_count()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                IF TG_OP = 'INSERT' AND NEW.role = 'student'::user_role AND NEW.class_id IS NOT NULL THEN
-                    UPDATE classes 
-                    SET student_count = student_count + 1,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE id = NEW.class_id;
-                ELSIF TG_OP = 'UPDATE' AND NEW.role = 'student'::user_role THEN
-                    IF OLD.class_id IS DISTINCT FROM NEW.class_id THEN
-                        IF OLD.class_id IS NOT NULL THEN
-                            UPDATE classes 
-                            SET student_count = student_count - 1,
-                                updated_at = CURRENT_TIMESTAMP
-                            WHERE id = OLD.class_id;
-                        END IF;
-                        IF NEW.class_id IS NOT NULL THEN
-                            UPDATE classes 
-                            SET student_count = student_count + 1,
-                                updated_at = CURRENT_TIMESTAMP
-                            WHERE id = NEW.class_id;
-                        END IF;
-                    END IF;
-                ELSIF TG_OP = 'DELETE' AND OLD.role = 'student'::user_role AND OLD.class_id IS NOT NULL THEN
-                    UPDATE classes 
-                    SET student_count = student_count - 1,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE id = OLD.class_id;
-                END IF;
-                RETURN NULL;
-            END;
-            $$ LANGUAGE plpgsql;
-            
-            -- 计算学生掌握度函数
-            CREATE OR REPLACE FUNCTION calculate_mastery_level(
-                p_user_id UUID,
-                p_knowledge_point VARCHAR
-            ) RETURNS INTEGER AS $$
-            DECLARE
-                total_attempts INTEGER;
-                correct_count INTEGER;
-                mastery_level INTEGER;
-            BEGIN
-                SELECT 
-                    COUNT(*),
-                    COUNT(*) FILTER (WHERE (value->>'is_correct')::boolean)
-                INTO total_attempts, correct_count
-                FROM game_records gr,
-                LATERAL jsonb_array_elements(gr.game_data->'questions') AS value
-                WHERE gr.user_id = p_user_id
-                AND gr.game_data IS NOT NULL
-                AND value->>'knowledge_point' = p_knowledge_point;
-                
-                IF total_attempts = 0 OR total_attempts IS NULL THEN
-                    RETURN 0;
-                END IF;
-                
-                mastery_level := (correct_count::FLOAT / total_attempts::FLOAT * 100)::INTEGER;
-                RETURN mastery_level;
-            END;
-            $$ LANGUAGE plpgsql;
-            
-            -- 生成周报函数
-            CREATE OR REPLACE FUNCTION generate_weekly_report(
-                p_school_id UUID,
-                p_week_date DATE
-            ) RETURNS JSONB AS $$
-            DECLARE
-                report JSONB;
-            BEGIN
-                WITH weekly_stats AS (
-                    SELECT 
-                        c.id AS class_id,
-                        c.name AS class_name,
-                        COUNT(DISTINCT gr.user_id) AS active_students,
-                        COUNT(gr.id) AS total_games,
-                        COALESCE(AVG(gr.accuracy), 0) AS avg_accuracy,
-                        COALESCE(SUM(gr.questions_completed), 0) AS total_questions,
-                        COUNT(DISTINCT wq.id) AS new_wrong_questions
-                    FROM classes c
-                    LEFT JOIN game_records gr ON gr.class_id = c.id 
-                        AND gr.created_at >= p_week_date
-                        AND gr.created_at < p_week_date + INTERVAL '7 days'
-                        AND NOT gr.is_deleted
-                    LEFT JOIN wrong_questions wq ON wq.class_id = c.id
-                        AND wq.created_at >= p_week_date
-                        AND wq.created_at < p_week_date + INTERVAL '7 days'
-                        AND NOT wq.is_deleted
-                    WHERE c.school_id = p_school_id
-                    AND NOT c.is_deleted
-                    GROUP BY c.id, c.name
-                )
-                SELECT jsonb_build_object(
-                    'school_id', p_school_id,
-                    'week_start', p_week_date,
-                    'week_end', p_week_date + INTERVAL '6 days',
-                    'total_classes', (SELECT COUNT(*) FROM classes WHERE school_id = p_school_id AND NOT is_deleted),
-                    'active_classes', (SELECT COUNT(*) FROM weekly_stats WHERE active_students > 0),
-                    'total_students', (SELECT COUNT(*) FROM profiles WHERE school_id = p_school_id AND role = 'student'::user_role AND NOT is_deleted),
-                    'class_stats', (SELECT jsonb_agg(weekly_stats) FROM weekly_stats)
-                ) INTO report;
-                
-                RETURN COALESCE(report, '{}'::jsonb);
-            END;
-            $$ LANGUAGE plpgsql;
-            
-            -- 归档旧数据函数
-            CREATE OR REPLACE FUNCTION archive_old_records(p_days INTEGER DEFAULT 365)
-            RETURNS TABLE(table_name TEXT, archived_count BIGINT) AS $$
-            DECLARE
-                v_cutoff_date TIMESTAMP;
-            BEGIN
-                v_cutoff_date := NOW() - (p_days || ' days')::INTERVAL;
-                
-                -- 创建归档表（如果不存在）
-                CREATE TABLE IF NOT EXISTS game_records_archive (LIKE game_records INCLUDING ALL);
-                CREATE TABLE IF NOT EXISTS system_logs_archive (LIKE system_logs INCLUDING ALL);
-                
-                -- 归档游戏记录
-                WITH moved AS (
-                    DELETE FROM game_records 
-                    WHERE created_at < v_cutoff_date
-                    RETURNING *
-                )
-                INSERT INTO game_records_archive SELECT * FROM moved;
-                GET DIAGNOSTICS archived_count = ROW_COUNT;
-                table_name := 'game_records';
-                RETURN NEXT;
-                
-                -- 归档系统日志
-                WITH moved AS (
-                    DELETE FROM system_logs 
-                    WHERE created_at < v_cutoff_date
-                    RETURNING *
-                )
-                INSERT INTO system_logs_archive SELECT * FROM moved;
-                GET DIAGNOSTICS archived_count = ROW_COUNT;
-                table_name := 'system_logs';
-                RETURN NEXT;
-            END;
-            $$ LANGUAGE plpgsql;
-            
-            -- 数据清洗函数
-            CREATE OR REPLACE FUNCTION clean_soft_deleted_data(p_days INTEGER DEFAULT 30)
-            RETURNS TABLE(table_name TEXT, deleted_count BIGINT) AS $$
-            DECLARE
-                v_cutoff_date TIMESTAMP;
-            BEGIN
-                v_cutoff_date := NOW() - (p_days || ' days')::INTERVAL;
-                
-                -- 清理软删除超过指定天数的数据
-                DELETE FROM schools WHERE is_deleted AND deleted_at < v_cutoff_date;
-                GET DIAGNOSTICS deleted_count = ROW_COUNT;
-                table_name := 'schools';
-                RETURN NEXT;
-                
-                DELETE FROM profiles WHERE is_deleted AND deleted_at < v_cutoff_date;
-                GET DIAGNOSTICS deleted_count = ROW_COUNT;
-                table_name := 'profiles';
-                RETURN NEXT;
-                
-                DELETE FROM game_records WHERE is_deleted AND deleted_at < v_cutoff_date;
-                GET DIAGNOSTICS deleted_count = ROW_COUNT;
-                table_name := 'game_records';
-                RETURN NEXT;
-            END;
-            $$ LANGUAGE plpgsql;
-        `,
-        
-        /**
-         * 表结构定义
-         */
-        tables: {
-            // 1. 学校表
-            schools: `
-                CREATE TABLE schools (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    name VARCHAR(200) NOT NULL,
-                    code VARCHAR(50) UNIQUE NOT NULL,
-                    district VARCHAR(100),
-                    address TEXT,
-                    phone VARCHAR(20),
-                    email VARCHAR(100),
-                    principal_name VARCHAR(100),
-                    established_year INTEGER CHECK (established_year BETWEEN 1900 AND 2100),
-                    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
-                    settings JSONB DEFAULT '{}'::jsonb,
-                    
-                    -- 软删除和版本控制
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    version INTEGER DEFAULT 1,
-                    
-                    -- 审计字段
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    -- 约束
-                    CONSTRAINT valid_school_email CHECK (email IS NULL OR email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'),
-                    CONSTRAINT valid_school_phone CHECK (phone IS NULL OR phone ~* '^[0-9+-]{10,15}$')
-                );
-                
-                -- 索引
-                CREATE INDEX idx_schools_code ON schools(code) WHERE NOT is_deleted;
-                CREATE INDEX idx_schools_district ON schools(district) WHERE NOT is_deleted;
-                CREATE INDEX idx_schools_status ON schools(status) WHERE NOT is_deleted;
-                CREATE INDEX idx_schools_search ON schools USING GIN (to_tsvector('simple', COALESCE(name, '') || ' ' || COALESCE(code, '')));
-                CREATE INDEX idx_schools_created_at ON schools(created_at);
-                
-                -- 触发器
-                CREATE TRIGGER trigger_update_schools_updated_at
-                    BEFORE UPDATE ON schools
-                    FOR EACH ROW
-                    EXECUTE FUNCTION update_updated_at_column();
-                    
-                CREATE TRIGGER trigger_check_schools_not_deleted
-                    BEFORE UPDATE ON schools
-                    FOR EACH ROW
-                    WHEN (OLD.is_deleted = true)
-                    EXECUTE FUNCTION check_not_deleted();
-            `,
-
-            // 2. 学年表
-            academic_years: `
-                CREATE TABLE academic_years (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
-                    name VARCHAR(50) NOT NULL,
-                    start_date DATE NOT NULL,
-                    end_date DATE NOT NULL CHECK (end_date > start_date),
-                    is_current BOOLEAN DEFAULT FALSE,
-                    settings JSONB DEFAULT '{}'::jsonb,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    UNIQUE(school_id, name)
-                );
-
-                CREATE INDEX idx_academic_years_school ON academic_years(school_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_academic_years_current ON academic_years(is_current) WHERE is_current AND NOT is_deleted;
-                CREATE INDEX idx_academic_years_dates ON academic_years(start_date, end_date) WHERE NOT is_deleted;
-
-                CREATE TRIGGER trigger_update_academic_years_updated_at
-                    BEFORE UPDATE ON academic_years
-                    FOR EACH ROW
-                    EXECUTE FUNCTION update_updated_at_column();
-            `,
-
-            // 3. 年级表
-            grades: `
-                CREATE TABLE grades (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
-                    academic_year_id UUID NOT NULL REFERENCES academic_years(id) ON DELETE CASCADE,
-                    name VARCHAR(50) NOT NULL,
-                    level INTEGER NOT NULL CHECK (level BETWEEN 1 AND 12),
-                    class_count INTEGER DEFAULT 0,
-                    student_count INTEGER DEFAULT 0,
-                    settings JSONB DEFAULT '{}'::jsonb,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    UNIQUE(school_id, academic_year_id, level)
-                );
-
-                CREATE INDEX idx_grades_school ON grades(school_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_grades_academic_year ON grades(academic_year_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_grades_level ON grades(level) WHERE NOT is_deleted;
-
-                CREATE TRIGGER trigger_update_grades_updated_at
-                    BEFORE UPDATE ON grades
-                    FOR EACH ROW
-                    EXECUTE FUNCTION update_updated_at_column();
-            `,
-
-            // 4. 班级表
-            classes: `
-                CREATE TABLE classes (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
-                    grade_id UUID NOT NULL REFERENCES grades(id) ON DELETE CASCADE,
-                    academic_year_id UUID NOT NULL REFERENCES academic_years(id) ON DELETE CASCADE,
-                    name VARCHAR(50) NOT NULL,
-                    class_number INTEGER,
-                    room_number VARCHAR(50),
-                    student_count INTEGER DEFAULT 0,
-                    settings JSONB DEFAULT '{}'::jsonb,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    UNIQUE(school_id, grade_id, academic_year_id, name)
-                );
-
-                CREATE INDEX idx_classes_school ON classes(school_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_classes_grade ON classes(grade_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_classes_academic_year ON classes(academic_year_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_classes_school_grade ON classes(school_id, grade_id) WHERE NOT is_deleted;
-
-                CREATE TRIGGER trigger_update_classes_updated_at
-                    BEFORE UPDATE ON classes
-                    FOR EACH ROW
-                    EXECUTE FUNCTION update_updated_at_column();
-            `,
-
-            // 5. 用户扩展表
-            profiles: `
-                CREATE TABLE profiles (
-                    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-                    school_id UUID REFERENCES schools(id),
-                    class_id UUID REFERENCES classes(id),
-                    grade_id UUID REFERENCES grades(id),
-                    academic_year_id UUID REFERENCES academic_years(id),
-                    username VARCHAR(100) UNIQUE,
-                    real_name VARCHAR(100),
-                    student_no VARCHAR(50),
-                    role user_role NOT NULL DEFAULT 'student',
-                    status user_status DEFAULT 'active',
-                    
-                    -- 学生特定字段
-                    parent_name VARCHAR(100),
-                    parent_phone VARCHAR(20),
-                    parent_email VARCHAR(100),
-                    enrollment_date DATE,
-                    
-                    -- 教师特定字段
-                    teacher_no VARCHAR(50),
-                    title VARCHAR(50),
-                    subjects TEXT[],
-                    
-                    -- 公共字段
-                    avatar_url TEXT,
-                    phone VARCHAR(20),
-                    settings JSONB DEFAULT '{}'::jsonb,
-                    
-                    -- 软删除和版本控制
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    version INTEGER DEFAULT 1,
-                    
-                    -- 审计字段
-                    last_login_at TIMESTAMP WITH TIME ZONE,
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    -- 约束
-                    CONSTRAINT valid_profile_email CHECK (parent_email IS NULL OR parent_email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'),
-                    CONSTRAINT valid_profile_phone CHECK (phone IS NULL OR phone ~* '^[0-9+-]{10,15}$'),
-                    CONSTRAINT valid_parent_phone CHECK (parent_phone IS NULL OR parent_phone ~* '^[0-9+-]{10,15}$'),
-                    CONSTRAINT student_has_class CHECK (role != 'student' OR (role = 'student' AND class_id IS NOT NULL)),
-                    CONSTRAINT teacher_has_school CHECK (role != 'teacher' OR (role = 'teacher' AND school_id IS NOT NULL))
-                );
-
-                -- 索引
-                CREATE INDEX idx_profiles_school ON profiles(school_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_profiles_class ON profiles(class_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_profiles_grade ON profiles(grade_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_profiles_role ON profiles(role) WHERE NOT is_deleted;
-                CREATE INDEX idx_profiles_student_no ON profiles(student_no) WHERE NOT is_deleted AND role = 'student';
-                CREATE INDEX idx_profiles_teacher_no ON profiles(teacher_no) WHERE NOT is_deleted AND role = 'teacher';
-                CREATE INDEX idx_profiles_status ON profiles(status) WHERE NOT is_deleted;
-                CREATE INDEX idx_profiles_parent_phone ON profiles(parent_phone) WHERE NOT is_deleted;
-                CREATE INDEX idx_profiles_search ON profiles USING GIN (to_tsvector('simple', COALESCE(real_name, '') || ' ' || COALESCE(student_no, '')));
-                CREATE INDEX idx_profiles_school_role ON profiles(school_id, role) WHERE NOT is_deleted;
-
-                -- 触发器
-                CREATE TRIGGER trigger_update_profiles_updated_at
-                    BEFORE UPDATE ON profiles
-                    FOR EACH ROW
-                    EXECUTE FUNCTION update_updated_at_column();
-
-                CREATE TRIGGER trigger_profiles_update_class_count
-                    AFTER INSERT OR UPDATE OR DELETE ON profiles
-                    FOR EACH ROW
-                    EXECUTE FUNCTION update_class_student_count();
-            `,
-
-            // 6. 教师-班级关联表
-            teacher_classes: `
-                CREATE TABLE teacher_classes (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    teacher_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-                    class_id UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
-                    subject VARCHAR(50) NOT NULL,
-                    is_homeroom BOOLEAN DEFAULT FALSE,
-                    academic_year_id UUID NOT NULL REFERENCES academic_years(id) ON DELETE CASCADE,
-                    is_active BOOLEAN DEFAULT TRUE,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    UNIQUE(teacher_id, class_id, academic_year_id, subject)
-                );
-
-                CREATE INDEX idx_teacher_classes_teacher ON teacher_classes(teacher_id) WHERE NOT is_deleted AND is_active;
-                CREATE INDEX idx_teacher_classes_class ON teacher_classes(class_id) WHERE NOT is_deleted AND is_active;
-                CREATE INDEX idx_teacher_classes_academic_year ON teacher_classes(academic_year_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_teacher_classes_teacher_academic ON teacher_classes(teacher_id, academic_year_id) WHERE NOT is_deleted;
-            `,
-
-            // 7. 游戏记录表
-            game_records: `
-                CREATE TABLE game_records (
-                    id UUID DEFAULT uuid_generate_v4(),
-                    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-                    school_id UUID REFERENCES schools(id),
-                    class_id UUID REFERENCES classes(id),
-                    grade_id UUID REFERENCES grades(id),
-                    academic_year_id UUID REFERENCES academic_years(id),
-                    
-                    score INTEGER NOT NULL DEFAULT 0 CHECK (score >= 0),
-                    questions_completed INTEGER NOT NULL DEFAULT 0 CHECK (questions_completed >= 0),
-                    correct_count INTEGER NOT NULL DEFAULT 0 CHECK (correct_count >= 0),
-                    accuracy DECIMAL(5,2) GENERATED ALWAYS AS (
-                        CASE 
-                            WHEN questions_completed > 0 
-                            THEN ROUND((correct_count::DECIMAL / questions_completed::DECIMAL * 100)::DECIMAL, 2)
-                            ELSE 0 
-                        END
-                    ) STORED,
-                    total_time INTEGER CHECK (total_time >= 0),
-                    avg_time_per_question DECIMAL(5,2),
-                    
-                    mode game_mode NOT NULL,
-                    difficulty difficulty_level,
-                    number_range VARCHAR(20),
-                    target_sum_min INTEGER,
-                    target_sum_max INTEGER,
-                    
-                    game_data JSONB,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    PRIMARY KEY (id, created_at)
-                ) PARTITION BY RANGE (created_at);
-                
-                -- 创建初始分区
-                CREATE TABLE game_records_default PARTITION OF game_records DEFAULT;
-                
-                -- 创建季度分区
-                CREATE TABLE game_records_2025_q4 PARTITION OF game_records
-                    FOR VALUES FROM ('2025-10-01') TO ('2026-01-01');
-                    
-                CREATE TABLE game_records_2026_q1 PARTITION OF game_records
-                    FOR VALUES FROM ('2026-01-01') TO ('2026-04-01');
-                    
-                CREATE TABLE game_records_2026_q2 PARTITION OF game_records
-                    FOR VALUES FROM ('2026-04-01') TO ('2026-07-01');
-                    
-                CREATE TABLE game_records_2026_q3 PARTITION OF game_records
-                    FOR VALUES FROM ('2026-07-01') TO ('2026-10-01');
-                    
-                CREATE TABLE game_records_2026_q4 PARTITION OF game_records
-                    FOR VALUES FROM ('2026-10-01') TO ('2027-01-01');
-                
-                -- 索引（在分区表上创建会自动传播到分区）
-                CREATE INDEX idx_game_records_user_created ON game_records(user_id, created_at) WHERE NOT is_deleted;
-                CREATE INDEX idx_game_records_school_created ON game_records(school_id, created_at) WHERE NOT is_deleted;
-                CREATE INDEX idx_game_records_class_created ON game_records(class_id, created_at) WHERE NOT is_deleted;
-                CREATE INDEX idx_game_records_grade_created ON game_records(grade_id, created_at) WHERE NOT is_deleted;
-                CREATE INDEX idx_game_records_mode_created ON game_records(mode, created_at) WHERE NOT is_deleted;
-                CREATE INDEX idx_game_records_score_created ON game_records(score DESC, created_at) WHERE NOT is_deleted;
-                CREATE INDEX idx_game_records_accuracy_created ON game_records(accuracy DESC, created_at) WHERE NOT is_deleted;
-                CREATE INDEX idx_game_records_game_data ON game_records USING GIN (game_data) WHERE NOT is_deleted AND game_data IS NOT NULL;
-            `,
-
-            // 8. 错题本表
-            wrong_questions: `
-                CREATE TABLE wrong_questions (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-                    school_id UUID REFERENCES schools(id),
-                    class_id UUID REFERENCES classes(id),
-                    grade_id UUID REFERENCES grades(id),
-                    
-                    target_sum INTEGER NOT NULL,
-                    num1 INTEGER NOT NULL,
-                    num2 INTEGER NOT NULL,
-                    knowledge_point VARCHAR(100),
-                    difficulty_level INTEGER CHECK (difficulty_level BETWEEN 1 AND 5),
-                    
-                    attempts INTEGER DEFAULT 1 CHECK (attempts > 0),
-                    last_wrong_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    first_wrong_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    is_mastered BOOLEAN DEFAULT FALSE,
-                    mastered_at TIMESTAMP WITH TIME ZONE,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    CONSTRAINT valid_numbers CHECK (num1 >= 0 AND num2 >= 0 AND target_sum > 0)
-                );
-
-                -- 索引
-                CREATE INDEX idx_wrong_questions_user ON wrong_questions(user_id) WHERE NOT is_deleted AND NOT is_mastered;
-                CREATE INDEX idx_wrong_questions_school ON wrong_questions(school_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_wrong_questions_class ON wrong_questions(class_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_wrong_questions_knowledge ON wrong_questions(knowledge_point) WHERE NOT is_deleted;
-                CREATE INDEX idx_wrong_questions_mastered ON wrong_questions(is_mastered) WHERE NOT is_deleted;
-                CREATE INDEX idx_wrong_questions_last_wrong ON wrong_questions(last_wrong_at DESC) WHERE NOT is_deleted;
-
-                -- 唯一约束（避免重复记录同一错题）
-                CREATE UNIQUE INDEX idx_wrong_questions_unique 
-                    ON wrong_questions(user_id, target_sum, num1, num2) 
-                    WHERE NOT is_deleted AND NOT is_mastered;
-            `,
-
-            // 9. 作业表
-            assignments: `
-                CREATE TABLE assignments (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    teacher_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-                    class_id UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
-                    academic_year_id UUID REFERENCES academic_years(id),
-                    
-                    title VARCHAR(200) NOT NULL,
-                    description TEXT,
-                    instructions TEXT,
-                    
-                    question_count INTEGER NOT NULL CHECK (question_count > 0),
-                    target_sum_min INTEGER DEFAULT 5,
-                    target_sum_max INTEGER DEFAULT 18,
-                    number_range VARCHAR(20) DEFAULT '0-14',
-                    difficulty difficulty_level DEFAULT 'medium',
-                    
-                    deadline TIMESTAMP WITH TIME ZONE,
-                    time_limit INTEGER CHECK (time_limit >= 0),
-                    allow_retry BOOLEAN DEFAULT TRUE,
-                    max_attempts INTEGER DEFAULT 3 CHECK (max_attempts > 0),
-                    
-                    status assignment_status DEFAULT 'draft',
-                    published_at TIMESTAMP WITH TIME ZONE,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    version INTEGER DEFAULT 1,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    CONSTRAINT valid_deadline CHECK (deadline IS NULL OR deadline > created_at),
-                    CONSTRAINT valid_target_range CHECK (target_sum_max >= target_sum_min)
-                );
-
-                CREATE INDEX idx_assignments_teacher ON assignments(teacher_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_assignments_class ON assignments(class_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_assignments_status ON assignments(status) WHERE NOT is_deleted;
-                CREATE INDEX idx_assignments_deadline ON assignments(deadline) WHERE NOT is_deleted AND deadline IS NOT NULL;
-                CREATE INDEX idx_assignments_teacher_status ON assignments(teacher_id, status) WHERE NOT is_deleted;
-
-                CREATE TRIGGER trigger_update_assignments_updated_at
-                    BEFORE UPDATE ON assignments
-                    FOR EACH ROW
-                    EXECUTE FUNCTION update_updated_at_column();
-            `,
-
-            // 10. 作业完成记录表
-            assignment_results: `
-                CREATE TABLE assignment_results (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
-                    student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-                    
-                    score INTEGER NOT NULL DEFAULT 0 CHECK (score >= 0),
-                    questions_completed INTEGER NOT NULL DEFAULT 0 CHECK (questions_completed >= 0),
-                    correct_count INTEGER NOT NULL DEFAULT 0 CHECK (correct_count >= 0),
-                    accuracy DECIMAL(5,2) GENERATED ALWAYS AS (
-                        CASE 
-                            WHEN questions_completed > 0 
-                            THEN ROUND((correct_count::DECIMAL / questions_completed::DECIMAL * 100)::DECIMAL, 2)
-                            ELSE 0 
-                        END
-                    ) STORED,
-                    
-                    total_time INTEGER CHECK (total_time >= 0),
-                    attempts INTEGER DEFAULT 1 CHECK (attempts > 0),
-                    best_score INTEGER,
-                    
-                    details JSONB,
-                    wrong_questions JSONB,
-                    
-                    status VARCHAR(20) DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'submitted', 'graded', 'overdue')),
-                    submitted_at TIMESTAMP WITH TIME ZONE,
-                    graded_at TIMESTAMP WITH TIME ZONE,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    UNIQUE(assignment_id, student_id)
-                );
-
-                CREATE INDEX idx_assignment_results_assignment ON assignment_results(assignment_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_assignment_results_student ON assignment_results(student_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_assignment_results_status ON assignment_results(status) WHERE NOT is_deleted;
-                CREATE INDEX idx_assignment_results_details ON assignment_results USING GIN (details) WHERE NOT is_deleted AND details IS NOT NULL;
-                CREATE INDEX idx_assignment_results_assignment_student ON assignment_results(assignment_id, student_id) WHERE NOT is_deleted;
-
-                CREATE TRIGGER trigger_update_assignment_results_updated_at
-                    BEFORE UPDATE ON assignment_results
-                    FOR EACH ROW
-                    EXECUTE FUNCTION update_updated_at_column();
-            `,
-
-            // 11. 成就定义表
-            achievements: `
-                CREATE TABLE achievements (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    code VARCHAR(50) UNIQUE NOT NULL,
-                    name VARCHAR(100) NOT NULL,
-                    description TEXT,
-                    category VARCHAR(50) NOT NULL,
-                    level INTEGER CHECK (level BETWEEN 1 AND 4),
-                    icon VARCHAR(50),
-                    badge_image TEXT,
-                    
-                    requirement_type VARCHAR(50) NOT NULL,
-                    requirement_value INTEGER NOT NULL,
-                    reward_score INTEGER DEFAULT 0,
-                    
-                    is_hidden BOOLEAN DEFAULT FALSE,
-                    sort_order INTEGER DEFAULT 0,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                );
-
-                CREATE INDEX idx_achievements_category ON achievements(category) WHERE NOT is_deleted;
-                CREATE INDEX idx_achievements_level ON achievements(level) WHERE NOT is_deleted;
-                CREATE INDEX idx_achievements_code ON achievements(code) WHERE NOT is_deleted;
-            `,
-
-            // 12. 用户成就表
-            user_achievements: `
-                CREATE TABLE user_achievements (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-                    achievement_id UUID NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
-                    
-                    unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    progress INTEGER DEFAULT 0 CHECK (progress >= 0),
-                    is_completed BOOLEAN DEFAULT FALSE,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    UNIQUE(user_id, achievement_id)
-                );
-
-                CREATE INDEX idx_user_achievements_user ON user_achievements(user_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_user_achievements_completed ON user_achievements(is_completed) WHERE NOT is_deleted;
-                CREATE INDEX idx_user_achievements_user_completed ON user_achievements(user_id, is_completed) WHERE NOT is_deleted;
-            `,
-
-            // 13. 排行榜快照表
-            leaderboard_snapshots: `
-                CREATE TABLE leaderboard_snapshots (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    school_id UUID REFERENCES schools(id) ON DELETE CASCADE,
-                    grade_id UUID REFERENCES grades(id) ON DELETE CASCADE,
-                    class_id UUID REFERENCES classes(id) ON DELETE CASCADE,
-                    
-                    snapshot_type leaderboard_type NOT NULL,
-                    category VARCHAR(20) NOT NULL CHECK (category IN ('score', 'accuracy', 'speed')),
-                    period leaderboard_period NOT NULL,
-                    
-                    data JSONB NOT NULL,
-                    generated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    CONSTRAINT valid_snapshot_scope CHECK (
-                        (snapshot_type = 'global' AND school_id IS NULL AND grade_id IS NULL AND class_id IS NULL) OR
-                        (snapshot_type = 'school' AND school_id IS NOT NULL AND grade_id IS NULL AND class_id IS NULL) OR
-                        (snapshot_type = 'grade' AND school_id IS NOT NULL AND grade_id IS NOT NULL AND class_id IS NULL) OR
-                        (snapshot_type = 'class' AND school_id IS NOT NULL AND grade_id IS NOT NULL AND class_id IS NOT NULL)
-                    )
-                );
-
-                CREATE INDEX idx_leaderboard_snapshots_school ON leaderboard_snapshots(school_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_leaderboard_snapshots_type ON leaderboard_snapshots(snapshot_type, category, period) WHERE NOT is_deleted;
-                CREATE INDEX idx_leaderboard_snapshots_generated ON leaderboard_snapshots(generated_at DESC) WHERE NOT is_deleted;
-            `,
-
-            // 14. 系统日志表
-            system_logs: `
-                CREATE TABLE system_logs (
-                    id UUID DEFAULT uuid_generate_v4(),
-                    user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
-                    school_id UUID REFERENCES schools(id) ON DELETE SET NULL,
-                    
-                    action_type VARCHAR(50) NOT NULL,
-                    action_name VARCHAR(200) NOT NULL,
-                    resource_type VARCHAR(50),
-                    resource_id UUID,
-                    
-                    details JSONB,
-                    ip_address INET,
-                    user_agent TEXT,
-                    session_id UUID,
-                    request_id UUID,
-                    response_time INTEGER CHECK (response_time >= 0),
-                    
-                    status VARCHAR(20) DEFAULT 'success' CHECK (status IN ('success', 'error', 'warning')),
-                    error_message TEXT,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    PRIMARY KEY (id, created_at)
-                ) PARTITION BY RANGE (created_at);
-
-                -- 创建初始分区
-                CREATE TABLE system_logs_default PARTITION OF system_logs DEFAULT;
-
-                -- 创建月度分区
-                CREATE TABLE system_logs_2025_12 PARTITION OF system_logs
-                    FOR VALUES FROM ('2025-12-01') TO ('2026-01-01');
-                    
-                CREATE TABLE system_logs_2026_01 PARTITION OF system_logs
-                    FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
-                    
-                CREATE TABLE system_logs_2026_02 PARTITION OF system_logs
-                    FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
-                    
-                CREATE TABLE system_logs_2026_03 PARTITION OF system_logs
-                    FOR VALUES FROM ('2026-03-01') TO ('2026-04-01');
-                    
-                CREATE TABLE system_logs_2026_04 PARTITION OF system_logs
-                    FOR VALUES FROM ('2026-04-01') TO ('2026-05-01');
-
-                -- 索引
-                CREATE INDEX idx_system_logs_user_created ON system_logs(user_id, created_at) WHERE NOT is_deleted;
-                CREATE INDEX idx_system_logs_school_created ON system_logs(school_id, created_at) WHERE NOT is_deleted;
-                CREATE INDEX idx_system_logs_action_created ON system_logs(action_type, created_at) WHERE NOT is_deleted;
-                CREATE INDEX idx_system_logs_created ON system_logs(created_at);
-                CREATE INDEX idx_system_logs_resource ON system_logs(resource_type, resource_id) WHERE NOT is_deleted AND resource_id IS NOT NULL;
-                CREATE INDEX idx_system_logs_request_id ON system_logs(request_id) WHERE request_id IS NOT NULL;
-                CREATE INDEX idx_system_logs_session_id ON system_logs(session_id) WHERE session_id IS NOT NULL;
-            `,
-
-            // 15. 通知表
-            notifications: `
-                CREATE TABLE notifications (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    school_id UUID REFERENCES schools(id) ON DELETE CASCADE,
-                    
-                    type VARCHAR(50) NOT NULL,
-                    title VARCHAR(200) NOT NULL,
-                    content TEXT,
-                    
-                    target_roles user_role[],
-                    target_classes UUID[],
-                    target_users UUID[],
-                    
-                    priority notification_priority DEFAULT 'normal',
-                    action_url TEXT,
-                    
-                    scheduled_at TIMESTAMP WITH TIME ZONE,
-                    expires_at TIMESTAMP WITH TIME ZONE CHECK (expires_at IS NULL OR expires_at > scheduled_at),
-                    
-                    created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                );
-
-                CREATE INDEX idx_notifications_school ON notifications(school_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_notifications_scheduled ON notifications(scheduled_at) WHERE NOT is_deleted AND scheduled_at IS NOT NULL;
-                CREATE INDEX idx_notifications_expires ON notifications(expires_at) WHERE NOT is_deleted AND expires_at IS NOT NULL;
-                CREATE INDEX idx_notifications_priority ON notifications(priority) WHERE NOT is_deleted;
-                CREATE INDEX idx_notifications_target_users ON notifications USING GIN (target_users) WHERE NOT is_deleted;
-                CREATE INDEX idx_notifications_target_classes ON notifications USING GIN (target_classes) WHERE NOT is_deleted;
-
-                CREATE TRIGGER trigger_update_notifications_updated_at
-                    BEFORE UPDATE ON notifications
-                    FOR EACH ROW
-                    EXECUTE FUNCTION update_updated_at_column();
-            `,
-
-            // 16. 用户通知阅读状态表
-            notification_reads: `
-                CREATE TABLE notification_reads (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    notification_id UUID NOT NULL REFERENCES notifications(id) ON DELETE CASCADE,
-                    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-                    
-                    is_read BOOLEAN DEFAULT FALSE,
-                    read_at TIMESTAMP WITH TIME ZONE,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    UNIQUE(notification_id, user_id)
-                );
-
-                CREATE INDEX idx_notification_reads_user ON notification_reads(user_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_notification_reads_notification ON notification_reads(notification_id) WHERE NOT is_deleted;
-                CREATE INDEX idx_notification_reads_read ON notification_reads(is_read) WHERE NOT is_deleted;
-            `,
-
-            // 17. 数据备份记录表
-            backup_records: `
-                CREATE TABLE backup_records (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    
-                    backup_type VARCHAR(20) NOT NULL CHECK (backup_type IN ('full', 'incremental')),
-                    backup_size BIGINT CHECK (backup_size >= 0),
-                    file_path TEXT,
-                    
-                    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'running', 'completed', 'failed')),
-                    started_at TIMESTAMP WITH TIME ZONE,
-                    completed_at TIMESTAMP WITH TIME ZONE CHECK (completed_at IS NULL OR completed_at >= started_at),
-                    
-                    tables_included TEXT[],
-                    row_count INTEGER CHECK (row_count >= 0),
-                    
-                    error_message TEXT,
-                    
-                    created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
-                    
-                    is_deleted BOOLEAN DEFAULT FALSE,
-                    deleted_at TIMESTAMP WITH TIME ZONE,
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                );
-
-                CREATE INDEX idx_backup_records_status ON backup_records(status) WHERE NOT is_deleted;
-                CREATE INDEX idx_backup_records_created ON backup_records(created_at DESC) WHERE NOT is_deleted;
-                CREATE INDEX idx_backup_records_type_created ON backup_records(backup_type, created_at) WHERE NOT is_deleted;
-            `,
-
-            // 18. 缓存表
-            cache_store: `
-                CREATE TABLE cache_store (
-                    cache_key VARCHAR(255) PRIMARY KEY,
-                    cache_value JSONB NOT NULL,
-                    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                );
-
-                CREATE INDEX idx_cache_expires ON cache_store(expires_at);
-                CREATE INDEX idx_cache_key_expires ON cache_store(cache_key, expires_at);
-            `,
-
-            // 19. API调用限制表
-            api_rate_limits: `
-                CREATE TABLE api_rate_limits (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-                    api_key VARCHAR(255),
-                    endpoint VARCHAR(255) NOT NULL,
-                    call_count INTEGER DEFAULT 1 CHECK (call_count > 0),
-                    window_start TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    
-                    CONSTRAINT unique_user_endpoint_window UNIQUE(user_id, endpoint, window_start),
-                    CONSTRAINT unique_key_endpoint_window UNIQUE(api_key, endpoint, window_start),
-                    CONSTRAINT either_user_or_key CHECK (
-                        (user_id IS NOT NULL AND api_key IS NULL) OR
-                        (user_id IS NULL AND api_key IS NOT NULL)
-                    )
-                );
-
-                CREATE INDEX idx_api_rate_limits_user ON api_rate_limits(user_id);
-                CREATE INDEX idx_api_rate_limits_api_key ON api_rate_limits(api_key);
-                CREATE INDEX idx_api_rate_limits_window ON api_rate_limits(window_start);
-            `,
-
-            // 20. 数据库迁移记录表
-            schema_migrations: `
-                CREATE TABLE schema_migrations (
-                    version VARCHAR(255) PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    execution_time INTEGER, -- 毫秒
-                    success BOOLEAN DEFAULT TRUE,
-                    error_message TEXT
-                );
-
-                CREATE INDEX idx_schema_migrations_applied ON schema_migrations(applied_at DESC);
-            `
+    // ==================== 多语言翻译 ====================
+    const TRANSLATIONS = {
+        zh: {
+            gameTitle: '🧮 数学加法消消乐',
+            gameSubtitle: '区域学校版 | 云端同步 | 实时排行榜',
+            history: '历史记录',
+            statistics: '统计',
+            achievements: '成就',
+            wrongBook: '错题本',
+            leaderboard: '排行榜',
+            profile: '个人资料',
+            modeStandard: '📚 挑战30',
+            modeStandardDesc: '完成30题，比拼用时',
+            modeChallenge: '⚡ 激情90秒',
+            modeChallengeDesc: '90秒时间，比拼题数',
+            modePractice: '🎯 练习模式',
+            modePracticeDesc: '无时间限制，专心学习',
+            modeCustom: '⚙️ 自定义',
+            modeCustomDesc: '自设参数，灵活练习',
+            numberRange: '数字范围',
+            rangeEasy: '0-9 (简单)',
+            rangeStandard: '0-14 (标准)',
+            rangeChallenge: '5-18 (挑战)',
+            startGame: '开始游戏',
+            startPractice: '开始练习',
+            questionCount: '题目数量',
+            timeLimit: '时间限制(秒)',
+            scoreLabel: '得分',
+            completedLabel: '完成题数',
+            timeLeft: '剩余时间',
+            timeUsed: '已用时间',
+            accuracyLabel: '正确率',
+            targetSum: '目标和',
+            hintButton: '提示',
+            refreshButton: '刷新',
+            endGameButton: '结束',
+            user: '用户',
+            logout: '退出',
+            loginTitle: '用户登录',
+            registerTitle: '用户注册',
+            emailLabel: '邮箱地址',
+            passwordLabel: '密码',
+            usernameLabel: '用户名',
+            loginButton: '登录',
+            registerButton: '注册',
+            noAccount: '还没有账号？',
+            registerNow: '立即注册',
+            hasAccount: '已有账号？',
+            loginNow: '立即登录',
+            needLogin: '请先登录',
+            offlineMode: '离线模式',
+            connecting: '连接服务器...',
+            connectionFailed: '连接失败',
+            retryConnection: '重试连接',
+            cloudConnected: '已连接云端',
+            syncSuccess: '同步成功',
+            syncFailed: '同步失败',
+            gameComplete: '恭喜完成30题！',
+            gameTimeout: '时间到！',
+            gameGiveup: '游戏结束',
+            gameEnd: '游戏结束!',
+            finalScore: '最终得分',
+            finalCompleted: '完成题数',
+            finalTime: '用时',
+            finalAccuracy: '正确率',
+            playerNamePlaceholder: '请输入名字',
+            saveScore: '保存成绩',
+            playAgain: '再玩一次',
+            viewLeaderboard: '查看排行榜',
+            viewStatistics: '查看统计',
+            noData: '暂无数据',
+            correct: '✓ 正确',
+            wrong: '✗ 错误',
+            seconds: '秒',
+            noValidCombination: '没有可匹配的组合',
+            maxTwoCards: '最多选择2张卡片',
+            hintCooldown: '提示冷却中',
+            hintActivated: '提示已激活',
+            scoreSaved: '成绩已保存',
+            loginFirst: '请先登录',
+            loginToStart: '请先登录再开始游戏',
+            teacherTools: '教师工具',
+            adminTools: '管理工具',
+            applyForTeacher: '教师申请',
+            cloudSync: '云同步',
+            refresh: '刷新',
+            show: '显示',
+            myBest: '我的最佳',
+            bestScore: '最佳得分',
+            bestAccuracy: '最佳正确率',
+            bestTime: '最快用时',
+            loading: '加载中...',
+            pleaseWait: '请稍候',
+            confirmClear: '确定清空吗？',
+            yes: '确定',
+            no: '取消'
         },
-        
-        /**
-         * 视图定义
-         */
-        views: {
-            // 班级统计视图
-            class_statistics: `
-                CREATE OR REPLACE VIEW class_statistics AS
-                SELECT 
-                    c.id AS class_id,
-                    c.name AS class_name,
-                    s.id AS school_id,
-                    s.name AS school_name,
-                    COUNT(DISTINCT p.id) AS student_count,
-                    COUNT(DISTINCT gr.id) AS game_count,
-                    COALESCE(AVG(gr.score), 0) AS avg_score,
-                    COALESCE(AVG(gr.accuracy), 0) AS avg_accuracy,
-                    COALESCE(COUNT(DISTINCT wq.id), 0) AS wrong_question_count
-                FROM classes c
-                JOIN schools s ON c.school_id = s.id
-                LEFT JOIN profiles p ON p.class_id = c.id AND p.role = 'student'::user_role AND NOT p.is_deleted
-                LEFT JOIN game_records gr ON gr.class_id = c.id AND NOT gr.is_deleted
-                LEFT JOIN wrong_questions wq ON wq.class_id = c.id AND NOT wq.is_deleted AND NOT wq.is_mastered
-                WHERE NOT c.is_deleted
-                GROUP BY c.id, c.name, s.id, s.name;
-            `,
-
-            // 学生进度视图
-            student_progress: `
-                CREATE OR REPLACE VIEW student_progress AS
-                SELECT 
-                    p.id AS student_id,
-                    p.real_name AS student_name,
-                    p.student_no,
-                    c.id AS class_id,
-                    c.name AS class_name,
-                    s.id AS school_id,
-                    s.name AS school_name,
-                    COUNT(DISTINCT gr.id) AS total_games,
-                    COALESCE(SUM(gr.questions_completed), 0) AS total_questions,
-                    COALESCE(AVG(gr.accuracy), 0) AS avg_accuracy,
-                    COALESCE(MAX(gr.score), 0) AS best_score,
-                    COALESCE(COUNT(DISTINCT wq.id), 0) AS current_wrong_count,
-                    COALESCE(COUNT(DISTINCT ua.id), 0) AS achievements_unlocked,
-                    (
-                        SELECT COUNT(*) 
-                        FROM game_records gr2 
-                        WHERE gr2.user_id = p.id 
-                        AND gr2.created_at >= (CURRENT_TIMESTAMP - INTERVAL '7 days')
-                        AND NOT gr2.is_deleted
-                    ) AS games_last_week
-                FROM profiles p
-                JOIN classes c ON p.class_id = c.id
-                JOIN schools s ON p.school_id = s.id
-                LEFT JOIN game_records gr ON gr.user_id = p.id AND NOT gr.is_deleted
-                LEFT JOIN wrong_questions wq ON wq.user_id = p.id AND NOT wq.is_deleted AND NOT wq.is_mastered
-                LEFT JOIN user_achievements ua ON ua.user_id = p.id AND ua.is_completed AND NOT ua.is_deleted
-                WHERE p.role = 'student'::user_role AND NOT p.is_deleted
-                GROUP BY p.id, p.real_name, p.student_no, c.id, c.name, s.id, s.name;
-            `,
-
-            // 教师工作量视图
-            teacher_workload: `
-                CREATE OR REPLACE VIEW teacher_workload AS
-                SELECT 
-                    p.id AS teacher_id,
-                    p.real_name AS teacher_name,
-                    s.id AS school_id,
-                    s.name AS school_name,
-                    COUNT(DISTINCT tc.class_id) AS class_count,
-                    COUNT(DISTINCT tc.class_id) FILTER (WHERE tc.is_homeroom) AS homeroom_count,
-                    COUNT(DISTINCT a.id) AS assignment_count,
-                    COUNT(DISTINCT a.id) FILTER (WHERE a.deadline > CURRENT_TIMESTAMP AND a.status = 'published') AS active_assignments,
-                    COUNT(DISTINCT ar.id) AS submissions_received,
-                    COUNT(DISTINCT ar.id) FILTER (WHERE ar.status = 'submitted') AS pending_grading
-                FROM profiles p
-                JOIN schools s ON p.school_id = s.id
-                LEFT JOIN teacher_classes tc ON tc.teacher_id = p.id AND NOT tc.is_deleted AND tc.is_active
-                LEFT JOIN assignments a ON a.teacher_id = p.id AND NOT a.is_deleted
-                LEFT JOIN assignment_results ar ON ar.assignment_id = a.id AND NOT ar.is_deleted
-                WHERE p.role = 'teacher'::user_role AND NOT p.is_deleted
-                GROUP BY p.id, p.real_name, s.id, s.name;
-            `
-        },
-        
-        /**
-         * 初始化数据
-         */
-        seed_data: {
-            achievements: [
-                "('victory_bronze', '初出茅庐', '完成第1局游戏', 'victory', 1, '🥉', NULL, 'games_completed', 1, 10, FALSE, 10)",
-                "('victory_silver', '小试牛刀', '完成10局游戏', 'victory', 2, '🥈', NULL, 'games_completed', 10, 50, FALSE, 20)",
-                "('victory_gold', '常胜将军', '完成50局游戏', 'victory', 3, '🥇', NULL, 'games_completed', 50, 200, FALSE, 30)",
-                "('victory_platinum', '战神降临', '完成100局游戏', 'victory', 4, '🏆', NULL, 'games_completed', 100, 500, FALSE, 40)",
-                "('score_bronze', '小有收获', '单局得分达到30分', 'score', 1, '🥉', NULL, 'best_score', 30, 20, FALSE, 50)",
-                "('score_silver', '财富积累', '单局得分达到50分', 'score', 2, '🥈', NULL, 'best_score', 50, 50, FALSE, 60)",
-                "('score_gold', '百战百胜', '单局得分达到100分', 'score', 3, '🥇', NULL, 'best_score', 100, 150, FALSE, 70)",
-                "('score_platinum', '分数收割机', '单局得分达到200分', 'score', 4, '💯', NULL, 'best_score', 200, 300, FALSE, 80)",
-                "('accuracy_bronze', '稳扎稳打', '单局准确率达到60%', 'accuracy', 1, '🥉', NULL, 'best_accuracy', 60, 15, FALSE, 90)",
-                "('accuracy_silver', '精准打击', '单局准确率达到75%', 'accuracy', 2, '🥈', NULL, 'best_accuracy', 75, 30, FALSE, 100)",
-                "('accuracy_gold', '百步穿杨', '单局准确率达到90%', 'accuracy', 3, '🥇', NULL, 'best_accuracy', 90, 100, FALSE, 110)",
-                "('accuracy_platinum', '弹无虚发', '单局准确率达到100%', 'accuracy', 4, '🎯', NULL, 'best_accuracy', 100, 200, FALSE, 120)"
-            ]
-        },
-        
-        /**
-         * 行级安全策略
-         */
-        row_level_security: {
-            enable_rls: `
-                -- 启用行级安全
-                ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE academic_years ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE grades ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE teacher_classes ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE game_records ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE wrong_questions ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE assignments ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE assignment_results ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE leaderboard_snapshots ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE notification_reads ENABLE ROW LEVEL SECURITY;
-            `,
-            
-            policies: [
-                // 超级管理员策略
-                `CREATE POLICY super_admin_all ON schools
-                    FOR ALL USING (
-                        EXISTS (
-                            SELECT 1 FROM profiles 
-                            WHERE id = auth.uid() 
-                            AND role = 'super_admin'::user_role 
-                            AND NOT is_deleted
-                        )
-                    );`,
-                
-                // 学校管理员策略
-                `CREATE POLICY school_admin_school ON schools
-                    FOR ALL USING (
-                        EXISTS (
-                            SELECT 1 FROM profiles 
-                            WHERE id = auth.uid() 
-                            AND school_id = schools.id 
-                            AND role = 'school_admin'::user_role 
-                            AND NOT is_deleted
-                        )
-                    );`,
-                
-                // 教师查看学生
-                `CREATE POLICY teacher_view_students ON profiles
-                    FOR SELECT USING (
-                        EXISTS (
-                            SELECT 1 FROM teacher_classes tc
-                            WHERE tc.teacher_id = auth.uid()
-                            AND tc.class_id = profiles.class_id
-                            AND NOT tc.is_deleted
-                            AND tc.is_active
-                        )
-                        OR
-                        EXISTS (
-                            SELECT 1 FROM profiles p
-                            WHERE p.id = auth.uid()
-                            AND p.school_id = profiles.school_id
-                            AND p.role IN ('school_admin'::user_role, 'super_admin'::user_role)
-                            AND NOT p.is_deleted
-                        )
-                    );`,
-                
-                // 学生查看同班同学
-                `CREATE POLICY student_view_classmates ON profiles
-                    FOR SELECT USING (
-                        EXISTS (
-                            SELECT 1 FROM profiles p
-                            WHERE p.id = auth.uid()
-                            AND p.class_id = profiles.class_id
-                            AND p.role = 'student'::user_role
-                            AND NOT p.is_deleted
-                        )
-                    );`,
-                
-                // 用户查看自己的游戏记录
-                `CREATE POLICY user_own_game_records ON game_records
-                    FOR ALL USING (auth.uid() = user_id AND NOT is_deleted);`,
-                
-                // 教师查看班级游戏记录
-                `CREATE POLICY teacher_view_class_game_records ON game_records
-                    FOR SELECT USING (
-                        EXISTS (
-                            SELECT 1 FROM teacher_classes tc
-                            WHERE tc.teacher_id = auth.uid()
-                            AND tc.class_id = game_records.class_id
-                            AND NOT tc.is_deleted
-                            AND tc.is_active
-                        )
-                    );`,
-                
-                // 用户管理自己的错题
-                `CREATE POLICY user_own_wrong_questions ON wrong_questions
-                    FOR ALL USING (auth.uid() = user_id AND NOT is_deleted);`,
-                
-                // 教师查看班级错题
-                `CREATE POLICY teacher_view_class_wrong_questions ON wrong_questions
-                    FOR SELECT USING (
-                        EXISTS (
-                            SELECT 1 FROM teacher_classes tc
-                            WHERE tc.teacher_id = auth.uid()
-                            AND tc.class_id = wrong_questions.class_id
-                            AND NOT tc.is_deleted
-                            AND tc.is_active
-                        )
-                    );`
-            ]
+        en: {
+            gameTitle: '🧮 Math Addition Match',
+            gameSubtitle: 'School Edition | Cloud Sync | Leaderboard',
+            history: 'History',
+            statistics: 'Statistics',
+            achievements: 'Achievements',
+            wrongBook: 'Wrong Questions',
+            leaderboard: 'Leaderboard',
+            profile: 'Profile',
+            modeStandard: '📚 Challenge 30',
+            modeStandardDesc: 'Complete 30 questions',
+            modeChallenge: '⚡ 90s Sprint',
+            modeChallengeDesc: '90 seconds challenge',
+            modePractice: '🎯 Practice',
+            modePracticeDesc: 'No time limit',
+            modeCustom: '⚙️ Custom',
+            modeCustomDesc: 'Set your own',
+            numberRange: 'Number Range',
+            rangeEasy: '0-9 (Easy)',
+            rangeStandard: '0-14 (Standard)',
+            rangeChallenge: '5-18 (Challenge)',
+            startGame: 'Start Game',
+            startPractice: 'Start Practice',
+            questionCount: 'Questions',
+            timeLimit: 'Time (sec)',
+            scoreLabel: 'Score',
+            completedLabel: 'Completed',
+            timeLeft: 'Time Left',
+            timeUsed: 'Time Used',
+            accuracyLabel: 'Accuracy',
+            targetSum: 'Target Sum',
+            hintButton: 'Hint',
+            refreshButton: 'Refresh',
+            endGameButton: 'End',
+            user: 'User',
+            logout: 'Logout',
+            loginTitle: 'Login',
+            registerTitle: 'Register',
+            emailLabel: 'Email',
+            passwordLabel: 'Password',
+            usernameLabel: 'Username',
+            loginButton: 'Login',
+            registerButton: 'Register',
+            noAccount: 'No account?',
+            registerNow: 'Register',
+            hasAccount: 'Have account?',
+            loginNow: 'Login',
+            needLogin: 'Please login',
+            offlineMode: 'Offline Mode',
+            connecting: 'Connecting...',
+            connectionFailed: 'Connection failed',
+            retryConnection: 'Retry',
+            cloudConnected: 'Connected',
+            syncSuccess: 'Sync success',
+            syncFailed: 'Sync failed',
+            gameComplete: 'Congratulations!',
+            gameTimeout: 'Time\'s up!',
+            gameGiveup: 'Game Over',
+            gameEnd: 'Game Over!',
+            finalScore: 'Final Score',
+            finalCompleted: 'Completed',
+            finalTime: 'Time',
+            finalAccuracy: 'Accuracy',
+            playerNamePlaceholder: 'Enter your name',
+            saveScore: 'Save Score',
+            playAgain: 'Play Again',
+            viewLeaderboard: 'Leaderboard',
+            viewStatistics: 'Statistics',
+            noData: 'No Data',
+            correct: '✓ Correct',
+            wrong: '✗ Wrong',
+            seconds: 's',
+            noValidCombination: 'No valid combination',
+            maxTwoCards: 'Select 2 cards max',
+            hintCooldown: 'Cooldown',
+            hintActivated: 'Hint activated',
+            scoreSaved: 'Score saved',
+            loginFirst: 'Login first',
+            loginToStart: 'Login to start',
+            teacherTools: 'Teacher Tools',
+            adminTools: 'Admin Tools',
+            applyForTeacher: 'Apply Teacher',
+            cloudSync: 'Cloud Sync',
+            refresh: 'Refresh',
+            show: 'Show',
+            myBest: 'My Best',
+            bestScore: 'Best Score',
+            bestAccuracy: 'Best Accuracy',
+            bestTime: 'Fastest Time',
+            loading: 'Loading...',
+            pleaseWait: 'Please wait',
+            confirmClear: 'Confirm clear?',
+            yes: 'Yes',
+            no: 'No'
         }
     };
 
-    // ==================== 完整部署脚本 ====================
-    const DEPLOY_SCRIPT = `-- =====================================================
--- 数学加法消消乐 - 数据库完整部署脚本
--- 版本: 4.0.0
--- 执行前请确保已创建Supabase项目并启用认证
--- =====================================================
+    // ==================== 游戏配置 ====================
+    const MODE_CONFIG = {
+        standard: { questions: 30, time: null, hasTimeLimit: false },
+        challenge: { questions: null, time: 90, hasTimeLimit: true },
+        practice: { questions: null, time: null, hasTimeLimit: false },
+        custom: { questions: 20, time: 60, hasTimeLimit: true }
+    };
 
--- 开始事务
-BEGIN;
+    const RANGE_CONFIG = {
+        '0-9': { min: 0, max: 9, targetMin: 5, targetMax: 10 },
+        '0-14': { min: 0, max: 14, targetMin: 6, targetMax: 14 },
+        '5-18': { min: 5, max: 18, targetMin: 8, targetMax: 18 }
+    };
 
--- 1. 创建扩展
-${SUPABASE_SCHEMA.extensions}
+    // ==================== 成就配置 ====================
+    const ACHIEVEMENTS = [
+        { id: 'victory_bronze', name: '初出茅庐', desc: '完成第1局', icon: '🥉', requirement: { type: 'games', value: 1 } },
+        { id: 'victory_silver', name: '小试牛刀', desc: '完成10局', icon: '🥈', requirement: { type: 'games', value: 10 } },
+        { id: 'victory_gold', name: '常胜将军', desc: '完成50局', icon: '🥇', requirement: { type: 'games', value: 50 } },
+        { id: 'score_bronze', name: '得分新秀', desc: '单局30分', icon: '🥉', requirement: { type: 'score', value: 30 } },
+        { id: 'score_silver', name: '得分高手', desc: '单局50分', icon: '🥈', requirement: { type: 'score', value: 50 } },
+        { id: 'score_gold', name: '得分王者', desc: '单局100分', icon: '🥇', requirement: { type: 'score', value: 100 } },
+        { id: 'accuracy_bronze', name: '稳扎稳打', desc: '正确率60%', icon: '🥉', requirement: { type: 'accuracy', value: 60 } },
+        { id: 'accuracy_silver', name: '精准打击', desc: '正确率75%', icon: '🥈', requirement: { type: 'accuracy', value: 75 } },
+        { id: 'accuracy_gold', name: '百发百中', desc: '正确率90%', icon: '🥇', requirement: { type: 'accuracy', value: 90 } }
+    ];
 
--- 2. 创建枚举类型
-${SUPABASE_SCHEMA.enums}
+    // ==================== 状态管理 ====================
+    const state = {
+        // 游戏状态
+        score: 0,
+        selectedCards: [],
+        timeLeft: 90,
+        timer: null,
+        completed: 0,
+        correct: 0,
+        attempts: 0,
+        startTime: null,
+        currentTarget: 10,
+        currentMode: 'standard',
+        gameActive: false,
+        hintCooldown: 0,
+        hintTimer: null,
+        history: [],
+        wrongQuestions: [],
+        timeouts: new Set(),
+        
+        // 用户状态
+        currentUser: null,
+        isTeacher: false,
+        isAdmin: false,
+        
+        // 连接状态
+        supabase: null,
+        supabaseReady: false,
+        offlineMode: false,
+        
+        // 语言
+        currentLang: 'zh',
+        
+        // 成就
+        achievements: new Map(),
+        stats: {
+            games: 0,
+            totalScore: 0,
+            bestScore: 0,
+            bestAccuracy: 0,
+            totalQuestions: 0,
+            totalCorrect: 0
+        },
+        
+        // 排行榜
+        leaderboard: {
+            mode: 'challenge',
+            difficulty: 'easy',
+            page: 1,
+            totalPages: 1,
+            data: []
+        },
+        
+        lastAnswer: null,
+        fastestAnswer: 999
+    };
 
--- 3. 创建基础函数
-${SUPABASE_SCHEMA.functions}
+    // ==================== 工具函数 ====================
+    const t = (key) => {
+        return TRANSLATIONS[state.currentLang]?.[key] || key;
+    };
 
--- 4. 创建表
-${Object.values(SUPABASE_SCHEMA.tables).join('\n\n')}
+    const showMessage = (text, type = 'info', duration = 2000) => {
+        const msg = document.createElement('div');
+        msg.className = 'message-popup';
+        msg.textContent = text;
+        msg.style.cssText = `
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#ff4444' : '#2196F3'};
+            color: white; padding: 12px 24px; border-radius: 30px;
+            z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 16px; max-width: 90%; text-align: center;
+        `;
+        document.body.appendChild(msg);
+        setTimeout(() => {
+            msg.style.opacity = '0';
+            msg.style.transform = 'translateX(-50%) translateY(-20px)';
+            msg.style.transition = 'all 0.3s';
+            setTimeout(() => msg.remove(), 300);
+        }, duration);
+    };
 
--- 5. 创建视图
-${Object.values(SUPABASE_SCHEMA.views).join('\n\n')}
+    const setLanguage = (lang) => {
+        if (!['zh', 'en'].includes(lang)) return;
+        state.currentLang = lang;
+        localStorage.setItem('mathGameLang', lang);
+        document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            if (key) el.textContent = t(key);
+        });
+        document.getElementById('language-text').textContent = t('languageText');
+    };
 
--- 6. 初始化成就数据
-INSERT INTO achievements (
-    code, name, description, category, level, icon, badge_image, 
-    requirement_type, requirement_value, reward_score, is_hidden, sort_order
-) VALUES 
-${SUPABASE_SCHEMA.seed_data.achievements.join(',\n')}
-ON CONFLICT (code) DO NOTHING;
+    const debounce = (fn, delay) => {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn(...args), delay);
+        };
+    };
 
--- 7. 启用行级安全
-${SUPABASE_SCHEMA.row_level_security.enable_rls}
+    const shuffleArray = (arr) => {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    };
 
--- 8. 创建安全策略
-${SUPABASE_SCHEMA.row_level_security.policies.join('\n\n')}
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
--- 9. 记录迁移
-INSERT INTO schema_migrations (version, name, execution_time, success)
-VALUES ('4.0.0', 'initial_schema', 0, true);
+    const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const validatePassword = (pwd) => pwd.length >= 6;
 
--- 提交事务
-COMMIT;
+    // ==================== Supabase初始化 ====================
+    const initSupabase = async () => {
+        if (window.location.protocol === 'file:') {
+            state.offlineMode = true;
+            showMessage(t('offlineMode'), 'warning');
+            return false;
+        }
 
--- 10. 更新统计信息
-ANALYZE;
+        try {
+            const config = document.getElementById('supabase-config');
+            const { supabaseUrl, supabaseKey } = config ? JSON.parse(config.textContent) : CONFIG;
+            
+            state.supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
+                auth: { autoRefreshToken: true, persistSession: true }
+            });
 
--- 验证部署
-SELECT '部署成功' AS status, 
-       (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public') AS table_count,
-       (SELECT COUNT(*) FROM pg_policies) AS policy_count;`;
+            const { error } = await state.supabase.auth.getSession();
+            if (error) throw error;
 
-    // ==================== 验证脚本 ====================
-    const VERIFY_SCRIPT = `-- =====================================================
--- 验证数据库部署
--- =====================================================
+            state.supabaseReady = true;
+            state.offlineMode = false;
+            await checkAuth();
+            return true;
+        } catch (err) {
+            console.error('Supabase init failed:', err);
+            state.offlineMode = true;
+            showMessage(t('connectionFailed'), 'error');
+            return false;
+        }
+    };
 
--- 1. 检查表数量
-SELECT '表数量' AS check_item, COUNT(*)::TEXT AS value 
-FROM information_schema.tables 
-WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
+    // ==================== 用户认证 ====================
+    const checkAuth = async () => {
+        if (!state.supabase || state.offlineMode) return false;
+        
+        try {
+            const { data: { user }, error } = await state.supabase.auth.getUser();
+            if (error) return false;
+            
+            if (user) {
+                state.currentUser = user;
+                const { data: profile } = await state.supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+                
+                if (profile) {
+                    state.isTeacher = profile.role === 'teacher';
+                    state.isAdmin = profile.role === 'admin';
+                    if (profile.school_id) {
+                        const themeNum = (parseInt(profile.school_id) % 4) + 1;
+                        document.body.classList.add(`school-theme-${themeNum}`);
+                    }
+                }
+                updateUserInfo();
+                await loadUserData();
+            }
+            return !!user;
+        } catch (err) {
+            console.error('Auth check failed:', err);
+            return false;
+        }
+    };
 
--- 2. 检查视图数量
-SELECT '视图数量' AS check_item, COUNT(*)::TEXT AS value 
-FROM information_schema.views 
-WHERE table_schema = 'public';
+    const login = async (email, password) => {
+        if (!validateEmail(email)) return showMessage('Invalid email', 'error');
+        if (!validatePassword(password)) return showMessage('Password too short', 'error');
+        if (!state.supabase || state.offlineMode) return showMessage(t('offlineMode'), 'error');
 
--- 3. 检查枚举类型
-SELECT '枚举类型' AS check_item, string_agg(typname, ', ') AS value 
-FROM pg_type 
-WHERE typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
-AND typtype = 'e';
+        try {
+            const { data, error } = await state.supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password: password.trim()
+            });
+            if (error) throw error;
+            
+            state.currentUser = data.user;
+            await checkAuth();
+            closeModal('auth-modal');
+            showMessage(t('syncSuccess'), 'success');
+        } catch (err) {
+            document.getElementById('auth-error').textContent = err.message;
+        }
+    };
 
--- 4. 检查RLS启用情况
-SELECT '启用RLS的表' AS check_item, string_agg(tablename, ', ') AS value 
-FROM pg_tables 
-WHERE schemaname = 'public' AND rowsecurity = true;
+    const register = async (email, password, username) => {
+        if (!validateEmail(email)) return showMessage('Invalid email', 'error');
+        if (!validatePassword(password)) return showMessage('Password too short', 'error');
+        if (!state.supabase || state.offlineMode) return showMessage(t('offlineMode'), 'error');
 
--- 5. 检查策略数量
-SELECT 'RLS策略数量' AS check_item, COUNT(*)::TEXT AS value 
-FROM pg_policies 
-WHERE schemaname = 'public';
+        try {
+            const { data, error } = await state.supabase.auth.signUp({
+                email: email.trim(),
+                password: password.trim(),
+                options: { data: { username: username || email.split('@')[0] } }
+            });
+            if (error) throw error;
+            
+            showMessage('Registration successful!', 'success');
+            toggleAuthMode();
+        } catch (err) {
+            document.getElementById('auth-error').textContent = err.message;
+        }
+    };
 
--- 6. 检查成就数据
-SELECT '成就数量' AS check_item, COUNT(*)::TEXT AS value 
-FROM achievements;
+    const logout = async () => {
+        if (state.supabase && !state.offlineMode) {
+            await state.supabase.auth.signOut();
+        }
+        state.currentUser = null;
+        state.isTeacher = false;
+        state.isAdmin = false;
+        updateUserInfo();
+        showMessage(t('logout'), 'info');
+    };
 
--- 7. 检查分区表
-SELECT '分区表' AS check_item, string_agg(partrelid::regclass::text, ', ') AS value 
-FROM pg_partitioned_table;
+    const updateUserInfo = () => {
+        const userInfo = document.getElementById('user-info');
+        const userName = document.getElementById('user-name');
+        const userAvatar = document.getElementById('user-avatar');
+        const teacherTools = document.getElementById('teacher-tools-section');
+        const adminTools = document.getElementById('admin-tools-section');
+        const teacherBtn = document.getElementById('teacher-tools-btn');
+        const adminBtn = document.getElementById('admin-tools-btn');
+        const applyBtn = document.getElementById('teacher-application-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const syncBtn = document.getElementById('sync-status-btn');
 
--- 8. 检查索引数量
-SELECT '索引数量' AS check_item, COUNT(*)::TEXT AS value 
-FROM pg_indexes 
-WHERE schemaname = 'public';
+        if (!state.currentUser) {
+            if (userInfo) userInfo.style.display = 'none';
+            if (teacherTools) teacherTools.style.display = 'none';
+            if (adminTools) adminTools.style.display = 'none';
+            if (applyBtn) applyBtn.style.display = 'block';
+            if (logoutBtn) logoutBtn.style.display = 'none';
+            if (syncBtn) syncBtn.style.display = 'none';
+            return;
+        }
 
--- 9. 检查外键约束
-SELECT '外键约束' AS check_item, COUNT(*)::TEXT AS value 
-FROM information_schema.table_constraints 
-WHERE constraint_type = 'FOREIGN KEY' AND constraint_schema = 'public';
+        if (userInfo) {
+            userInfo.style.display = 'flex';
+            userName.textContent = state.currentUser.user_metadata?.username || state.currentUser.email?.split('@')[0];
+            userAvatar.textContent = state.currentUser.email?.charAt(0).toUpperCase() || '?';
+        }
 
--- 10. 检查触发器
-SELECT '触发器数量' AS check_item, COUNT(*)::TEXT AS value 
-FROM information_schema.triggers 
-WHERE trigger_schema = 'public';`;
+        if (teacherTools) teacherTools.style.display = state.isTeacher || state.isAdmin ? 'block' : 'none';
+        if (adminTools) adminTools.style.display = state.isAdmin ? 'block' : 'none';
+        if (applyBtn) applyBtn.style.display = (state.currentUser && !state.isTeacher && !state.isAdmin) ? 'block' : 'none';
+        if (logoutBtn) logoutBtn.style.display = 'block';
+        if (syncBtn) syncBtn.style.display = 'block';
+    };
 
-    // ==================== 导出到全局 ====================
-    global.SUPABASE_SCHEMA = SUPABASE_SCHEMA;
-    global.DEPLOY_SCRIPT = DEPLOY_SCRIPT;
-    global.VERIFY_SCRIPT = VERIFY_SCRIPT;
+    const loadUserData = async () => {
+        if (!state.supabase || !state.currentUser || state.offlineMode) return;
+        
+        try {
+            const { data: games } = await state.supabase
+                .from('game_records')
+                .select('*')
+                .eq('user_id', state.currentUser.id)
+                .order('created_at', { ascending: false })
+                .limit(CONFIG.MAX_HISTORY);
+            
+            if (games) state.history = games;
 
-    // ==================== 使用说明 ====================
-    console.log(`
-╔══════════════════════════════════════════════════════════════════════════╗
-║        数学加法消消乐 - Supabase 数据库部署工具 v4.0.0                    ║
-║                   区域学校多租户教育系统                                 ║
-╚══════════════════════════════════════════════════════════════════════════╝
+            const { data: wrong } = await state.supabase
+                .from('wrong_questions')
+                .select('*')
+                .eq('user_id', state.currentUser.id)
+                .order('created_at', { ascending: false });
+            
+            if (wrong) state.wrongQuestions = wrong;
 
-📋 部署步骤:
------------
-1. 登录 Supabase 控制台 (https://app.supabase.com)
-2. 进入你的项目
-3. 点击左侧菜单 "SQL Editor"
-4. 点击 "New Query"
-5. 复制下面的 DEPLOY_SCRIPT 内容并执行
-6. 执行后运行验证脚本确认部署成功
+            showMessage(t('syncSuccess'), 'success');
+        } catch (err) {
+            console.error('Load user data failed:', err);
+        }
+    };
 
-📦 包含的组件:
------------
-✅ 20个核心数据表
-✅ 3个业务视图
-✅ 8个枚举类型
-✅ 7个基础函数
-✅ 12个初始化成就
-✅ 10个RLS安全策略
+    // ==================== 游戏核心 ====================
+    const selectMode = (mode) => {
+        state.currentMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`mode-${mode}`)?.classList.add('active');
+        
+        const customSettings = document.getElementById('custom-settings');
+        if (customSettings) customSettings.style.display = mode === 'custom' ? 'flex' : 'none';
+        
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn) startBtn.innerHTML = `<span>${t(mode === 'practice' ? 'startPractice' : 'startGame')}</span>`;
+    };
 
-🔒 安全特性:
------------
-✅ 行级安全(RLS)策略
-✅ 数据软删除
-✅ 乐观锁版本控制
-✅ 操作审计日志
-✅ API调用限制
-✅ 数据分区管理
-✅ 外键约束
-✅ 数据验证约束
+    const getRangeConfig = () => {
+        const select = document.getElementById('number-range');
+        return RANGE_CONFIG[select?.value] || RANGE_CONFIG['0-14'];
+    };
 
-🚀 性能优化:
------------
-✅ 复合索引优化
-✅ 分区表设计
-✅ GIN索引支持JSON查询
-✅ 全文搜索支持
-✅ 缓存表支持
-✅ 连接池配置建议
+    const startGame = () => {
+        if (!state.currentUser && !state.offlineMode) {
+            showMessage(t('loginToStart'), 'info');
+            openModal('auth-modal');
+            return;
+        }
 
-📊 监控和维护:
------------
-✅ 系统日志表
-✅ 备份记录表
-✅ 迁移记录表
-✅ 归档函数
-✅ 数据清洗函数
-✅ 统计信息更新
+        resetGame();
 
-⚠️ 重要提示:
------------
-1. 执行前请确保已创建Supabase项目
-2. 建议先在测试环境验证
-3. 执行后运行验证脚本检查
-4. 根据实际用户量调整分区范围
-5. 定期运行归档函数清理旧数据
-6. 监控表空间使用情况
-7. 定期更新数据库统计信息
+        const config = getRangeConfig();
+        const modeConfig = { ...MODE_CONFIG[state.currentMode] };
 
-🔧 后续配置:
------------
-1. 创建超级管理员账号
-2. 配置Supabase认证设置
-3. 设置备份策略
-4. 配置监控告警
-5. 调整连接池大小
+        if (state.currentMode === 'custom') {
+            const q = document.getElementById('custom-questions');
+            const t = document.getElementById('custom-time');
+            modeConfig.questions = Math.min(100, Math.max(5, parseInt(q?.value) || 20));
+            modeConfig.time = Math.min(300, Math.max(10, parseInt(t?.value) || 60));
+        }
 
-需要帮助?
-- 查看 Supabase 文档: https://supabase.com/docs
-- 技术支持: support@mathgame.com
-- 项目地址: https://github.com/mathgame/regional-edition
-`);
-})(typeof window !== 'undefined' ? window : global);
+        if (modeConfig.hasTimeLimit) state.timeLeft = modeConfig.time;
+
+        // 切换UI
+        ['game-info', 'progress-container', 'target-container', 'game-controls', 'game-grid'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = id === 'game-grid' ? 'grid' : 'block';
+        });
+        document.querySelector('.mode-selection').style.display = 'none';
+        document.querySelector('.game-setting').style.display = 'none';
+
+        const grid = document.getElementById('game-grid');
+        if (grid) {
+            grid.style.gridTemplateColumns = `repeat(${window.innerWidth < 500 ? 4 : 5}, 1fr)`;
+            grid.innerHTML = '';
+        }
+
+        generateTarget();
+        generateGrid();
+
+        state.startTime = new Date();
+        state.lastAnswer = null;
+        state.gameActive = true;
+
+        if (modeConfig.hasTimeLimit) {
+            document.getElementById('time').textContent = state.timeLeft;
+            state.timer = setInterval(updateTimer, 1000);
+        } else {
+            state.timer = setInterval(updateElapsed, 1000);
+        }
+
+        state.hintTimer = setInterval(updateHintCooldown, 1000);
+    };
+
+    const resetGame = () => {
+        if (state.timer) clearInterval(state.timer);
+        if (state.hintTimer) clearInterval(state.hintTimer);
+        state.timeouts.forEach(clearTimeout);
+        state.timeouts.clear();
+
+        state.score = 0;
+        state.selectedCards = [];
+        state.completed = 0;
+        state.correct = 0;
+        state.attempts = 0;
+        state.gameActive = false;
+        state.fastestAnswer = 999;
+        state.lastAnswer = null;
+
+        ['score', 'completed', 'accuracy', 'progress-bar'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (id === 'score') el.textContent = '0';
+                else if (id === 'completed') el.textContent = '0/30';
+                else if (id === 'accuracy') el.textContent = '100%';
+                else if (id === 'progress-bar') el.style.width = '0%';
+            }
+        });
+
+        const grid = document.getElementById('game-grid');
+        if (grid) grid.innerHTML = '';
+    };
+
+    const generateGrid = (ensureValid = true) => {
+        const grid = document.getElementById('game-grid');
+        if (!grid) return;
+
+        const config = getRangeConfig();
+        let numbers = [];
+        let attempts = 0;
+        const maxAttempts = 100;
+
+        do {
+            numbers = [];
+            for (let i = 0; i < CONFIG.GRID_SIZE; i++) {
+                numbers.push(Math.floor(Math.random() * (config.max - config.min + 1)) + config.min);
+            }
+            attempts++;
+        } while (ensureValid && !hasAnyCombination(state.currentTarget, numbers) && attempts < maxAttempts);
+
+        shuffleArray(numbers);
+        
+        const fragment = document.createDocumentFragment();
+        numbers.forEach(num => {
+            const card = document.createElement('div');
+            card.className = 'number-card';
+            card.textContent = num;
+            card.dataset.value = num;
+            card.addEventListener('click', handleCardClick);
+            fragment.appendChild(card);
+        });
+
+        grid.innerHTML = '';
+        grid.appendChild(fragment);
+    };
+
+    const handleCardClick = (e) => {
+        const card = e.currentTarget;
+        selectCard(card);
+    };
+
+    const selectCard = (card) => {
+        if (!state.gameActive || card.classList.contains('disappear')) return;
+
+        if (card.classList.contains('selected')) {
+            card.classList.remove('selected');
+            state.selectedCards = state.selectedCards.filter(c => c !== card);
+            return;
+        }
+
+        if (state.selectedCards.length >= 2) {
+            showMessage(t('maxTwoCards'), 'error');
+            return;
+        }
+
+        card.classList.add('selected');
+        state.selectedCards.push(card);
+
+        if (state.selectedCards.length === 2) {
+            state.attempts++;
+            setTimeout(checkMatch, 300);
+        }
+    };
+
+    const checkMatch = () => {
+        if (state.selectedCards.length !== 2) return;
+
+        const num1 = parseInt(state.selectedCards[0].dataset.value);
+        const num2 = parseInt(state.selectedCards[1].dataset.value);
+        const sum = num1 + num2;
+        const isCorrect = sum === state.currentTarget;
+
+        const now = new Date();
+        if (state.lastAnswer) {
+            const time = (now - state.lastAnswer) / 1000;
+            if (time < state.fastestAnswer) state.fastestAnswer = time;
+        }
+        state.lastAnswer = now;
+
+        const record = {
+            id: `${Date.now()}_${Math.random().toString(36)}`,
+            target: state.currentTarget,
+            num1, num2,
+            isCorrect,
+            timestamp: now.toISOString()
+        };
+        state.history.unshift(record);
+        if (state.history.length > CONFIG.MAX_HISTORY) state.history.pop();
+
+        if (isCorrect) {
+            handleCorrect(record);
+        } else {
+            handleWrong();
+        }
+    };
+
+    const handleCorrect = (record) => {
+        state.correct++;
+        state.completed++;
+        
+        removeFromWrong(record.num1, record.num2, record.target);
+
+        showFeedback(t('correct'), 'success');
+
+        state.selectedCards.forEach(c => c.classList.add('disappear'));
+        
+        setTimeout(() => {
+            state.selectedCards.forEach(c => c.remove());
+            state.selectedCards = [];
+
+            const remaining = document.querySelectorAll('.number-card:not(.disappear)');
+            if (remaining.length < 2) {
+                generateGrid();
+            } else if (!hasValidCombination(state.currentTarget, remaining)) {
+                showMessage(t('noValidCombination'), 'info');
+                setTimeout(refreshNumbers, 500);
+            }
+        }, 500);
+
+        state.score += 10;
+        updateDisplay();
+
+        const modeConfig = MODE_CONFIG[state.currentMode];
+        if (state.currentMode === 'standard' && state.completed >= (modeConfig.questions || 30)) {
+            endGame('complete');
+            return;
+        }
+
+        checkAchievements();
+        setTimeout(generateTarget, 800);
+    };
+
+    const handleWrong = () => {
+        addToWrong();
+        showFeedback(t('wrong'), 'error');
+        
+        state.selectedCards.forEach(c => c.classList.remove('selected'));
+        state.selectedCards = [];
+
+        const remaining = document.querySelectorAll('.number-card:not(.disappear)');
+        if (!hasValidCombination(state.currentTarget, remaining)) {
+            showMessage(t('noValidCombination'), 'info');
+            setTimeout(refreshNumbers, 500);
+        }
+    };
+
+    const addToWrong = () => {
+        if (state.selectedCards.length !== 2) return;
+
+        const wrong = {
+            id: `${Date.now()}_${Math.random().toString(36)}`,
+            target: state.currentTarget,
+            num1: parseInt(state.selectedCards[0].dataset.value),
+            num2: parseInt(state.selectedCards[1].dataset.value),
+            timestamp: new Date().toISOString()
+        };
+
+        const existing = state.wrongQuestions.findIndex(w => 
+            w.target === wrong.target && 
+            ((w.num1 === wrong.num1 && w.num2 === wrong.num2) ||
+             (w.num1 === wrong.num2 && w.num2 === wrong.num1))
+        );
+
+        if (existing >= 0) {
+            state.wrongQuestions[existing].attempts = (state.wrongQuestions[existing].attempts || 1) + 1;
+        } else {
+            state.wrongQuestions.unshift(wrong);
+        }
+
+        if (state.wrongQuestions.length > CONFIG.MAX_WRONG) state.wrongQuestions.pop();
+    };
+
+    const removeFromWrong = (num1, num2, target) => {
+        const index = state.wrongQuestions.findIndex(w => 
+            w.target === target && 
+            ((w.num1 === num1 && w.num2 === num2) ||
+             (w.num1 === num2 && w.num2 === num1))
+        );
+        if (index >= 0) state.wrongQuestions.splice(index, 1);
+    };
+
+    const hasValidCombination = (target, cards) => {
+        if (!cards?.length || cards.length < 2) return false;
+        const nums = Array.from(cards).map(c => parseInt(c.dataset.value));
+        for (let i = 0; i < nums.length; i++) {
+            for (let j = i + 1; j < nums.length; j++) {
+                if (nums[i] + nums[j] === target) return true;
+            }
+        }
+        return false;
+    };
+
+    const hasAnyCombination = (target, nums) => {
+        if (!nums?.length || nums.length < 2) return false;
+        for (let i = 0; i < nums.length; i++) {
+            for (let j = i + 1; j < nums.length; j++) {
+                if (nums[i] + nums[j] === target) return true;
+            }
+        }
+        return false;
+    };
+
+    const showFeedback = (text, type) => {
+        const fb = document.getElementById('match-feedback');
+        if (!fb) return;
+        fb.textContent = text;
+        fb.style.color = type === 'success' ? '#4CAF50' : '#ff4444';
+        fb.style.opacity = '1';
+        setTimeout(() => fb.style.opacity = '0', 1000);
+    };
+
+    const updateTimer = () => {
+        if (!state.gameActive) return;
+        state.timeLeft--;
+        if (state.timeLeft < 0) state.timeLeft = 0;
+        document.getElementById('time').textContent = state.timeLeft;
+        if (state.timeLeft <= 0) endGame('timeout');
+    };
+
+    const updateElapsed = () => {
+        if (!state.gameActive || !state.startTime) return;
+        const elapsed = Math.floor((new Date() - state.startTime) / 1000);
+        document.getElementById('time').textContent = formatTime(elapsed);
+    };
+
+    const updateDisplay = () => {
+        document.getElementById('score').textContent = state.score;
+
+        const modeConfig = MODE_CONFIG[state.currentMode];
+        const completedEl = document.getElementById('completed');
+        const progressBar = document.getElementById('progress-bar');
+
+        if (modeConfig.questions) {
+            completedEl.textContent = `${state.completed}/${modeConfig.questions}`;
+            if (progressBar) {
+                progressBar.style.width = `${(state.completed / modeConfig.questions) * 100}%`;
+            }
+        } else {
+            completedEl.textContent = state.completed.toString();
+        }
+
+        const accuracy = state.attempts > 0 ? Math.round((state.correct / state.attempts) * 100) : 100;
+        document.getElementById('accuracy').textContent = `${accuracy}%`;
+    };
+
+    const generateTarget = () => {
+        const config = getRangeConfig();
+        const minPossible = config.min * 2;
+        const maxPossible = config.max * 2;
+        const targetMin = Math.max(config.targetMin, minPossible);
+        const targetMax = Math.min(config.targetMax, maxPossible);
+        
+        if (targetMin > targetMax) return;
+        
+        state.currentTarget = Math.floor(Math.random() * (targetMax - targetMin + 1)) + targetMin;
+        document.getElementById('target-sum').textContent = state.currentTarget;
+
+        setTimeout(() => {
+            if (state.gameActive) checkAutoRefresh();
+        }, 300);
+    };
+
+    const checkAutoRefresh = () => {
+        if (!state.gameActive) return;
+        const remaining = document.querySelectorAll('.number-card:not(.disappear)');
+        if (!hasValidCombination(state.currentTarget, remaining)) {
+            showMessage(t('noValidCombination'), 'info');
+            setTimeout(refreshNumbers, 500);
+        }
+    };
+
+    const refreshNumbers = () => {
+        const grid = document.getElementById('game-grid');
+        if (!grid) return;
+        grid.style.opacity = '0.5';
+        setTimeout(() => {
+            generateGrid();
+            grid.style.opacity = '1';
+        }, 500);
+    };
+
+    const updateHintCooldown = () => {
+        if (state.hintCooldown > 0) {
+            state.hintCooldown--;
+            updateHintButton();
+        }
+    };
+
+    const updateHintButton = () => {
+        const btn = document.getElementById('hint-btn');
+        if (!btn) return;
+        if (state.hintCooldown > 0) {
+            btn.innerHTML = `<span>💡 ${state.hintCooldown}${t('seconds')}</span>`;
+            btn.disabled = true;
+        } else {
+            btn.innerHTML = `<span>${t('hintButton')}</span>`;
+            btn.disabled = false;
+        }
+    };
+
+    const showHint = () => {
+        if (state.hintCooldown > 0) {
+            showMessage(`${t('hintCooldown')} ${state.hintCooldown}${t('seconds')}`, 'info');
+            return;
+        }
+
+        const cards = document.querySelectorAll('.number-card:not(.disappear)');
+        const nums = Array.from(cards).map(c => parseInt(c.dataset.value));
+        
+        for (let i = 0; i < nums.length; i++) {
+            for (let j = i + 1; j < nums.length; j++) {
+                if (nums[i] + nums[j] === state.currentTarget) {
+                    cards[i].style.animation = 'pulse 1s';
+                    cards[j].style.animation = 'pulse 1s';
+                    setTimeout(() => {
+                        cards[i].style.animation = '';
+                        cards[j].style.animation = '';
+                    }, 1000);
+                    
+                    state.hintCooldown = 10;
+                    updateHintButton();
+                    showMessage(t('hintActivated'), 'success');
+                    return;
+                }
+            }
+        }
+        showMessage('No hint available', 'info');
+    };
+
+    const endGame = (reason) => {
+        if (!state.gameActive) return;
+
+        state.gameActive = false;
+        if (state.timer) clearInterval(state.timer);
+        if (state.hintTimer) clearInterval(state.hintTimer);
+
+        const elapsed = state.startTime ? Math.floor((new Date() - state.startTime) / 1000) : 0;
+        const accuracy = state.attempts > 0 ? Math.round((state.correct / state.attempts) * 100) : 100;
+
+        document.getElementById('final-score').textContent = state.score;
+        document.getElementById('final-completed').textContent = state.completed;
+        document.getElementById('final-time').textContent = `${elapsed}${t('seconds')}`;
+        document.getElementById('final-accuracy').textContent = `${accuracy}%`;
+
+        const titles = {
+            'complete': t('gameComplete'),
+            'timeout': t('gameTimeout'),
+            'giveup': t('gameGiveup')
+        };
+        document.getElementById('result-title').textContent = titles[reason] || t('gameEnd');
+
+        openModal('game-over');
+
+        updateStats();
+        saveLocal();
+        checkAchievements();
+    };
+
+    const updateStats = () => {
+        state.stats.games++;
+        state.stats.totalQuestions += state.completed;
+        state.stats.totalCorrect += state.correct;
+        if (state.score > state.stats.bestScore) state.stats.bestScore = state.score;
+        
+        const accuracy = state.attempts > 0 ? Math.round((state.correct / state.attempts) * 100) : 100;
+        if (accuracy > state.stats.bestAccuracy) state.stats.bestAccuracy = accuracy;
+        
+        if (state.fastestAnswer < state.stats.fastestAnswer) state.stats.fastestAnswer = state.fastestAnswer;
+    };
+
+    const checkAchievements = () => {
+        ACHIEVEMENTS.forEach(ach => {
+            if (state.achievements.get(ach.id)) return;
+
+            let achieved = false;
+            switch (ach.requirement.type) {
+                case 'games':
+                    achieved = state.stats.games >= ach.requirement.value;
+                    break;
+                case 'score':
+                    achieved = state.stats.bestScore >= ach.requirement.value;
+                    break;
+                case 'accuracy':
+                    achieved = state.stats.bestAccuracy >= ach.requirement.value;
+                    break;
+            }
+
+            if (achieved) {
+                state.achievements.set(ach.id, true);
+                showMessage(`🏆 ${ach.name}`, 'success', 3000);
+            }
+        });
+    };
+
+    // ==================== 排行榜 ====================
+    const loadLeaderboard = async () => {
+        const content = document.getElementById('leaderboard-content');
+        if (!content) return;
+
+        if (state.offlineMode || !state.supabase) {
+            content.innerHTML = `<div class="empty-state">${t('offlineMode')}</div>`;
+            return;
+        }
+
+        try {
+            const { data, error } = await state.supabase
+                .from('game_records')
+                .select(`
+                    *,
+                    profiles:user_id (username)
+                `)
+                .eq('mode', state.leaderboard.mode)
+                .eq('difficulty', state.leaderboard.difficulty)
+                .order('score', { ascending: false })
+                .limit(10);
+
+            if (error) throw error;
+
+            if (!data?.length) {
+                content.innerHTML = `<div class="empty-state">${t('noData')}</div>`;
+                return;
+            }
+
+            let html = '<table class="leaderboard-table"><thead><tr><th>#</th><th>' + t('player') + '</th><th>' + t('score') + '</th><th>' + t('accuracy') + '</th><th>' + t('time') + '</th></tr></thead><tbody>';
+            
+            data.forEach((item, i) => {
+                const isCurrent = state.currentUser && item.user_id === state.currentUser.id;
+                html += `<tr${isCurrent ? ' class="current-user"' : ''}>
+                    <td>${i + 1}</td>
+                    <td>${item.profiles?.username || 'Anonymous'}</td>
+                    <td>${item.score}</td>
+                    <td>${item.accuracy}%</td>
+                    <td>${item.total_time || 0}s</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            content.innerHTML = html;
+
+            // 更新分页
+            document.getElementById('page-1').classList.add('active');
+            document.getElementById('prev-page').disabled = true;
+            document.getElementById('next-page').disabled = true;
+
+        } catch (err) {
+            console.error('Leaderboard error:', err);
+            content.innerHTML = `<div class="empty-state">${t('connectionFailed')}</div>`;
+        }
+    };
+
+    // ==================== 模态框管理 ====================
+    const openModal = (id) => {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.style.display = 'flex';
+            if (id === 'leaderboard-modal') loadLeaderboard();
+            if (id === 'wrongbook-modal') showWrongBook();
+            if (id === 'history-modal') showHistory();
+            if (id === 'statistics-modal') showStatistics();
+            if (id === 'achievements-modal') showAchievements();
+            if (id === 'profile-modal') showProfile();
+        }
+    };
+
+    const closeModal = (id) => {
+        const modal = document.getElementById(id);
+        if (modal) modal.style.display = 'none';
+    };
+
+    // ==================== 各个模态框内容 ====================
+    const showHistory = () => {
+        const tbody = document.getElementById('history-table-body');
+        if (!tbody) return;
+
+        if (!state.history.length) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${t('noData')}</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = state.history.slice(0, 20).map((h, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${h.target}</td>
+                <td>${h.num1}</td>
+                <td>${h.num2}</td>
+                <td style="color: ${h.isCorrect ? '#4CAF50' : '#ff4444'}">${h.isCorrect ? t('correct') : t('wrong')}</td>
+                <td>${new Date(h.timestamp).toLocaleTimeString()}</td>
+            </tr>
+        `).join('');
+    };
+
+    const showStatistics = () => {
+        const content = document.getElementById('statistics-content');
+        if (!content) return;
+
+        const accuracy = state.stats.totalQuestions > 0 
+            ? Math.round((state.stats.totalCorrect / state.stats.totalQuestions) * 100) 
+            : 0;
+
+        content.innerHTML = `
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <div class="profile-stat-label">${t('totalGames')}</div>
+                    <div class="profile-stat-value">${state.stats.games}</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-label">${t('totalQuestions')}</div>
+                    <div class="profile-stat-value">${state.stats.totalQuestions}</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-label">${t('totalCorrect')}</div>
+                    <div class="profile-stat-value">${state.stats.totalCorrect}</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-label">${t('avgAccuracy')}</div>
+                    <div class="profile-stat-value">${accuracy}%</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-label">${t('bestScore')}</div>
+                    <div class="profile-stat-value">${state.stats.bestScore}</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-label">${t('bestAccuracy')}</div>
+                    <div class="profile-stat-value">${state.stats.bestAccuracy}%</div>
+                </div>
+            </div>
+        `;
+    };
+
+    const showAchievements = () => {
+        const grid = document.getElementById('achievements-grid');
+        if (!grid) return;
+
+        grid.innerHTML = ACHIEVEMENTS.map(ach => {
+            const unlocked = state.achievements.get(ach.id);
+            return `
+                <div class="achievement-card ${unlocked ? '' : 'locked'}">
+                    <div class="achievement-icon">${ach.icon}</div>
+                    <div class="achievement-name">${ach.name}</div>
+                    <div class="achievement-desc">${ach.desc}</div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    const showWrongBook = () => {
+        const list = document.getElementById('wrong-questions-list');
+        if (!list) return;
+
+        if (!state.wrongQuestions.length) {
+            list.innerHTML = `<div class="empty-state">${t('noData')}</div>`;
+            return;
+        }
+
+        list.innerHTML = state.wrongQuestions.map(w => `
+            <div class="wrong-question-item">
+                <span>${w.target} = ${w.num1} + ${w.num2}</span>
+                <small>${new Date(w.timestamp).toLocaleDateString()}</small>
+            </div>
+        `).join('');
+    };
+
+    const showProfile = () => {
+        if (!state.currentUser) {
+            closeModal('profile-modal');
+            openModal('auth-modal');
+            return;
+        }
+
+        document.getElementById('profile-avatar').textContent = state.currentUser.email?.charAt(0).toUpperCase() || '?';
+        document.getElementById('profile-email').textContent = state.currentUser.email;
+        document.getElementById('profile-role').textContent = state.isTeacher ? 'Teacher' : state.isAdmin ? 'Admin' : 'Student';
+        document.getElementById('profile-game-count').textContent = state.stats.games;
+        document.getElementById('profile-high-score').textContent = state.stats.bestScore;
+        
+        const accuracy = state.stats.totalQuestions > 0 
+            ? Math.round((state.stats.totalCorrect / state.stats.totalQuestions) * 100) 
+            : 0;
+        document.getElementById('profile-avg-accuracy').textContent = `${accuracy}%`;
+    };
+
+    // ==================== 保存成绩 ====================
+    const saveScore = async (e) => {
+        if (e) e.preventDefault();
+
+        const name = document.getElementById('player-name').value.trim() || 
+                    state.currentUser?.user_metadata?.username || 
+                    'Anonymous';
+
+        if (!state.currentUser && !state.offlineMode) {
+            showMessage(t('loginFirst'), 'error');
+            openModal('auth-modal');
+            return;
+        }
+
+        const record = {
+            user_id: state.currentUser?.id,
+            score: state.score,
+            questions_completed: state.completed,
+            correct_count: state.correct,
+            accuracy: state.attempts > 0 ? (state.correct / state.attempts * 100) : 100,
+            mode: state.currentMode,
+            difficulty: getRangeConfig().difficulty,
+            total_time: state.startTime ? Math.floor((new Date() - state.startTime) / 1000) : 0,
+            created_at: new Date().toISOString()
+        };
+
+        state.history.unshift(record);
+        if (state.history.length > CONFIG.MAX_HISTORY) state.history.pop();
+
+        if (state.supabase && !state.offlineMode && state.currentUser) {
+            try {
+                await state.supabase.from('game_records').insert([record]);
+            } catch (err) {
+                console.error('Save failed:', err);
+            }
+        }
+
+        saveLocal();
+        showMessage(t('scoreSaved'), 'success');
+        closeModal('game-over');
+        restartGame();
+    };
+
+    const saveLocal = () => {
+        try {
+            localStorage.setItem('mathGame', JSON.stringify({
+                version: CONFIG.VERSION,
+                stats: state.stats,
+                achievements: Array.from(state.achievements.entries()),
+                history: state.history.slice(0, 50),
+                wrong: state.wrongQuestions.slice(0, 100)
+            }));
+        } catch (e) {
+            console.warn('Save failed:', e);
+        }
+    };
+
+    const loadLocal = () => {
+        try {
+            const saved = localStorage.getItem('mathGame');
+            if (!saved) return;
+            
+            const data = JSON.parse(saved);
+            if (data.version === CONFIG.VERSION) {
+                state.stats = data.stats || state.stats;
+                state.achievements = new Map(data.achievements || []);
+                state.history = data.history || [];
+                state.wrongQuestions = data.wrong || [];
+            }
+        } catch (e) {
+            console.warn('Load failed:', e);
+        }
+    };
+
+    const restartGame = () => {
+        closeModal('game-over');
+        document.querySelector('.mode-selection').style.display = 'grid';
+        document.querySelector('.game-setting').style.display = 'block';
+        ['game-info', 'progress-container', 'target-container', 'game-controls', 'game-grid'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        document.getElementById('player-name').value = '';
+        resetGame();
+    };
+
+    const clearHistory = () => {
+        if (confirm(t('confirmClear'))) {
+            state.history = [];
+            saveLocal();
+            showHistory();
+            showMessage('Cleared', 'success');
+        }
+    };
+
+    const clearWrong = () => {
+        if (confirm(t('confirmClear'))) {
+            state.wrongQuestions = [];
+            saveLocal();
+            showWrongBook();
+            showMessage('Cleared', 'success');
+        }
+    };
+
+    // ==================== 认证相关 ====================
+    let authMode = 'login';
+
+    const toggleAuthMode = () => {
+        authMode = authMode === 'login' ? 'register' : 'login';
+        const title = document.getElementById('auth-title');
+        const submitBtn = document.getElementById('auth-submit-btn');
+        const switchText = document.getElementById('auth-switch-text');
+        const switchLink = document.getElementById('auth-switch-link');
+        const usernameGroup = document.getElementById('auth-username-group');
+
+        if (title) title.innerHTML = `<span>${t(authMode === 'login' ? 'loginTitle' : 'registerTitle')}</span>`;
+        if (submitBtn) submitBtn.innerHTML = `<span>${t(authMode === 'login' ? 'loginButton' : 'registerButton')}</span>`;
+        if (switchText) switchText.innerHTML = `<span>${t(authMode === 'login' ? 'noAccount' : 'hasAccount')}</span>`;
+        if (switchLink) switchLink.innerHTML = `<span>${t(authMode === 'login' ? 'registerNow' : 'loginNow')}</span>`;
+        if (usernameGroup) usernameGroup.style.display = authMode === 'login' ? 'none' : 'block';
+    };
+
+    const handleAuth = async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('auth-email').value.trim();
+        const password = document.getElementById('auth-password').value.trim();
+        const username = document.getElementById('auth-username')?.value.trim();
+
+        if (!email || !password) {
+            document.getElementById('auth-error').textContent = 'Email and password required';
+            return;
+        }
+
+        if (authMode === 'login') {
+            await login(email, password);
+        } else {
+            await register(email, password, username);
+        }
+    };
+
+    // ==================== 事件绑定 ====================
+    const bindEvents = () => {
+        // 语言切换
+        document.getElementById('language-btn')?.addEventListener('click', () => {
+            setLanguage(state.currentLang === 'zh' ? 'en' : 'zh');
+        });
+
+        // 侧边栏按钮
+        const navMap = [
+            ['history-btn', () => openModal('history-modal')],
+            ['statistics-btn', () => openModal('statistics-modal')],
+            ['achievements-btn', () => openModal('achievements-modal')],
+            ['wrongbook-btn', () => openModal('wrongbook-modal')],
+            ['leaderboard-btn', () => openModal('leaderboard-modal')],
+            ['profile-btn', () => openModal('profile-modal')],
+            ['teacher-tools-btn', () => openModal('teacher-tools-modal')],
+            ['admin-tools-btn', () => openModal('admin-tools-modal')],
+            ['teacher-application-btn', () => showMessage(t('applyForTeacher'), 'info')],
+            ['logout-btn', logout]
+        ];
+        navMap.forEach(([id, fn]) => {
+            document.getElementById(id)?.addEventListener('click', fn);
+        });
+
+        // 游戏模式
+        ['standard', 'challenge', 'practice', 'custom'].forEach(mode => {
+            document.getElementById(`mode-${mode}`)?.addEventListener('click', () => selectMode(mode));
+        });
+
+        // 游戏控制
+        document.getElementById('start-btn')?.addEventListener('click', startGame);
+        document.getElementById('hint-btn')?.addEventListener('click', showHint);
+        document.getElementById('refresh-btn')?.addEventListener('click', refreshNumbers);
+        document.getElementById('endgame-btn')?.addEventListener('click', () => endGame('giveup'));
+
+        // 认证
+        document.getElementById('auth-form')?.addEventListener('submit', handleAuth);
+        document.getElementById('auth-switch-link')?.addEventListener('click', toggleAuthMode);
+
+        // 关闭按钮
+        const closeMap = [
+            'auth-modal', 'history-modal', 'statistics-modal', 'achievements-modal',
+            'wrongbook-modal', 'leaderboard-modal', 'profile-modal', 'teacher-tools-modal',
+            'admin-tools-modal', 'game-over'
+        ];
+        closeMap.forEach(id => {
+            document.getElementById(`close-${id}`)?.addEventListener('click', () => closeModal(id));
+        });
+
+        // 游戏结束按钮
+        document.getElementById('save-score-form')?.addEventListener('submit', saveScore);
+        document.getElementById('play-again-btn')?.addEventListener('click', restartGame);
+        document.getElementById('view-leaderboard-btn')?.addEventListener('click', () => {
+            closeModal('game-over');
+            openModal('leaderboard-modal');
+        });
+        document.getElementById('view-statistics-btn')?.addEventListener('click', () => {
+            closeModal('game-over');
+            openModal('statistics-modal');
+        });
+
+        // 历史记录操作
+        document.getElementById('clear-history-btn')?.addEventListener('click', clearHistory);
+
+        // 错题本操作
+        document.getElementById('sync-wrong-btn')?.addEventListener('click', () => showMessage('Sync coming soon', 'info'));
+        document.getElementById('clear-wrong-btn')?.addEventListener('click', clearWrong);
+
+        // 排行榜
+        document.getElementById('sync-leaderboard-btn')?.addEventListener('click', loadLeaderboard);
+        document.getElementById('leaderboard-login-btn')?.addEventListener('click', () => {
+            closeModal('leaderboard-modal');
+            openModal('auth-modal');
+        });
+
+        // 排行榜分页
+        document.getElementById('prev-page')?.addEventListener('click', () => {
+            if (state.leaderboard.page > 1) {
+                state.leaderboard.page--;
+                loadLeaderboard();
+            }
+        });
+        document.getElementById('next-page')?.addEventListener('click', () => {
+            if (state.leaderboard.page < state.leaderboard.totalPages) {
+                state.leaderboard.page++;
+                loadLeaderboard();
+            }
+        });
+        [1, 2, 3].forEach(i => {
+            document.getElementById(`page-${i}`)?.addEventListener('click', () => {
+                state.leaderboard.page = i;
+                loadLeaderboard();
+            });
+        });
+
+        // 排行榜标签切换
+        document.querySelectorAll('.game-mode-tabs .tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.game-mode-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.leaderboard.mode = btn.dataset.gameMode;
+                loadLeaderboard();
+            });
+        });
+
+        document.querySelectorAll('.difficulty-tabs .tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.difficulty-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.leaderboard.difficulty = btn.dataset.difficulty;
+                loadLeaderboard();
+            });
+        });
+
+        // 点击背景关闭
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.style.display = 'none';
+            });
+        });
+
+        // ESC键关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal[style*="flex"], .game-over[style*="flex"]').forEach(m => {
+                    m.style.display = 'none';
+                });
+            }
+        });
+
+        // 窗口大小改变
+        window.addEventListener('resize', debounce(() => {
+            if (state.gameActive) {
+                const grid = document.getElementById('game-grid');
+                if (grid) {
+                    grid.style.gridTemplateColumns = `repeat(${window.innerWidth < 500 ? 4 : 5}, 1fr)`;
+                }
+            }
+        }, 250));
+    };
+
+    // ==================== 初始化 ====================
+    const init = async () => {
+        console.log('Math Game v' + CONFIG.VERSION);
+
+        // 加载语言
+        const savedLang = localStorage.getItem('mathGameLang') || 'zh';
+        setLanguage(savedLang);
+
+        // 加载本地数据
+        loadLocal();
+
+        // 初始化Supabase
+        await initSupabase();
+
+        // 绑定事件
+        bindEvents();
+
+        // 默认模式
+        selectMode('standard');
+
+        // 隐藏加载
+        setTimeout(() => {
+            document.getElementById('loading-overlay')?.classList.add('hide-loading');
+            document.body.classList.add('loaded');
+        }, 500);
+
+        // 定期自动保存
+        setInterval(saveLocal, 60000);
+    };
+
+    // ==================== 导出全局 ====================
+    window.MathGame = {
+        init,
+        selectMode,
+        startGame,
+        showHint,
+        refreshNumbers,
+        endGame,
+        restartGame,
+        logout,
+        showAuthModal: () => openModal('auth-modal'),
+        isOfflineMode: () => state.offlineMode
+    };
+
+    // 自动初始化
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(init, 100));
+    } else {
+        setTimeout(init, 100);
+    }
+
+})();
